@@ -544,9 +544,9 @@ function ensureAudioContextInitialized() {
     }
 }
 
-// Procedural Ingestion Generation Engine. Computes unique keys and chords algorithmically using string properties as safe random seeds.
+// Procedural Ingestion Generation Engine. Computes unique keys and chord blocks using string length values as generation seeds.
 function triggerArrangementMapping(fileName) {
-    const seed = fileName.length + 3; // Modulate index calculation mapping offset
+    const seed = fileName.length;
     const availableKeys = ["C Major", "G Major", "A Minor"];
     currentBaseKey = availableKeys[seed % availableKeys.length];
 
