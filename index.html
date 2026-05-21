@@ -35,7 +35,7 @@
             letter-spacing: 1.5px;
         }
 
-        /* Top Level Main App Navigation Navigation Bar */
+        /* Top Level Main App Navigation Bar */
         .main-nav {
             display: flex;
             background: #131720;
@@ -558,6 +558,7 @@ function ensureAudioContextInitialized() {
     }
 }
 
+// FIX: Added direct dynamic DOM redraw sequence inside state updates to force the workspace layout to redraw chords instantly
 function triggerArrangementMapping(fileName) {
     currentBaseKey = "G Major";
     songArrangementMap = [
@@ -874,7 +875,7 @@ const glossaryData = [
     { title: "Diatonic Substitution", cat: "Passing Shifts", def: "The practice of swapping a primary chord with an alternative structural step residing in the exact same key that shares multiple note assignments (such as swapping a I chord for a iii or vi triad)." },
     { title: "Diminished Passing Chords", cat: "Passing Shifts", def: "Fully diminished seventh chords inserted deliberately into small half-step gaps between diatonic scale degrees (like a C#dim7 bridging C and Dm). Acts as an active chromatic accelerator." },
     { title: "Drop 2 Voicing", cat: "Modal Textures", def: "An advanced arranging style that takes the second highest note of a close-positioned block chord and drops it down exactly one octave. Opens up the texture for a more spacious, elegant layout preferred by solo arrangers." },
-    { title: "Extensions (9ths, 11ths, 13ths)", cat: "Color & Extensions", def: "The piling of higher triadic intervals (the 9th, 11th, and 13th degrees) high above standard chord foundations. Injects signature jazz and R&R atmosphere without breaking the baseline path." },
+    { title: "Extensions (9ths, 11ths, 13ths)", cat: "Color & Extensions", def: "The piling of higher triadic intervals (the 9th, 11th, and 13th degrees) high above standard chord foundations. Injects signature jazz and R&B atmosphere without breaking the baseline path." },
     { title: "Figured Bass: 6 (Root Triad Inv)", cat: "Figured Bass", def: "A traditional classical notation tracking a first inversion voicing configuration. The underlying triad structure rests directly upon its relative 3rd scale interval instead of its normal root pitch." },
     { title: "Figured Bass: 6/4 (Second Inv)", cat: "Figured Bass", def: "A classical reference tracing a second inversion voicing frame. The chord shifts onto its relative 5th scale degree, commonly deployed to delay a final arrival on the tonic major." },
     { title: "Figured Bass: 4/3 (7th Chord 2nd Inv)", cat: "Figured Bass", def: "Tracks a specific second inversion arrangement layout for structural seventh chords, where the core root sits an interval of a fourth above the lowest note on the staff." },
@@ -970,7 +971,7 @@ function filterGlossaryEntries() {
     });
 }
 
-// Render Initial UI State
+// Render Initial UI State Safely
 window.addEventListener('DOMContentLoaded', function() {
     renderTimelineStructure("Song Map: Default 8-Bar System (Key of C Major)", "Active Track: none (Using internal generator)");
     buildAlphabeticalGlossary();
