@@ -699,7 +699,7 @@ function renderTimelineStructure(titleText, trackMetaText) {
     document.getElementById('explanation').innerText = "Structural layout processed. Select any matrix category below to reharmonize all tracks simultaneously.";
 }
 
-// Global Reharm Mapping Configuration Matrix (FIXED ARRANGEMENT LOOPS ARRAYS)
+// Global Reharm Mapping Configuration Matrix
 const coreTransformMatrix = {
     tritone: {
         "C Major": ["Cmaj7", "Eb7", "Abmaj7", "Db7", "Cmaj7", "Eb7", "Abmaj7", "Db7"],
@@ -874,7 +874,7 @@ const glossaryData = [
     { title: "Diatonic Substitution", cat: "Passing Shifts", def: "The practice of swapping a primary chord with an alternative structural step residing in the exact same key that shares multiple note assignments (such as swapping a I chord for a iii or vi triad)." },
     { title: "Diminished Passing Chords", cat: "Passing Shifts", def: "Fully diminished seventh chords inserted deliberately into small half-step gaps between diatonic scale degrees (like a C#dim7 bridging C and Dm). Acts as an active chromatic accelerator." },
     { title: "Drop 2 Voicing", cat: "Modal Textures", def: "An advanced arranging style that takes the second highest note of a close-positioned block chord and drops it down exactly one octave. Opens up the texture for a more spacious, elegant layout preferred by solo arrangers." },
-    { title: "Extensions (9ths, 11ths, 13ths)", cat: "Color & Extensions", def: "The piling of higher triadic intervals (the 9th, 11th, and 13th degrees) high above standard chord foundations. Injects signature jazz and R&B atmosphere without breaking the baseline path." },
+    { title: "Extensions (9ths, 11ths, 13ths)", cat: "Color & Extensions", def: "The piling of higher triadic intervals (the 9th, 11th, and 13th degrees) high above standard chord foundations. Injects signature jazz and R&R atmosphere without breaking the baseline path." },
     { title: "Figured Bass: 6 (Root Triad Inv)", cat: "Figured Bass", def: "A traditional classical notation tracking a first inversion voicing configuration. The underlying triad structure rests directly upon its relative 3rd scale interval instead of its normal root pitch." },
     { title: "Figured Bass: 6/4 (Second Inv)", cat: "Figured Bass", def: "A classical reference tracing a second inversion voicing frame. The chord shifts onto its relative 5th scale degree, commonly deployed to delay a final arrival on the tonic major." },
     { title: "Figured Bass: 4/3 (7th Chord 2nd Inv)", cat: "Figured Bass", def: "Tracks a specific second inversion arrangement layout for structural seventh chords, where the core root sits an interval of a fourth above the lowest note on the staff." },
@@ -901,3 +901,81 @@ const glossaryData = [
 
 function applyReharm(key) {
     const transformationGroup = coreTransformMatrix[key];
+    if (!transformationGroup) return;
+
+    const targetChords = transformationGroup[currentBaseKey];
+    if (!targetChords) return;
+
+    document.querySelectorAll('.mod-btn').forEach(btn => btn.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+
+    songArrangementMap.forEach((section, sIdx) => {
+        section.baseChords.forEach((chord, cIdx) => {
+            const cardElement = document.getElementById(`reharm-${sIdx}-${cIdx}`);
+            if (cardElement) {
+                cardElement.innerText = targetChords[cIdx % targetChords.length];
+                cardElement.classList.remove('transformed');
+                void cardElement.offsetWidth;
+                cardElement.classList.add('transformed');
+            }
+        });
+    });
+
+    const conceptualDescriptions = {};
+    glossaryData.forEach(item => {
+        let matrixKey = item.title.toLowerCase().split(" ")[0];
+        if (item.title.includes("ii-V-I")) matrixKey = "iiVI";
+        if (item.title.includes("iii-vi")) matrixKey = "iii-vi";
+        conceptualDescriptions[matrixKey] = item.def;
+    });
+    
+    if(conceptualDescriptions[key]) {
+        document.getElementById('explanation').innerText = conceptualDescriptions[key];
+    }
+}
+
+function buildAlphabeticalGlossary() {
+    const container = document.getElementById('glossaryContainer');
+    container.innerHTML = ""; 
+
+    const sortedData = [...glossaryData].sort((a, b) => a.title.localeCompare(b.title));
+
+    sortedData.forEach(item => {
+        const entryBlock = document.createElement('div');
+        entryBlock.className = "glossary-card";
+        entryBlock.setAttribute('data-title', item.title.toLowerCase());
+        entryBlock.setAttribute('data-def', item.def.toLowerCase());
+        
+        entryBlock.innerHTML = `
+            <h4>${item.title} <span class="glossary-tag">${item.cat}</span></h4>
+            <p class="glossary-def">${item.def}</p>
+        `;
+        container.appendChild(entryBlock);
+    });
+}
+
+function filterGlossaryEntries() {
+    const query = document.getElementById('glossarySearchInput').value.toLowerCase();
+    const cards = document.querySelectorAll('.glossary-card');
+
+    cards.forEach(card => {
+        const titleText = card.getAttribute('data-title');
+        const defText = card.getAttribute('data-def');
+        
+        if (titleText.includes(query) || defText.includes(query)) {
+            card.style.display = "block";
+        } else {
+            card.style.display = "none";
+        }
+    });
+}
+
+// Render Initial UI State
+window.addEventListener('DOMContentLoaded', function() {
+    renderTimelineStructure("Song Map: Default 8-Bar System (Key of C Major)", "Active Track: none (Using internal generator)");
+    buildAlphabeticalGlossary();
+});
+</script>
+
+</body>
+</html>
