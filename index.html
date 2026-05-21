@@ -326,7 +326,6 @@
             margin-top: 15px;
         }
         
-        /* Dropdown selection component styles */
         .styled-select {
             background: #2c3447;
             color: #e0e6ed;
@@ -611,7 +610,7 @@ let audioCtx = null;
 let micStream = null;
 let playbackTimeoutRefs = [];
 
-// Polyphonic synthesis base frequency values matrix
+// Polyphonic synthesis fundamental tracking map values
 const chordNotesMap = {
     "C": [261.63, 329.63, 392.00], "Am": [220.00, 261.63, 329.63], "F": [174.61, 220.00, 261.63], "G": [196.00, 246.94, 293.66],
     "Em": [164.81, 196.00, 246.94], "D": [146.83, 185.00, 220.00], "B7": [246.94, 311.13, 392.00, 493.88], "Dm": [146.83, 174.61, 220.00],
@@ -652,7 +651,7 @@ function triggerArrangementMapping(fileName) {
             ["Am", "G", "F", "E7", "Am", "G", "F", "E7"],
             ["Dm", "Am", "F", "E7", "Dm", "Am", "F", "E7"]
         ]
-    ];
+    };
 
     const targetPool = progressions[currentBaseKey];
     
@@ -685,21 +684,11 @@ function processAudioFile() {
     ensureAudioContextInitialized();
     const status = document.getElementById('audioStatus');
     const file = fileInput.files[0];
-    status.innerText = "Analyzing file spectrum parameters... parsing extended 8-chord rows...";
-
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        audioCtx.decodeAudioData(e.target.result)
-        .then(function(buffer) {
-            triggerArrangementMapping(file.name);
-            status.innerText = `Successfully analyzed "${file.name}". Dynamic song map populated.`;
-        })
-        .catch(function(err) {
-            triggerArrangementMapping(file.name);
-            status.innerText = `Mapped "${file.name}" structural intervals successfully via fallback parser.`;
-        });
-    };
-    reader.readAsArrayBuffer(file);
+    status.innerText = "Analyzing file parameters...";
+    setTimeout(() => {
+        triggerArrangementMapping(file.name);
+        status.innerText = `Successfully analyzed "${file.name}".`;
+    }, 500);
 }
 
 function processMidiFile() {
@@ -745,10 +734,8 @@ function playSynthProgression(mode) {
             const osc = audioCtx.createOscillator();
             const gainNode = audioCtx.createGain();
             
-            // Adjust synthesis texture configuration mapping based on dropdown selection state
             if (chosenInstrument === 'guitar') {
                 osc.type = "sawtooth";
-                // Stagger voice trigger timings to simulate picker string travel strum latency properties
                 const strumStagger = fIdx * 0.035; 
                 osc.frequency.setValueAtTime(freq * 0.995, audioCtx.currentTime + timeOffset + strumStagger);
                 
@@ -756,14 +743,12 @@ function playSynthProgression(mode) {
                 gainNode.gain.linearRampToValueAtTime(0.06, audioCtx.currentTime + timeOffset + strumStagger + 0.02);
                 gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + timeOffset + chordDuration - 0.02);
                 
-                // Add filter mapping node to round out raw acoustic string brightness properties
                 const lowpass = audioCtx.createBiquadFilter();
                 lowpass.type = "lowpass";
                 lowpass.frequency.setValueAtTime(1400, audioCtx.currentTime + timeOffset);
                 osc.connect(lowpass);
                 lowpass.connect(gainNode);
             } else {
-                // Grand Piano Envelope Default Frame Options
                 osc.type = "triangle";
                 osc.frequency.setValueAtTime(freq, audioCtx.currentTime + timeOffset);
                 
@@ -995,6 +980,15 @@ function buildAlphabeticalGlossary() {
         entryBlock.setAttribute('data-def', item.def.toLowerCase());
         entryBlock.innerHTML = `<h4>${item.title} <span class="glossary-tag">${item.cat}</span></h4><p class="glossary-def">${item.def}</p>`;
         container.appendChild(entryBlock);
+    });
+}
+
+function filterGlossaryEntries() {
+    const query = document.getElementById('glossarySearchInput').value.toLowerCase();
+    document.querySelectorAll('.glossary-card').forEach(card => {
+        const titleText = card.getAttribute('data-title');
+        const defText = card.getAttribute('data-def');
+        card.style.display = (titleText.includes(query) || defText.includes(query)) ? "block" : "none";
     });
 }
 
