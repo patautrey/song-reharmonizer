@@ -124,6 +124,18 @@
             margin-bottom: 30px;
             border-left: 5px solid #00d2d3;
         }
+        .track-metadata {
+            display: inline-block;
+            font-size: 11px;
+            background: rgba(0, 210, 211, 0.1);
+            color: #00d2d3;
+            padding: 4px 10px;
+            border-radius: 4px;
+            border: 1px solid rgba(0, 210, 211, 0.2);
+            font-family: monospace;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
         .section-block {
             background: rgba(0, 0, 0, 0.25);
             border-radius: 8px;
@@ -282,7 +294,8 @@
     </div>
 
     <div class="display-deck">
-        <div style="font-weight: bold; font-size: 14px; color: #a4b0be; text-transform: uppercase; margin-bottom: 15px;" id="detectedTitle">Song Map: Default Pattern (Key of C Major)</div>
+        <div style="font-weight: bold; font-size: 14px; color: #a4b0be; text-transform: uppercase; margin-bottom: 5px;" id="detectedTitle">Song Map: Default Pattern (Key of C Major)</div>
+        <div class="track-metadata" id="trackNameDisplay">Active Track: none (Using internal generator)</div>
         
         <div id="timelineContainer">
             <div class="section-block">
@@ -427,7 +440,7 @@ function processAudioFile() {
                     { label: "Chorus", baseChords: ["G", "D", "Em", "C"], reharmChords: ["G", "D", "Em", "C"] },
                     { label: "Outro", baseChords: ["G", "C", "D", "G"], reharmChords: ["G", "C", "D", "G"] }
                 ];
-                renderTimelineStructure("Audio Stream: G Major Full Arrangement Mapped");
+                renderTimelineStructure("Audio Stream: G Major Full Arrangement Mapped", `Active Track: ${file.name}`);
                 status.innerText = `Successfully analyzed "${file.name}". Full song map parsed.`;
             }, 1200);
         })
@@ -455,7 +468,7 @@ function processMidiFile() {
             { label: "Guitar Solo", baseChords: ["Am", "G", "F", "E7"], reharmChords: ["Am", "G", "F", "E7"] },
             { label: "Bridge", baseChords: ["Dm", "Am", "F", "E7"], reharmChords: ["Dm", "Am", "F", "E7"] }
         ];
-        renderTimelineStructure("MIDI Stream: A Minor Array Configuration Loaded");
+        renderTimelineStructure("MIDI Stream: A Minor Array Configuration Loaded", `Active Track: ${file.name}`);
         status.innerText = `Successfully parsed note lanes for "${file.name}". Sections grouped clean.`;
     }, 1200);
 }
@@ -468,305 +481,4 @@ function toggleLiveRecording() {
 
     if (!isRecording) {
         initAudioContext();
-        navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(stream => {
-            isRecording = true;
-            micStream = stream;
-            btn.innerText = "Stop Live Stream Input";
-            btn.style.background = "#333";
-            status.innerText = "Listening... capture loop processing live chroma updates...";
-
-            window.liveAnalysisLoop = setTimeout(() => {
-                if (isRecording) {
-                    currentBaseKey = "C Major";
-                    songArrangementMap = [
-                        { label: "Live Performance Segment", baseChords: ["C", "Am", "F", "G"], reharmChords: ["C", "Am", "F", "G"] }
-                    ];
-                    renderTimelineStructure("Live Feed Engine Tracker Synced");
-                    status.innerText = "Running audio tracking logic metrics. guide tones fully anchored.";
-                }
-            }, 1800);
-        })
-        .catch(err => {
-            status.innerText = "Error: Input routing denied.";
-        });
-    } else {
-        isRecording = false;
-        btn.innerText = "Start Live Stream Input";
-        btn.style.background = "#eb4d4b";
-        status.innerText = "Microphone channel closed and returned to standby.";
-        if (micStream) {
-            micStream.getTracks().forEach(track => track.stop());
-        }
-        clearTimeout(window.liveAnalysisLoop);
-    }
-}
-
-// DYNAMIC SECTION INTERFACE RENDERING ENGINE
-function renderTimelineStructure(titleText) {
-    document.getElementById('detectedTitle').innerText = titleText;
-    const container = document.getElementById('timelineContainer');
-    container.innerHTML = ""; // Clear timeline view
-
-    songArrangementMap.forEach((section, sIdx) => {
-        const block = document.createElement('div');
-        block.className = "section-block";
-        
-        let rowContent = `<div class="section-header"><span class="section-type">${section.label}</span></div>`;
-        rowContent += `<div class="progression-row">`;
-        
-        section.baseChords.forEach((chord, cIdx) => {
-            rowContent += `
-                <div class="chord-wrapper">
-                    <span class="chord-title">Base</span>
-                    <div class="chord-card">${chord}</div>
-                </div>
-                <div class="arrow">→</div>
-                <div class="chord-wrapper">
-                    <span class="chord-title">Reharm</span>
-                    <div class="chord-card transformed" id="reharm-${sIdx}-${cIdx}">${section.reharmChords[cIdx]}</div>
-                </div>
-            `;
-            if (cIdx < section.baseChords.length - 1) {
-                rowContent += `<div class="arrow" style="margin-left:10px; margin-right:10px; color:#313d4a;">|</div>`;
-            }
-        });
-        
-        rowContent += `</div>`;
-        block.innerHTML = rowContent;
-        container.appendChild(block);
-    });
-
-    document.getElementById('explanation').innerText = "Structural layout processed. Select any matrix category below to reharmonize all tracks simultaneously.";
-}
-
-// Global Reharm Mapping Configuration Matrix
-const coreTransformMatrix = {
-    tritone: {
-        "C Major": ["Cmaj7", "Eb7", "Abmaj7", "Db7"],
-        "G Major": ["Gmaj7", "Bb7", "Ebmaj7", "Ab7"],
-        "A Minor": ["Am7", "C7", "Fmaj7", "Bb7"]
-    },
-    secondary: {
-        "C Major": ["C", "E7", "Am", "D7"],
-        "G Major": ["G", "B7", "Em", "A7"],
-        "A Minor": ["Am", "C7", "Dm", "E7"]
-    },
-    chromatic: {
-        "C Major": ["C", "Bb7", "Ab7", "Db7"],
-        "G Major": ["G", "F7", "Eb7", "Ab7"],
-        "A Minor": ["Am", "G7", "F7", "Bb7"]
-    },
-    backdoor: {
-        "C Major": ["Cmaj7", "Am7", "Fm7", "Bb7"],
-        "G Major": ["Gmaj7", "Em7", "Cm7", "F7"],
-        "A Minor": ["Am7", "Fmaj7", "Bdm7", "E7"]
-    },
-    modal: {
-        "C Major": ["Cmaj7", "Abmaj7", "Fm7", "Bb7"],
-        "G Major": ["Gmaj7", "Ebmaj7", "Cm7", "F7"],
-        "A Minor": ["Am7", "Dmaj7", "Fmaj7", "Gmaj7"]
-    },
-    planing: {
-        "C Major": ["Cmaj7", "A#maj7", "Amaj7", "G#maj7"],
-        "G Major": ["Gmaj7", "Fmaj7", "E#maj7", "D#maj7"],
-        "A Minor": ["Am7", "G#m7", "Gm7", "F#m7"]
-    },
-    polychords: {
-        "C Major": ["D/C", "F#/Am", "G/F", "F/G"],
-        "G Major": ["A/G", "C#/Em", "D/C", "C/D"],
-        "A Minor": ["B/Am", "D#/F", "E/Dm", "D/E"]
-    },
-    upper: {
-        "C Major": ["Cmaj9", "Am11", "Fmaj13", "G7b9"],
-        "G Major": ["Gmaj9", "Em11", "Cmaj13", "D7b9"],
-        "A Minor": ["Am9", "Fmaj11", "Cmaj13", "Esusb9"]
-    },
-    drop2: {
-        "C Major": ["C(Dr2)", "Am(Dr2)", "F(Dr2)", "G(Dr2)"],
-        "G Major": ["G(Dr2)", "Em(Dr2)", "C(Dr2)", "D(Dr2)"],
-        "A Minor": ["Am(Dr2)", "F(Dr2)", "C(Dr2)", "G(Dr2)"]
-    },
-    diminished: {
-        "C Major": ["C", "C#dim7", "Dm7", "D#dim7"],
-        "G Major": ["G", "G#dim7", "Am7", "A#dim7"],
-        "A Minor": ["Am", "A#dim7", "Bm7b5", "G#dim7"]
-    },
-    diatonic: {
-        "C Major": ["Em", "F", "Dm", "Em"],
-        "G Major": ["Bm", "C", "Am", "Bm"],
-        "A Minor": ["C", "Dm", "Bdim", "C"]
-    },
-    relative: {
-        "C Major": ["Am", "C", "Dm", "F"],
-        "G Major": ["Em", "G", "Am", "C"],
-        "A Minor": ["C", "Am", "F", "Dm"]
-    },
-    prolongation: {
-        "C Major": ["C", "F/C", "G/C", "C"],
-        "G Major": ["G", "C/G", "D/G", "G"],
-        "A Minor": ["Am", "Dm/A", "E/A", "Am"]
-    },
-    pedal: {
-        "C Major": ["C", "Am/C", "F/C", "G/C"],
-        "G Major": ["G", "Em/G", "C/G", "D/G"],
-        "A Minor": ["Am", "F/A", "C/A", "G/A"]
-    },
-    walkups: {
-        "C Major": ["C", "C/E", "F", "G"],
-        "G Major": ["G", "G/B", "C", "D"],
-        "A Minor": ["Am", "Am/C", "Dm", "Em"]
-    },
-    walkdowns: {
-        "C Major": ["C", "G/B", "Am", "Am/G"],
-        "G Major": ["G", "D/F#", "Em", "Em/D"],
-        "A Minor": ["Am", "Em/G", "F", "F/E"]
-    },
-    inversions: {
-        "C Major": ["C/E", "Am/C", "F/A", "G/B"],
-        "G Major": ["G/B", "Em/G", "C/E", "D/F#"],
-        "A Minor": ["Am/C", "F/A", "C/E", "G/B"]
-    },
-    nonchord: {
-        "C Major": ["Cadd9", "Asus4", "Fadd9", "G7sus4"],
-        "G Major": ["Gadd9", "Esus4", "Cadd9", "D7sus4"],
-        "A Minor": ["Amadd9", "Fsus4", "Cadd9", "E7sus4"]
-    },
-    circle: {
-        "C Major": ["Cmaj7", "Fmaj7", "Bdim7", "E7"],
-        "G Major": ["Gmaj7", "Cmaj7", "F#dim7", "B7"],
-        "A Minor": ["Am7", "Dm7", "Gmaj7", "Cmaj7"]
-    },
-    turnaround: {
-        "C Major": ["Cmaj7", "Am7", "Dm7", "G7"],
-        "G Major": ["Gmaj7", "Em7", "Am7", "D7"],
-        "A Minor": ["Am7", "Fmaj7", "Bm7b5", "E7"]
-    },
-    iiVI: {
-        "C Major": ["Dm7", "G7", "Cmaj7", "Ddim7"],
-        "G Major": ["Am7", "D7", "Gmaj7", "Adim7"],
-        "A Minor": ["Bm7b5", "E7", "Am7", "F#dim7"]
-    },
-    "iii-vi": {
-        "C Major": ["Em7", "Am7", "Dm7", "G7"],
-        "G Major": ["Bm7", "Em7", "Am7", "D7"],
-        "A Minor": ["Cmaj7", "Fmaj7", "Bm7b5", "E7"]
-    },
-    andalusian: {
-        "C Major": ["Am", "G", "F", "E7"],
-        "G Major": ["Em", "D", "C", "B7"],
-        "A Minor": ["Am", "G", "F", "E7"]
-    },
-    extensions: {
-        "C Major": ["Cmaj13", "Am9", "Fmaj9", "G13"],
-        "G Major": ["Gmaj13", "Em9", "Cmaj9", "D13"],
-        "A Minor": ["Am11", "Fmaj9", "Cmaj9", "E7b9"]
-    },
-    suspended: {
-        "C Major": ["Csus4", "C", "Gsus4", "G"],
-        "G Major": ["Gsus4", "G", "Dsus4", "D"],
-        "A Minor": ["Asus4", "Am", "Esus4", "E"]
-    },
-    pac: {
-        "C Major": ["C", "Am", "G7", "C"],
-        "G Major": ["G", "Em", "D7", "G"],
-        "A Minor": ["Am", "F", "E7", "Am"]
-    },
-    plagal: {
-        "C Major": ["C", "Am", "F", "C"],
-        "G Major": ["G", "Em", "C", "G"],
-        "A Minor": ["Am", "Dm", "F", "Am"]
-    },
-    half: {
-        "C Major": ["C", "Am", "F", "G"],
-        "G Major": ["G", "Em", "C", "D"],
-        "A Minor": ["Am", "F", "Dm", "E"]
-    },
-    fb6: {
-        "C Major": ["C6", "Am6", "F6", "G6"],
-        "G Major": ["G6", "Em6", "C6", "D6"],
-        "A Minor": ["Am6", "F6", "C6", "E6"]
-    },
-    fb64: {
-        "C Major": ["C/G", "Am/E", "F/C", "G/D"],
-        "G Major": ["G/D", "Em/B", "C/G", "D/A"],
-        "A Minor": ["Am/E", "F/C", "C/G", "E/B"]
-    },
-    fb43: {
-        "C Major": ["C7/G", "Am7/E", "F7/C", "G7/D"],
-        "G Major": ["G7/D", "Em7/B", "C7/G", "D7/A"],
-        "A Minor": ["Am7/E", "F7/C", "C7/G", "E7/B"]
-    },
-    fb52: {
-        "C Major": ["C7/Bb", "Am7/G", "F7/Eb", "G7/F"],
-        "G Major": ["G7/F", "Em7/D", "C7/Bb", "D7/C"],
-        "A Minor": ["Am7/G", "F7/Eb", "C7/Bb", "E7/D"]
-    }
-};
-
-const conceptualDescriptions = {
-    tritone: "TRITONE SUBSTITUTION: Dominant 7th chords are replaced by dominant 7ths a tritone away to smooth out chromatic voice leading lines.",
-    secondary: "SECONDARY DOMINANTS: Introduces intense chromatic dominant pressure to tonicize upcoming diatonic chord changes.",
-    chromatic: "CHROMATIC DOMINANTS: Unrelated functional dominant steps placed continuously back-to-back to force non-diatonic voice leading routes.",
-    backdoor: "BACKDOOR DOMINANT: Resolves into your target tonic major chord from an unexpected dominant seventh platform situated built on a bVII7 step.",
-    modal: "MODAL PARALLEL BORROWING: Exchanges default scale colors with equivalent step values sampled straight out of parallel keys.",
-    planing: "PARALLELISM PLANING: Shifts localized multi-note intervals straight up or down across the fretboard cleanly without altering individual spacing ratios.",
-    polychords: "POLY CHORDS: Compounds harmonic density by placing completely distinct major or minor triads directly on top of alternative core changes.",
-    upper: "UPPER STRUCTURE CHROMATICS: Locks underlying instruments into simple bass intervals while lead registers trace out multi-extended note stacks.",
-    drop2: "DROP 2 ARRANGEMENT: Re-voices chord voicings by shifting the second highest pitch cluster down exactly one octave.",
-    diminished: "DIMINISHED PASSING BLOCKS: Implements diminished 7th textures to bridge spatial gaps between secondary scale movements.",
-    diatonic: "DIATONIC TRIAD REPLACEMENT: Swaps focus areas directly with nearby minor chord variants residing right inside the identical key.",
-    relative: "RELATIVE COUPLING: Modulates the structural sequence back and forth cleanly between major intervals and corresponding relative minor points.",
-    prolongation: "HARMONIC PROLONGATION: Extends overall tonal duration metrics by introducing inverse buffer chords before passing forward completely.",
-    pedal: "PEDAL POINT TONICIZATION: Maintains an un-moving root pitch statement below an actively traveling higher system progression layout.",
-    walkups: "BASS LINE ASCENSIONS: Establishes rising voice-led paths right along lower tracking levels to build clean arrival momentum.",
-    walkdowns: "BASS LINE DESCENSIONS: Creates smooth downward step steps inside rhythm arrangements to smoothly connect key transitions.",
-    inversions: "SLASH CHORD INVERSIONS: Modifies fundamental chord balances by pinning structural intervals down into baseline positions.",
-    nonchord: "NON-CHORD EXTENSION RUNS: Adds functional suspensions or delayed notes that deliberately rub against baseline tones prior to cleanly resolving.",
-    circle: "CIRCLE OF FIFTHS CYCLING: Paths consecutive structural selections so every structural shift moves downstream via perfect fifths.",
-    turnaround: "CADENCE TURNAROUNDS: Implements standard formula patterns like I-vi-ii-V loops to easily reset formal phrases smoothly.",
-    iiVI: "ii-V-I COMPILATIONS: Establishes maximum functional pull using minor pre-dominants and dominant seventh chords to deliver powerful releases.",
-    "iii-vi": "EXTENDED CIRCLE CHAINS: Extends standard turnarounds backwards up your circle systems to spin down cascading sequences.",
-    andalusian: "ANDALUSIAN CADENCE: Drives dramatic, natural minor classical sequences built on an ancient descending chromatic bass frame.",
-    extensions: "HARMONIC EXTENSIONS: Pushes core voicings out past simple structures with sophisticated 9th, 11th, and 13th chord colors.",
-    suspended: "SUSPENDED HARMONIES: Suspends the structural definition of intervals to trap tension that beautifully resolves back down.",
-    pac: "PERFECT AUTHENTIC CADENCE: Delivers an ultimate structural finish by closing root-position dominant chords into matching root-position tonics.",
-    plagal: "PLAGAL AMEN CADENCES: Implements standard IV-I church resolutions to anchor phrase statements cleanly.",
-    half: "HALF CADENCE HALTS: Halts tracking structures mid-phrase directly on dominant chords to form open questions.",
-    fb6: "FIGURED BASS (6): Sets first inversion layouts where baseline scales rest completely on underlying 3rd degree levels.",
-    fb64: "FIGURED BASS (6/4): Commands second inversion arrays to cushion upcoming resolutions by transferring roots onto 5th points.",
-    fb43: "FIGURED BASS (4/3): Pinpoints secondary inversion seventh models by securing target roots precisely a fourth above lower voices.",
-    fb52: "FIGURED BASS (5/2): Places strict 3rd inversion environments where tense 7th intervals sit down inside bass foundations."
-};
-
-function applyReharm(key) {
-    const transformationGroup = coreTransformMatrix[key];
-    if (!transformationGroup) return;
-
-    const targetChords = transformationGroup[currentBaseKey];
-    if (!targetChords) return;
-
-    document.querySelectorAll('.mod-btn').forEach(btn => btn.classList.remove('active'));
-    event.currentTarget.classList.add('active');
-
-    // Dynamically iterate through every active structural block section on screen
-    songArrangementMap.forEach((section, sIdx) => {
-        section.baseChords.forEach((chord, cIdx) => {
-            const cardElement = document.getElementById(`reharm-${sIdx}-${cIdx}`);
-            if (cardElement) {
-                // If section loops have a matching sequence, reharmonize mathematically based on the selected matrix array
-                // For demonstration, each block updates to follow the advanced voice targets cleanly
-                cardElement.innerText = targetChords[cIdx % targetChords.length];
-                cardElement.classList.remove('transformed');
-                void cardElement.offsetWidth; // Trigger reflow to restart clean animation
-                cardElement.classList.add('transformed');
-            }
-        });
-    });
-
-    document.getElementById('explanation').innerText = conceptualDescriptions[key];
-}
-</script>
-
-</body>
-</html>
+        navigator.mediaDevices.getUserMedia({
