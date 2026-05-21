@@ -329,12 +329,7 @@
         <div class="track-metadata" id="trackNameDisplay">Active Track: none (Using internal generator)</div>
         
         <div id="timelineContainer">
-            <div class="section-block">
-                <div class="section-header"><span class="section-type">Default Loop Template</span></div>
-                <div class="progression-grid">
-                    </div>
             </div>
-        </div>
 
         <div class="analysis-text" id="explanation">
             Select any harmonic modification matrix below to parse your structural sections into advanced arrangements.
@@ -414,7 +409,7 @@ function switchInputTab(tabId, element) {
     element.classList.add('active');
 }
 
-// Global Core Structural Map State Definition (Expanded to full 8-Chord arrays)
+// Global Core Structural Map State Definition
 let currentBaseKey = "C Major";
 let songArrangementMap = [
     { 
@@ -441,7 +436,7 @@ function initAudioContext() {
 // 1. Process Audio File Input (.wav, .mp3)
 function processAudioFile() {
     const fileInput = document.getElementById('audioFile');
-    if (fileInput.files.length === 0) return;
+    if (!fileInput || fileInput.files.length === 0) return;
     
     initAudioContext();
     const status = document.getElementById('audioStatus');
@@ -477,7 +472,7 @@ function processAudioFile() {
 // 2. Process MIDI File Input (.mid)
 function processMidiFile() {
     const fileInput = document.getElementById('midiFile');
-    if (fileInput.files.length === 0) return;
+    if (!fileInput || fileInput.files.length === 0) return;
 
     const status = document.getElementById('midiStatus');
     const file = fileInput.files[0];
@@ -577,9 +572,6 @@ function renderTimelineStructure(titleText, trackMetaText) {
     document.getElementById('explanation').innerText = "Structural layout processed. Select any matrix category below to reharmonize all tracks simultaneously.";
 }
 
-// Initialize default layout map on start
-renderTimelineStructure("Song Map: Default 8-Bar System (Key of C Major)", "Active Track: none (Using internal generator)");
-
 // Global Reharm Mapping Configuration Matrix
 const coreTransformMatrix = {
     tritone: {
@@ -623,3 +615,26 @@ const coreTransformMatrix = {
         "A Minor": ["Am9", "Fmaj11", "Cmaj13", "Esusb9", "Am9", "Fmaj11", "Cmaj13", "Esusb9"]
     },
     drop2: {
+        "C Major": ["C(Dr2)", "Am(Dr2)", "F(Dr2)", "G(Dr2)", "C(Dr2)", "Am(Dr2)", "F(Dr2)", "G(Dr2)"],
+        "G Major": ["G(Dr2)", "Em(Dr2)", "C(Dr2)", "D(Dr2)", "G(Dr2)", "Em(Dr2)", "C(Dr2)", "D(Dr2)"],
+        "A Minor": ["Am(Dr2)", "F(Dr2)", "C(Dr2)", "G(Dr2)", "Am(Dr2)", "F(Dr2)", "C(Dr2)", "G(Dr2)"]
+    },
+    diminished: {
+        "C Major": ["C", "C#dim7", "Dm7", "D#dim7", "Em7", "Fdim7", "C/G", "G7"],
+        "G Major": ["G", "G#dim7", "Am7", "A#dim7", "Bm7", "Cdim7", "G/D", "D7"],
+        "A Minor": ["Am", "A#dim7", "Bm7b5", "G#dim7", "Am", "C#dim7", "Dm", "E7"]
+    },
+    diatonic: {
+        "C Major": ["Em", "F", "Dm", "Em", "Am", "Dm", "Em", "F"],
+        "G Major": ["Bm", "C", "Am", "Bm", "Em", "Am", "Bm", "C"],
+        "A Minor": ["C", "Dm", "Bdim", "C", "F", "Bdim", "C", "Dm"]
+    },
+    relative: {
+        "C Major": ["Am", "C", "Dm", "F", "Am", "C", "Dm", "G"],
+        "G Major": ["Em", "G", "Am", "C", "Em", "G", "Am", "D"],
+        "A Minor": ["C", "Am", "F", "Dm", "C", "Am", "F", "E7"]
+    },
+    prolongation: {
+        "C Major": ["C", "F/C", "G/C", "C", "Am", "Dm/A", "E/A", "Am"],
+        "G Major": ["G", "C/G", "D/G", "G", "Em", "Am/E", "B/E", "Em"],
+        "A Minor":
