@@ -40,7 +40,7 @@
             background: #1e232e;
             border-radius: 8px;
             padding: 20px;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             border: 1px solid #2c3447;
         }
         .input-tabs {
@@ -53,7 +53,7 @@
             background: #2c3447;
             color: #a4b0be;
             border: 1px solid #3d4862;
-            padding: 10px;
+            padding: 12px;
             border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
@@ -74,7 +74,7 @@
         .tab-content {
             display: none;
             background: #131720;
-            padding: 15px;
+            padding: 20px;
             border-radius: 6px;
             border: 1px solid #2c3447;
         }
@@ -90,6 +90,7 @@
             cursor: pointer;
             font-size: 14px;
             border: 1px solid #3d4862;
+            font-weight: 600;
         }
         .file-label:hover {
             background: #3d4862;
@@ -98,10 +99,21 @@
             display: none;
         }
         .status-text {
-            margin-top: 10px;
+            margin-top: 12px;
             font-size: 13px;
             color: #84817a;
             font-family: monospace;
+        }
+        .action-btn {
+            background: #eb4d4b; 
+            color: white; 
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-size: 13px;
         }
 
         /* Processing Panel Display */
@@ -229,7 +241,7 @@
         </div>
 
         <div id="record-tab" class="tab-content">
-            <button class="tab-btn" id="recordBtn" onclick="toggleLiveRecording()" style="background: #eb4d4b; color: white; width: auto; display: inline-block; padding: 10px 20px;">Start Live Stream Input</button>
+            <button class="action-btn" id="recordBtn" onclick="toggleLiveRecording()">Start Live Stream Input</button>
             <div class="status-text" id="recordStatus">Microphone access channel closed.</div>
         </div>
     </div>
@@ -326,7 +338,6 @@
 </div>
 
 <script>
-// UI Tab Handling Logic
 function switchInputTab(tabId, element) {
     document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -335,11 +346,9 @@ function switchInputTab(tabId, element) {
     element.classList.add('active');
 }
 
-// Global Core Theory State Map
 let currentBaseKey = "C Major";
 let currentOriginalChords = ["C", "Am", "F", "G"];
 
-// Simulated Audio FFT + Chroma Template Matching Recognition System
 function processAudioFile() {
     const fileInput = document.getElementById('audioFile');
     if (fileInput.files.length === 0) return;
@@ -348,7 +357,6 @@ function processAudioFile() {
     status.innerText = "Analyzing file spectrum via Web Audio FFT API...";
 
     setTimeout(() => {
-        // Mocking a detected alternative radio loop via chromagram template comparison
         currentOriginalChords = ["G", "Em", "C", "D"];
         currentBaseKey = "G Major";
         updateBaseDisplay("Audio Sync: G Major Progression Detected");
@@ -377,7 +385,6 @@ function toggleLiveRecording() {
     const status = document.getElementById('recordStatus');
 
     if (!isRecording) {
-        // Request Web Audio stream context channels
         navigator.mediaDevices.getUserMedia({ audio: true })
         .then(stream => {
             isRecording = true;
@@ -385,7 +392,6 @@ function toggleLiveRecording() {
             btn.style.background = "#333";
             status.innerText = "Listening stream hot... running matrix vector cross-correlations...";
             
-            // Simulating continuous live template updates
             window.recordMock = setTimeout(() => {
                 currentOriginalChords = ["C", "F", "G", "C"];
                 currentBaseKey = "C Major";
@@ -411,7 +417,6 @@ function updateBaseDisplay(titleText) {
     document.getElementById('orig3').innerText = currentOriginalChords[2];
     document.getElementById('orig4').innerText = currentOriginalChords[3];
     
-    // Automatically reset current transformations to avoid mismatched key relationships
     document.querySelectorAll('.mod-btn').forEach(btn => btn.classList.remove('active'));
     document.getElementById('ch1').innerText = currentOriginalChords[0];
     document.getElementById('ch2').innerText = currentOriginalChords[1];
@@ -420,7 +425,6 @@ function updateBaseDisplay(titleText) {
     document.getElementById('explanation').innerText = "Harmonic baseline updated. Choose a modification matrix below to compute alternative pathways.";
 }
 
-// Reharmonization Mapping Matrix
 const coreTransformMatrix = {
     tritone: {
         "C Major": ["Cmaj7", "Eb7", "Abmaj7", "Db7"],
@@ -623,7 +627,6 @@ function applyReharm(key) {
     const transformationGroup = coreTransformMatrix[key];
     if (!transformationGroup) return;
 
-    // Detect transformation using active state context key (C Major, G Major, A Minor)
     const targetChords = transformationGroup[currentBaseKey];
     if (!targetChords) return;
 
