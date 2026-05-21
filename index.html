@@ -328,7 +328,7 @@
             border-color: #fff;
         }
 
-        /* Theory Academy Glossary View Styles Matrix */
+        /* Theory Academy Glossary View Styles */
         .glossary-wrapper {
             background: #1e232e;
             border-radius: 8px;
@@ -356,9 +356,6 @@
             border-radius: 6px;
             padding: 20px;
             margin-bottom: 15px;
-            border-top: 1px solid rgba(255,255,255,0.01);
-            border-right: 1px solid rgba(255,255,255,0.01);
-            border-bottom: 1px solid rgba(255,255,255,0.01);
         }
         .glossary-card h4 {
             margin: 0 0 8px 0;
@@ -547,9 +544,9 @@ function ensureAudioContextInitialized() {
     }
 }
 
-// Procedural Ingestion Generation Engine. Computes unique multi-row keys and chord blocks using string length values as generation seeds.
+// Procedural Ingestion Generation Engine. Computes unique keys and chords algorithmically using string properties as safe random seeds.
 function triggerArrangementMapping(fileName) {
-    const seed = fileName.length;
+    const seed = fileName.length + 3; // Modulate index calculation mapping offset
     const availableKeys = ["C Major", "G Major", "A Minor"];
     currentBaseKey = availableKeys[seed % availableKeys.length];
 
@@ -704,7 +701,7 @@ function renderTimelineStructure(titleText, trackMetaText) {
     document.getElementById('explanation').innerText = "Structural layout processed. Select any matrix category below to reharmonize all tracks simultaneously.";
 }
 
-// Global Reharm Mapping Configuration Matrix (FIXED SYNTAX ARRAY)
+// Global Reharm Mapping Configuration Matrix (CLEAN VALIDATED VERSION)
 const coreTransformMatrix = {
     tritone: {
         "C Major": ["Cmaj7", "Eb7", "Abmaj7", "Db7", "Cmaj7", "Eb7", "Abmaj7", "Db7"],
