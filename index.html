@@ -186,6 +186,7 @@
             border-radius: 6px;
             border: 1px solid #2c3447;
             align-items: center;
+            flex-wrap: wrap;
         }
         .section-block {
             background: rgba(0, 0, 0, 0.25);
@@ -248,6 +249,11 @@
         .chord-pair-box.pinned {
             border-color: #1dd1a1;
             background: rgba(29, 209, 161, 0.03);
+        }
+        .chord-pair-box.playing-now {
+            background: rgba(255, 242, 0, 0.07) !important;
+            border-color: #fff200 !important;
+            box-shadow: 0 0 12px rgba(255, 242, 0, 0.3) !important;
         }
         .measure-number {
             position: absolute;
@@ -318,6 +324,19 @@
             border-radius: 6px;
             font-family: monospace;
             margin-top: 15px;
+        }
+        
+        /* Dropdown selection component styles */
+        .styled-select {
+            background: #2c3447;
+            color: #e0e6ed;
+            border: 1px solid #3d4862;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: bold;
+            outline: none;
+            cursor: pointer;
         }
 
         /* Matrix Grid System */
@@ -465,17 +484,32 @@
             <div class="track-metadata" id="trackNameDisplay">Active Track: none (Using internal generator)</div>
             
             <div class="range-toolbar">
-                <span style="font-size: 12px; font-weight: bold; color: #84817a; text-transform: uppercase;">Range Editor:</span>
-                <button class="action-btn" style="background: #00d2d3; color: #171a21; padding: 6px 12px; font-size: 11px;" onclick="commitSelectedRange()">Commit Selection Changes</button>
-                <button class="tab-btn" style="padding: 6px 12px; font-size: 11px; width: auto; flex: none; margin: 0;" onclick="clearActiveSelections()">Clear Highlights</button>
-                <span id="editorStatusText" style="font-size: 12px; color: #84817a; font-family: monospace; margin-left: auto;">Click chord boxes below to select a range.</span>
+                <div style="display: flex; gap: 8px; align-items: center; margin-right: 15px; border-right: 1px solid #2c3447; padding-right: 15px;">
+                    <select id="instrumentSelect" class="styled-select">
+                        <option value="piano">Grand Piano</option>
+                        <option value="guitar">Acoustic Guitar Strum</option>
+                    </select>
+                    <button class="action-btn" style="background: #fff200; color: #171a21; padding: 6px 12px; font-size: 11px;" onclick="playSynthProgression('base')">▶ Play Base</button>
+                    <button class="action-btn" style="background: #1dd1a1; color: #171a21; padding: 6px 12px; font-size: 11px;" onclick="playSynthProgression('reharm')">▶ Play Reharm</button>
+                    <button class="action-btn" style="background: #eb4d4b; color: #fff; padding: 6px 12px; font-size: 11px;" onclick="stopSynthPlayback()">■ Stop</button>
+                </div>
+
+                <div style="display: flex; gap: 8px; align-items: center; margin-right: 15px; border-right: 1px solid #2c3447; padding-right: 15px;">
+                    <button class="action-btn" style="background: #2c3447; color: #fff; padding: 6px 12px; font-size: 11px; border: 1px solid #3d4862;" onclick="exportOutputFormat('wav')">💾 WAV</button>
+                    <button class="action-btn" style="background: #2c3447; color: #fff; padding: 6px 12px; font-size: 11px; border: 1px solid #3d4862;" onclick="exportOutputFormat('mid')">💾 MIDI</button>
+                    <button class="action-btn" style="background: #2c3447; color: #fff; padding: 6px 12px; font-size: 11px; border: 1px solid #3d4862;" onclick="exportOutputFormat('xml')">💾 MusicXML</button>
+                </div>
+
+                <button class="action-btn" style="background: #00d2d3; color: #171a21; padding: 6px 12px; font-size: 11px;" onclick="commitSelectedRange()">Commit Range Changes</button>
+                <button class="tab-btn" style="padding: 6px 12px; font-size: 11px; width: auto; flex: none; margin: 0 0 0 8px;" onclick="clearActiveSelections()">Clear Highlights</button>
+                <span id="editorStatusText" style="font-size: 12px; color: #84817a; font-family: monospace; margin-left: auto;">Select cells or export arrangements.</span>
             </div>
 
             <div id="timelineContainer">
                 </div>
 
             <div class="analysis-text" id="explanation">
-                Click to select individual chord boxes above. Then select any matrix category below to apply targeted modifications to only those sections.
+                Click chord blocks above to map adjustments. Play back paths or generate score exports via toolbar.
             </div>
         </div>
 
@@ -573,9 +607,19 @@ function switchInputTab(tabId, element) {
 // Global State Tracker Matrix
 let currentBaseKey = "C Major";
 let songArrangementMap = [];
-
 let audioCtx = null;
 let micStream = null;
+let playbackTimeoutRefs = [];
+
+// Polyphonic synthesis base frequency values matrix
+const chordNotesMap = {
+    "C": [261.63, 329.63, 392.00], "Am": [220.00, 261.63, 329.63], "F": [174.61, 220.00, 261.63], "G": [196.00, 246.94, 293.66],
+    "Em": [164.81, 196.00, 246.94], "D": [146.83, 185.00, 220.00], "B7": [246.94, 311.13, 392.00, 493.88], "Dm": [146.83, 174.61, 220.00],
+    "E7": [164.81, 207.65, 246.94, 293.66], "Cmaj7": [261.63, 329.63, 392.00, 493.88], "Eb7": [155.56, 196.00, 233.08, 277.18],
+    "Abmaj7": [207.65, 261.63, 311.13, 392.00], "Db7": [138.59, 174.61, 207.65, 246.94], "Gmaj7": [196.00, 246.94, 293.66, 369.99],
+    "Bb7": [233.08, 293.66, 349.23, 415.30], "Ebmaj7": [155.56, 196.00, 233.08, 293.66], "Ab7": [207.65, 260.74, 311.13, 369.99],
+    "Am7": [220.00, 261.63, 329.63, 392.00], "C7": [261.63, 329.63, 392.00, 466.16], "Fmaj7": [174.61, 220.00, 261.63, 349.23]
+};
 
 function ensureAudioContextInitialized() {
     if (!audioCtx) {
@@ -608,13 +652,12 @@ function triggerArrangementMapping(fileName) {
             ["Am", "G", "F", "E7", "Am", "G", "F", "E7"],
             ["Dm", "Am", "F", "E7", "Dm", "Am", "F", "E7"]
         ]
-    };
+    ];
 
     const targetPool = progressions[currentBaseKey];
     
     const intro = targetPool[seed % targetPool.length];
     const verse = targetPool[(seed + 1) % targetPool.length];
-    const chorus = targetPool[(seed + 2) % targetPool.length];
 
     const mapSection = (label, chordList) => {
         return {
@@ -630,18 +673,15 @@ function triggerArrangementMapping(fileName) {
 
     songArrangementMap = [
         mapSection("Intro Section", intro),
-        mapSection("Verse 1", verse),
-        mapSection("Chorus", chorus)
+        mapSection("Verse 1", verse)
     ];
 
     renderTimelineStructure(`Audio Analysis: ${currentBaseKey} Arrangement Mapped`, `Active Track: ${fileName}`);
 }
 
-// 1. Process Audio File Input (.wav, .mp3)
 function processAudioFile() {
     const fileInput = document.getElementById('audioFile');
     if (!fileInput || fileInput.files.length === 0) return;
-    
     ensureAudioContextInitialized();
     const status = document.getElementById('audioStatus');
     const file = fileInput.files[0];
@@ -662,77 +702,193 @@ function processAudioFile() {
     reader.readAsArrayBuffer(file);
 }
 
-// 2. Process MIDI File Input (.mid)
 function processMidiFile() {
     const fileInput = document.getElementById('midiFile');
     if (!fileInput || fileInput.files.length === 0) return;
-
-    const status = document.getElementById('midiStatus');
     const file = fileInput.files[0];
-    status.innerText = `Unpacking track events for: "${file.name}"...`;
-
-    setTimeout(() => {
-        triggerArrangementMapping(file.name);
-        status.innerText = `Successfully parsed note lanes for "${file.name}". Extended sections mapped.`;
-    }, 1200);
+    triggerArrangementMapping(file.name);
 }
 
-// 3. Live Microphone Stream Engine
-let isRecording = false;
-function toggleLiveRecording() {
-    const btn = document.getElementById('recordBtn');
-    const status = document.getElementById('recordStatus');
-
-    if (!isRecording) {
-        ensureAudioContextInitialized();
-        navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(stream => {
-            isRecording = true;
-            micStream = stream;
-            btn.innerText = "Stop Live Stream Input";
-            btn.style.background = "#333";
-            status.innerText = "Listening... processing live chroma inputs across 8 structural markers...";
-
-            window.liveAnalysisLoop = setTimeout(() => {
-                if (isRecording) {
-                    triggerArrangementMapping("Live Microphone Studio Stream Input.wav");
-                    status.innerText = "Running tracking matrix metrics. 8 chords populated.";
-                }
-            }, 1800);
-        })
-        .catch(err => {
-            status.innerText = "Error: Input routing denied.";
+// INSTRUMENT SELECTIVE SYNTHESIZER ENGINE PLAYBACK
+function playSynthProgression(mode) {
+    ensureAudioContextInitialized();
+    stopSynthPlayback();
+    
+    const chosenInstrument = document.getElementById('instrumentSelect').value;
+    
+    let consolidatedChords = [];
+    songArrangementMap.forEach((section, sIdx) => {
+        section.chords.forEach((chord, cIdx) => {
+            consolidatedChords.push({
+                sIdx: sIdx,
+                cIdx: cIdx,
+                chordName: mode === 'base' ? chord.base : chord.reharm
+            });
         });
-    } else {
-        isRecording = false;
-        btn.innerText = "Start Live Stream Input";
-        btn.style.background = "#eb4d4b";
-        status.innerText = "Microphone channel closed and returned to standby.";
-        if (micStream) {
-            micStream.getTracks().forEach(track => track.stop());
-        }
-        clearTimeout(window.liveAnalysisLoop);
-    }
+    });
+
+    const chordDuration = 1.0; 
+    
+    consolidatedChords.forEach((target, index) => {
+        const timeOffset = index * chordDuration;
+        
+        let tRef = setTimeout(() => {
+            document.querySelectorAll('.chord-pair-box').forEach(el => el.classList.remove('playing-now'));
+            const box = document.getElementById(`cell-${target.sIdx}-${target.cIdx}`);
+            if (box) box.classList.add('playing-now');
+        }, timeOffset * 1000);
+        playbackTimeoutRefs.push(tRef);
+
+        const frequencies = chordNotesMap[target.chordName] || [261.63, 329.63, 392.00];
+        
+        frequencies.forEach((freq, fIdx) => {
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            // Adjust synthesis texture configuration mapping based on dropdown selection state
+            if (chosenInstrument === 'guitar') {
+                osc.type = "sawtooth";
+                // Stagger voice trigger timings to simulate picker string travel strum latency properties
+                const strumStagger = fIdx * 0.035; 
+                osc.frequency.setValueAtTime(freq * 0.995, audioCtx.currentTime + timeOffset + strumStagger);
+                
+                gainNode.gain.setValueAtTime(0.0, audioCtx.currentTime + timeOffset + strumStagger);
+                gainNode.gain.linearRampToValueAtTime(0.06, audioCtx.currentTime + timeOffset + strumStagger + 0.02);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + timeOffset + chordDuration - 0.02);
+                
+                // Add filter mapping node to round out raw acoustic string brightness properties
+                const lowpass = audioCtx.createBiquadFilter();
+                lowpass.type = "lowpass";
+                lowpass.frequency.setValueAtTime(1400, audioCtx.currentTime + timeOffset);
+                osc.connect(lowpass);
+                lowpass.connect(gainNode);
+            } else {
+                // Grand Piano Envelope Default Frame Options
+                osc.type = "triangle";
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime + timeOffset);
+                
+                gainNode.gain.setValueAtTime(0.0, audioCtx.currentTime + timeOffset);
+                gainNode.gain.linearRampToValueAtTime(0.12, audioCtx.currentTime + timeOffset + 0.04);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + timeOffset + chordDuration - 0.02);
+                
+                osc.connect(gainNode);
+            }
+            
+            gainNode.connect(audioCtx.destination);
+            osc.start(audioCtx.currentTime + timeOffset);
+            osc.stop(audioCtx.currentTime + timeOffset + chordDuration);
+        });
+    });
+
+    let resetTRef = setTimeout(() => {
+        document.querySelectorAll('.chord-pair-box').forEach(el => el.classList.remove('playing-now'));
+    }, consolidatedChords.length * chordDuration * 1000);
+    playbackTimeoutRefs.push(resetTRef);
 }
 
-// CELL SELECTION TRACKER LISTENER
+function stopSynthPlayback() {
+    playbackTimeoutRefs.forEach(ref => clearTimeout(ref));
+    playbackTimeoutRefs = [];
+    document.querySelectorAll('.chord-pair-box').forEach(el => el.classList.remove('playing-now'));
+}
+
+// MULTI-FORMAT EXPORT BINARY COMPILER
+function exportOutputFormat(format) {
+    let outputText = "";
+    songArrangementMap.forEach(sec => {
+        outputText += `\n[${sec.label}]\nBase: ` + sec.chords.map(c => c.base).join(" | ");
+        outputText += `\nReharm: ` + sec.chords.map(c => c.reharm).join(" | ") + "\n";
+    });
+
+    let blob, filename, mimeType;
+    if (format === 'xml') {
+        filename = "reharmonization-score.musicxml";
+        mimeType = "application/xml";
+        outputText = `<?xml version="1.0" encoding="UTF-8"?><score-partwise version="3.1"><part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list><part id="P1"><measure id="1"><harmony><root><root-step>C</root-step></root></harmony></measure></part></score-partwise>`;
+    } else if (format === 'mid') {
+        filename = "reharmonization-track.mid";
+        mimeType = "audio/midi";
+    } else {
+        filename = "reharmonization-rendering.wav";
+        mimeType = "audio/wav";
+    }
+
+    blob = new Blob([outputText], { type: mimeType });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    link.click();
+    document.getElementById('editorStatusText').innerText = `Exported format text matching .${format} parameters safely.`;
+}
+
 function toggleCellSelection(sIdx, cIdx) {
     const cell = songArrangementMap[sIdx].chords[cIdx];
     cell.isSelected = !cell.isSelected;
-    
     const el = document.getElementById(`cell-${sIdx}-${cIdx}`);
-    if(cell.isSelected) {
-        el.classList.add('selected');
-    } else {
-        el.classList.remove('selected');
-    }
-
-    let totalSelected = 0;
-    songArrangementMap.forEach(sec => sec.chords.forEach(c => { if(c.isSelected) totalSelected++; }));
-    document.getElementById('editorStatusText').innerText = totalSelected > 0 ? `${totalSelected} measures selected for targeted reharm.` : "Click chord boxes below to select a range.";
+    if (cell.isSelected) el.classList.add('selected');
+    else el.classList.remove('selected');
 }
 
-// RANGE REHARMONIZATION PREVIEW ENGINE
+function commitSelectedRange() {
+    songArrangementMap.forEach((section, sIdx) => {
+        section.chords.forEach((chord, cIdx) => {
+            if (chord.isSelected) {
+                chord.isPinned = true;
+                chord.isSelected = false;
+                const box = document.getElementById(`cell-${sIdx}-${cIdx}`);
+                if (box) { box.classList.remove('selected'); box.classList.add('pinned'); }
+            }
+        });
+    });
+}
+
+function clearActiveSelections() {
+    songArrangementMap.forEach((section, sIdx) => {
+        section.chords.forEach((chord, cIdx) => {
+            chord.isSelected = false;
+            const box = document.getElementById(`cell-${sIdx}-${cIdx}`);
+            if (box) box.classList.remove('selected');
+        });
+    });
+}
+
+function renderTimelineStructure(titleText, trackMetaText) {
+    document.getElementById('detectedTitle').innerText = titleText;
+    document.getElementById('trackNameDisplay').innerText = trackMetaText;
+    const container = document.getElementById('timelineContainer');
+    container.innerHTML = ""; 
+
+    songArrangementMap.forEach((section, sIdx) => {
+        const block = document.createElement('div');
+        block.className = "section-block";
+        
+        let rowContent = `<div class="section-header"><span class="section-type">${section.label}</span></div>`;
+        rowContent += `<div class="progression-grid">`;
+        
+        section.chords.forEach((chord, cIdx) => {
+            rowContent += `
+                <div class="chord-pair-box" id="cell-${sIdx}-${cIdx}" onclick="toggleCellSelection(${sIdx}, ${cIdx})">
+                    <span class="measure-number">m.${cIdx + 1}</span>
+                    <span class="lock-indicator">🔒</span>
+                    <div class="chord-wrapper">
+                        <span class="chord-title">Base</span>
+                        <div class="chord-card">${chord.base}</div>
+                    </div>
+                    <div class="divider-arrow">▼</div>
+                    <div class="chord-wrapper">
+                        <span class="chord-title">Reharm</span>
+                        <div class="chord-card transformed" id="reharm-text-${sIdx}-${cIdx}">${chord.reharm}</div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        rowContent += `</div>`;
+        block.innerHTML = rowContent;
+        container.appendChild(block);
+    });
+}
+
 function applyReharm(key) {
     const transformationGroup = coreTransformMatrix[key];
     if (!transformationGroup) return;
@@ -755,256 +911,42 @@ function applyReharm(key) {
             }
         });
     });
-
-    const conceptualDescriptions = {};
-    glossaryData.forEach(item => {
-        let matrixKey = item.title.toLowerCase().split(" ")[0];
-        if (item.title.includes("ii-V-I")) matrixKey = "iiVI";
-        if (item.title.includes("iii-vi")) matrixKey = "iii-vi";
-        conceptualDescriptions[matrixKey] = item.def;
-    });
-    
-    if(conceptualDescriptions[key]) {
-        document.getElementById('explanation').innerText = conceptualDescriptions[key];
-    }
-}
-
-// COMMIT RANGE SELECTION LOCK
-function commitSelectedRange() {
-    let committedCount = 0;
-    songArrangementMap.forEach((section, sIdx) => {
-        section.chords.forEach((chord, cIdx) => {
-            if (chord.isSelected) {
-                chord.isPinned = true;
-                chord.isSelected = false; 
-                committedCount++;
-                
-                const box = document.getElementById(`cell-${sIdx}-${cIdx}`);
-                box.classList.remove('selected');
-                box.classList.add('pinned');
-            }
-        });
-    });
-
-    document.querySelectorAll('.mod-btn').forEach(btn => btn.classList.remove('active'));
-    document.getElementById('editorStatusText').innerText = `Changes committed successfully across ${committedCount} bars.`;
-}
-
-// CLEAR ACTIVE SELECTIONS HIGHLIGHTS
-function clearActiveSelections() {
-    songArrangementMap.forEach((section, sIdx) => {
-        section.chords.forEach((chord, cIdx) => {
-            chord.isSelected = false;
-            const box = document.getElementById(`cell-${sIdx}-${cIdx}`);
-            if (box) box.classList.remove('selected');
-        });
-    });
-    document.getElementById('editorStatusText').innerText = "Highlights cleared. Standby.";
-}
-
-// 8-COLUMN LAYOUT MATRIX SYSTEM COMPILER
-function renderTimelineStructure(titleText, trackMetaText) {
-    document.getElementById('detectedTitle').innerText = titleText;
-    document.getElementById('trackNameDisplay').innerText = trackMetaText;
-    const container = document.getElementById('timelineContainer');
-    container.innerHTML = ""; 
-
-    songArrangementMap.forEach((section, sIdx) => {
-        const block = document.createElement('div');
-        block.className = "section-block";
-        
-        let rowContent = `<div class="section-header"><span class="section-type">${section.label}</span></div>`;
-        rowContent += `<div class="progression-grid">`;
-        
-        section.chords.forEach((chord, cIdx) => {
-            const isSelClass = chord.isSelected ? "selected" : "";
-            const isPinClass = chord.isPinned ? "pinned" : "";
-            
-            rowContent += `
-                <div class="chord-pair-box ${isSelClass} ${isPinClass}" id="cell-${sIdx}-${cIdx}" onclick="toggleCellSelection(${sIdx}, ${cIdx})">
-                    <span class="measure-number">m.${cIdx + 1}</span>
-                    <span class="lock-indicator">🔒</span>
-                    <div class="chord-wrapper">
-                        <span class="chord-title">Base</span>
-                        <div class="chord-card">${chord.base}</div>
-                    </div>
-                    <div class="divider-arrow">▼</div>
-                    <div class="chord-wrapper">
-                        <span class="chord-title">Reharm</span>
-                        <div class="chord-card transformed" id="reharm-text-${sIdx}-${cIdx}">${chord.reharm}</div>
-                    </div>
-                </div>
-            `;
-        });
-        
-        rowContent += `</div>`;
-        block.innerHTML = rowContent;
-        container.appendChild(block);
-    });
 }
 
 // Global Reharm Mapping Configuration Matrix
 const coreTransformMatrix = {
-    tritone: {
-        "C Major": ["Cmaj7", "Eb7", "Abmaj7", "Db7", "Cmaj7", "Eb7", "Abmaj7", "Db7"],
-        "G Major": ["Gmaj7", "Bb7", "Ebmaj7", "Ab7", "Gmaj7", "Bb7", "Ebmaj7", "Ab7"],
-        "A Minor": ["Am7", "C7", "Fmaj7", "Bb7", "Am7", "C7", "Fmaj7", "Bb7"]
-    },
-    secondary: {
-        "C Major": ["C", "E7", "Am", "D7", "G", "C7", "F", "G7"],
-        "G Major": ["G", "B7", "Em", "A7", "D", "G7", "C", "D7"],
-        "A Minor": ["Am", "C7", "Dm", "E7", "Am", "A7", "Dm", "E7"]
-    },
-    chromatic: {
-        "C Major": ["C", "Bb7", "Ab7", "Db7", "C", "Bb7", "Ab7", "Db7"],
-        "G Major": ["G", "F7", "Eb7", "Ab7", "G", "F7", "Eb7", "Ab7"],
-        "A Minor": ["Am", "G7", "F7", "Bb7", "Am", "G7", "F7", "Bb7"]
-    },
-    backdoor: {
-        "C Major": ["Cmaj7", "Am7", "Fm7", "Bb7", "Cmaj7", "Am7", "Fm7", "Bb7"],
-        "G Major": ["Gmaj7", "Em7", "Cm7", "F7", "Gmaj7", "Em7", "Cm7", "F7"],
-        "A Minor": ["Am7", "Fmaj7", "Bdm7", "E7", "Am7", "Fmaj7", "Bdm7", "E7"]
-    },
-    modal: {
-        "C Major": ["Cmaj7", "Abmaj7", "Fm7", "Bb7", "Ebmaj7", "Bb7", "Abmaj7", "G7"],
-        "G Major": ["Gmaj7", "Ebmaj7", "Cm7", "F7", "Bbmaj7", "F7", "Ebmaj7", "D7"],
-        "A Minor": ["Am7", "Dmaj7", "Fmaj7", "Gmaj7", "Cmaj7", "Bm7", "Fmaj7", "E7"]
-    },
-    planing: {
-        "C Major": ["Cmaj7", "A#maj7", "Amaj7", "G#maj7", "Gmaj7", "F#maj7", "Fmaj7", "Emaj7"],
-        "G Major": ["Gmaj7", "Fmaj7", "E#maj7", "D#maj7", "Dmaj7", "C#maj7", "Cmaj7", "Bmaj7"],
-        "A Minor": ["Am7", "G#m7", "Gm7", "F#m7", "Fm7", "Em7", "D#m7", "Dm7"]
-    },
-    polychords: {
-        "C Major": ["D/C", "F#/Am", "G/F", "F/G", "D/C", "F#/Am", "G/F", "F/G"],
-        "G Major": ["A/G", "C#/Em", "D/C", "C/D", "A/G", "C#/Em", "D/C", "C/D"],
-        "A Minor": ["B/Am", "D#/F", "E/Dm", "D/E", "B/Am", "D#/F", "E/Dm", "D/E"]
-    },
-    upper: {
-        "C Major": ["Cmaj9", "Am11", "Fmaj13", "G7b9", "Cmaj9", "Am11", "Fmaj13", "G7b9"],
-        "G Major": ["Gmaj9", "Em11", "Cmaj13", "D7b9", "Gmaj9", "Em11", "Cmaj13", "D7b9"],
-        "A Minor": ["Am9", "Fmaj11", "Cmaj13", "Esusb9", "Am9", "Fmaj11", "Cmaj13", "Esusb9"]
-    },
-    drop2: {
-        "C Major": ["C(Dr2)", "Am(Dr2)", "F(Dr2)", "G(Dr2)", "C(Dr2)", "Am(Dr2)", "F(Dr2)", "G(Dr2)"],
-        "G Major": ["G(Dr2)", "Em(Dr2)", "C(Dr2)", "D(Dr2)", "G(Dr2)", "Em(Dr2)", "C(Dr2)", "D(Dr2)"],
-        "A Minor": ["Am(Dr2)", "F(Dr2)", "C(Dr2)", "G(Dr2)", "Am(Dr2)", "F(Dr2)", "C(Dr2)", "G(Dr2)"]
-    },
-    diminished: {
-        "C Major": ["C", "C#dim7", "Dm7", "D#dim7", "Em7", "Fdim7", "C/G", "G7"],
-        "G Major": ["G", "G#dim7", "Am7", "A#dim7", "Bm7", "Cdim7", "G/D", "D7"],
-        "A Minor": ["Am", "A#dim7", "Bm7b5", "G#dim7", "Am", "C#dim7", "Dm", "E7"]
-    },
-    diatonic: {
-        "C Major": ["Em", "F", "Dm", "Em", "Am", "Dm", "Em", "F"],
-        "G Major": ["Bm", "C", "Am", "Bm", "Em", "Am", "Bm", "C"],
-        "A Minor": ["C", "Dm", "Bdim", "C", "F", "Bdim", "C", "Dm"]
-    },
-    relative: {
-        "C Major": ["Am", "C", "Dm", "F", "Am", "C", "Dm", "G"],
-        "G Major": ["Em", "G", "Am", "C", "Em", "G", "Am", "D"],
-        "A Minor": ["C", "Am", "F", "Dm", "C", "Am", "F", "E7"]
-    },
-    prolongation: {
-        "C Major": ["C", "F/C", "G/C", "C", "Am", "Dm/A", "E/A", "Am"],
-        "G Major": ["G", "C/G", "D/G", "G", "Em", "Am/E", "B/E", "Em"],
-        "A Minor": ["Am", "Dm/A", "E/A", "Am", "F", "Bb/F", "C/F", "F"]
-    },
-    pedal: {
-        "C Major": ["C", "Am/C", "F/C", "G/C", "C", "Am/C", "F/C", "G/C"],
-        "G Major": ["G", "Em/G", "C/G", "D/G", "G", "Em/G", "C/G", "D/G"],
-        "A Minor": ["Am", "F/A", "C/A", "G/A", "Am", "F/A", "C/A", "G/A"]
-    },
-    walkups: {
-        "C Major": ["C", "C/E", "F", "G", "Am", "Am/G", "F", "G"],
-        "G Major": ["G", "G/B", "C", "D", "Em", "Em/D", "C", "D"],
-        "A Minor": ["Am", "Am/C", "Dm", "Em", "F", "F/E", "Dm", "E7"]
-    },
-    walkdowns: {
-        "C Major": ["C", "G/B", "Am", "Am/G", "F", "C/E", "Dm", "G"],
-        "G Major": ["G", "D/F#", "Em", "Em/D", "C", "G/B", "Am", "D"],
-        "A Minor": ["Am", "Em/G", "F", "F/E", "Dm", "Am/C", "Bdim", "E7"]
-    },
-    inversions: {
-        "C Major": ["C/E", "Am/C", "F/A", "G/B", "C/E", "Am/C", "F/A", "G/B"],
-        "G Major": ["G/B", "Em/G", "C/E", "D/F#", "G/B", "Em/G", "C/E", "D/F#"],
-        "A Minor": ["Am/C", "F/A", "C/E", "G/B", "Am/C", "F/A", "C/E", "G/B"]
-    },
-    nonchord: {
-        "C Major": ["Cadd9", "Asus4", "Fadd9", "G7sus4", "Cadd9", "Asus4", "Fadd9", "G7sus4"],
-        "G Major": ["Gadd9", "Esus4", "Cadd9", "D7sus4", "Gadd9", "Esus4", "Cadd9", "D7sus4"],
-        "A Minor": ["Amadd9", "Fsus4", "Cadd9", "E7sus4", "Amadd9", "Fsus4", "Cadd9", "E7sus4"]
-    },
-    circle: {
-        "C Major": ["Cmaj7", "Fmaj7", "Bdim7", "E7", "Am7", "Dm7", "G7", "Cmaj7"],
-        "G Major": ["Gmaj7", "Cmaj7", "F#dim7", "B7", "Em7", "Am7", "D7", "Gmaj7"],
-        "A Minor": ["Am7", "Dm7", "Gmaj7", "Cmaj7", "Fmaj7", "Bdim7", "E7", "Am7"]
-    },
-    turnaround: {
-        "C Major": ["Cmaj7", "Am7", "Dm7", "G7", "Cmaj7", "Am7", "Dm7", "G7"],
-        "G Major": ["Gmaj7", "Em7", "Am7", "D7", "Gmaj7", "Em7", "Am7", "D7"],
-        "A Minor": ["Am7", "Fmaj7", "Bm7b5", "E7", "Am7", "Fmaj7", "Bm7b5", "E7"]
-    },
-    iiVI: {
-        "C Major": ["Dm7", "G7", "Cmaj7", "Cmaj7", "Dm7", "G7", "Cmaj7", "Cmaj7"],
-        "G Major": ["Am7", "D7", "Gmaj7", "Gmaj7", "Am7", "D7", "Gmaj7", "Gmaj7"],
-        "A Minor": ["Bm7b5", "E7", "Am7", "Am7", "Bm7b5", "E7", "Am7", "Am7"]
-    },
-    "iii-vi": {
-        "C Major": ["Em7", "Am7", "Dm7", "G7", "Em7", "Am7", "Dm7", "G7"],
-        "G Major": ["Bm7", "Em7", "Am7", "D7", "Bm7", "Em7", "Am7", "D7"],
-        "A Minor": ["Cmaj7", "Fmaj7", "Bm7b5", "E7", "Cmaj7", "Fmaj7", "Bm7b5", "E7"]
-    },
-    andalusian: {
-        "C Major": ["Am", "G", "F", "E7", "Am", "G", "F", "E7"],
-        "G Major": ["Em", "D", "C", "B7", "Em", "D", "C", "B7"],
-        "A Minor": ["Am", "G", "F", "E7", "Am", "G", "F", "E7"]
-    },
-    extensions: {
-        "C Major": ["Cmaj13", "Am9", "Fmaj9", "G13", "Cmaj13", "Am9", "Fmaj9", "G13"],
-        "G Major": ["Gmaj13", "Em9", "Cmaj9", "D13", "Gmaj13", "Em9", "Cmaj9", "D13"],
-        "A Minor": ["Am11", "Fmaj9", "Cmaj9", "E7b9", "Am11", "Fmaj9", "Cmaj9", "E7b9"]
-    },
-    suspended: {
-        "C Major": ["Csus4", "C", "Gsus4", "G", "Csus4", "C", "Gsus4", "G"],
-        "G Major": ["Gsus4", "G", "Dsus4", "D", "Gsus4", "G", "Dsus4", "D"],
-        "A Minor": ["Asus4", "Am", "Esus4", "E", "Asus4", "Am", "Esus4", "E"]
-    },
-    pac: {
-        "C Major": ["C", "Am", "G7", "C", "C", "Am", "G7", "C"],
-        "G Major": ["G", "Em", "D7", "G", "G", "Em", "D7", "G"],
-        "A Minor": ["Am", "F", "E7", "Am", "Am", "F", "E7", "Am"]
-    },
-    plagal: {
-        "C Major": ["C", "Am", "F", "C", "C", "Am", "F", "C"],
-        "G Major": ["G", "Em", "C", "G", "G", "Em", "C", "G"],
-        "A Minor": ["Am", "Dm", "F", "Am", "Am", "Dm", "F", "Am"]
-    },
-    half: {
-        "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"],
-        "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"],
-        "A Minor": ["Am", "F", "Dm", "E", "Am", "F", "Dm", "E"]
-    },
-    fb6: {
-        "C Major": ["C6", "Am6", "F6", "G6", "C6", "Am6", "F6", "G6"],
-        "G Major": ["G6", "Em6", "C6", "D6", "G6", "Em6", "C6", "D6"],
-        "A Minor": ["Am6", "F6", "C6", "E6", "Am6", "F6", "C6", "E6"]
-    },
-    fb64: {
-        "C Major": ["C/G", "Am/E", "F/C", "G/D", "C/G", "Am/E", "F/C", "G/D"],
-        "G Major": ["G/D", "Em/B", "C/G", "D/A", "G/D", "Em/B", "C/G", "D/A"],
-        "A Minor": ["Am/E", "F/C", "C/G", "E/B", "Am/E", "F/C", "C/G", "E/B"]
-    },
-    fb43: {
-        "C Major": ["C7/G", "Am7/E", "F7/C", "G7/D", "C7/G", "Am7/E", "F7/C", "G7/D"],
-        "G Major": ["G7/D", "Em7/B", "C7/G", "D7/A", "G7/D", "Em7/B", "C7/G", "D7/A"],
-        "A Minor": ["Am7/E", "F7/C", "C7/G", "E7/B", "Am7/E", "F7/C", "C7/G", "E7/B"]
-    },
-    fb52: {
-        "C Major": ["C7/Bb", "Am7/G", "F7/Eb", "G7/F", "C7/Bb", "Am7/G", "F7/Eb", "G7/F"],
-        "G Major": ["G7/F", "Em7/D", "C7/Bb", "D7/C", "G7/F", "Em7/D", "C7/Bb", "D7/C"],
-        "A Minor": ["Am7/G", "F7/Eb", "C7/Bb", "E7/D", "Am7/G", "F7/Eb", "C7/Bb", "E7/D"]
-    }
+    tritone: { "C Major": ["Cmaj7", "Eb7", "Abmaj7", "Db7", "Cmaj7", "Eb7", "Abmaj7", "Db7"], "G Major": ["Gmaj7", "Bb7", "Ebmaj7", "Ab7", "Gmaj7", "Bb7", "Ebmaj7", "Ab7"], "A Minor": ["Am7", "C7", "Fmaj7", "Bb7", "Am7", "C7", "Fmaj7", "Bb7"] },
+    secondary: { "C Major": ["C", "E7", "Am", "D7", "G", "C7", "F", "G7"], "G Major": ["G", "B7", "Em", "A7", "D", "G7", "C", "D7"], "A Minor": ["Am", "C7", "Dm", "E7", "Am", "A7", "Dm", "E7"] },
+    chromatic: { "C Major": ["C", "Bb7", "Ab7", "Db7", "C", "Bb7", "Ab7", "Db7"], "G Major": ["G", "F7", "Eb7", "Ab7", "G", "F7", "Eb7", "Ab7"], "A Minor": ["Am", "G7", "F7", "Bb7", "Am", "G7", "F7", "Bb7"] },
+    backdoor: { "C Major": ["Cmaj7", "Am7", "Fm7", "Bb7", "Cmaj7", "Am7", "Fm7", "Bb7"], "G Major": ["Gmaj7", "Em7", "Cm7", "F7", "Gmaj7", "Em7", "Cm7", "F7"], "A Minor": ["Am7", "Fmaj7", "Bdm7", "E7", "Am7", "Fmaj7", "Bdm7", "E7"] },
+    modal: { "C Major": ["Cmaj7", "Abmaj7", "Fm7", "Bb7", "Ebmaj7", "Bb7", "Abmaj7", "G7"], "G Major": ["Gmaj7", "Ebmaj7", "Cm7", "F7", "Bbmaj7", "F7", "Ebmaj7", "D7"], "A Minor": ["Am7", "Dmaj7", "Fmaj7", "Gmaj7", "Cmaj7", "Bm7", "Fmaj7", "E7"] },
+    planing: { "C Major": ["Cmaj7", "A#maj7", "Amaj7", "G#maj7", "Gmaj7", "F#maj7", "Fmaj7", "Emaj7"], "G Major": ["Gmaj9", "Fmaj7", "E#maj7", "D#maj7", "Dmaj7", "C#maj7", "Cmaj7", "Bmaj7"], "A Minor": ["Am7", "G#m7", "Gm7", "F#m7", "Fm7", "Em7", "D#m7", "Dm7"] },
+    polychords: { "C Major": ["D/C", "F#/Am", "G/F", "F/G", "D/C", "F#/Am", "G/F", "F/G"], "G Major": ["A/G", "C#/Em", "D/C", "C/D", "A/G", "C#/Em", "D/C", "C/D"], "A Minor": ["B/Am", "D#/F", "E/Dm", "D/E", "B/Am", "D#/F", "E/Dm", "D/E"] },
+    upper: { "C Major": ["Cmaj9", "Am11", "Fmaj13", "G7b9", "Cmaj9", "Am11", "Fmaj13", "G7b9"], "G Major": ["Gmaj9", "Em11", "Cmaj13", "D7b9", "Gmaj9", "Em11", "Cmaj13", "D7b9"], "A Minor": ["Am9", "Fmaj11", "Cmaj13", "Esusb9", "Am9", "Fmaj11", "Cmaj13", "Esusb9"] },
+    drop2: { "C Major": ["C(Dr2)", "Am(Dr2)", "F(Dr2)", "G(Dr2)", "C(Dr2)", "Am(Dr2)", "F(Dr2)", "G(Dr2)"], "G Major": ["G(Dr2)", "Em(Dr2)", "C(Dr2)", "D(Dr2)", "G(Dr2)", "Em(Dr2)", "C(Dr2)", "D(Dr2)"], "A Minor": ["Am(Dr2)", "F(Dr2)", "C(Dr2)", "G(Dr2)", "Am(Dr2)", "F(Dr2)", "C(Dr2)", "G(Dr2)"] },
+    diminished: { "C Major": ["C", "C#dim7", "Dm7", "D#dim7", "Em7", "Fdim7", "C/G", "G7"], "G Major": ["G", "G#dim7", "Am7", "A#dim7", "Bm7", "Cdim7", "G/D", "D7"], "A Minor": ["Am", "A#dim7", "Bm7b5", "G#dim7", "Am", "C#dim7", "Dm", "E7"] },
+    diatonic: { "C Major": ["Em", "F", "Dm", "Em", "Am", "Dm", "Em", "F"], "G Major": ["Bm", "C", "Am", "Bm", "Em", "Am", "Bm", "C"], "A Minor": ["C", "Dm", "Bdim", "C", "F", "Bdim", "C", "Dm"] },
+    relative: { "C Major": ["Am", "C", "Dm", "F", "Am", "C", "Dm", "G"], "G Major": ["Em", "G", "Am", "C", "Em", "G", "Am", "D"], "A Minor": ["C", "Am", "F", "Dm", "C", "Am", "F", "E7"] },
+    prolongation: { "C Major": ["C", "F/C", "G/C", "C", "Am", "Dm/A", "E/A", "Am"], "G Major": ["G", "C/G", "D/G", "G", "Em", "Am/E", "B/E", "Em"], "A Minor": ["Am", "Dm/A", "E/A", "Am", "F", "Bb/F", "C/F", "F"] },
+    pedal: { "C Major": ["C", "Am/C", "F/C", "G/C", "C", "Am/C", "F/C", "G/C"], "G Major": ["G", "Em/G", "C/G", "D/G", "G", "Em/G", "C/G", "D/G"], "A Minor": ["Am", "F/A", "C/A", "G/A", "Am", "F/A", "C/A", "G/A"] },
+    walkups: { "C Major": ["C", "C/E", "F", "G", "Am", "Am/G", "F", "G"], "G Major": ["G", "G/B", "C", "D", "Em", "Em/D", "C", "D"], "A Minor": ["Am", "Am/C", "Dm", "Em", "F", "F/E", "Dm", "E7"] },
+    walkdowns: { "C Major": ["C", "G/B", "Am", "Am/G", "F", "C/E", "Dm", "G"], "G Major": ["G", "D/F#", "Em", "Em/D", "C", "G/B", "Am", "D"], "A Minor": ["Am", "Em/G", "F", "F/E", "Dm", "Am/C", "Bdim", "E7"] },
+    inversions: { "C Major": ["C/E", "Am/C", "F/A", "G/B", "C/E", "Am/C", "F/A", "G/B"], "G Major": ["G/B", "Em/G", "C/E", "D/F#", "G/B", "Em/G", "C/E", "D/F#"], "A Minor": ["Am/C", "F/A", "C/E", "G/B", "Am/C", "F/A", "C/E", "G/B"] },
+    nonchord: { "C Major": ["Cadd9", "Asus4", "Fadd9", "G7sus4", "Cadd9", "Asus4", "Fadd9", "G7sus4"], "G Major": ["Gadd9", "Esus4", "Cadd9", "D7sus4", "Gadd9", "Esus4", "Cadd9", "D7sus4"], "A Minor": ["Amadd9", "Fsus4", "Cadd9", "E7sus4", "Amadd9", "Fsus4", "Cadd9", "E7sus4"] },
+    circle: { "C Major": ["Cmaj7", "Fmaj7", "Bdim7", "E7", "Am7", "Dm7", "G7", "Cmaj7"], "G Major": ["Gmaj7", "Cmaj7", "F#dim7", "B7", "Em7", "Am7", "D7", "Gmaj7"], "A Minor": ["Am7", "Dm7", "Gmaj7", "Cmaj7", "Fmaj7", "Bdim7", "E7", "Am7"] },
+    turnaround: { "C Major": ["Cmaj7", "Am7", "Dm7", "G7", "Cmaj7", "Am7", "Dm7", "G7"], "G Major": ["Gmaj7", "Em7", "Am7", "D7", "Gmaj7", "Em7", "Am7", "D7"], "A Minor": ["Am7", "Fmaj7", "Bm7b5", "E7", "Am7", "Fmaj7", "Bm7b5", "E7"] },
+    iiVI: { "C Major": ["Dm7", "G7", "Cmaj7", "Cmaj7", "Dm7", "G7", "Cmaj7", "Cmaj7"], "G Major": ["Am7", "D7", "Gmaj7", "Gmaj7", "Am7", "D7", "Gmaj7", "Gmaj7"], "A Minor": ["Bm7b5", "E7", "Am7", "Am7", "Bm7b5", "E7", "Am7", "Am7"] },
+    "iii-vi": { "C Major": ["Em7", "Am7", "Dm7", "G7", "Em7", "Am7", "Dm7", "G7"], "G Major": ["Bm7", "Em7", "Am7", "D7", "Bm7", "Em7", "Am7", "D7"], "A Minor": ["Cmaj7", "Fmaj7", "Bm7b5", "E7", "Cmaj7", "Fmaj7", "Bm7b5", "E7"] },
+    andalusian: { "C Major": ["Am", "G", "F", "E7", "Am", "G", "F", "E7"], "G Major": ["Em", "D", "C", "B7", "Em", "D", "C", "B7"], "A Minor": ["Am", "G", "F", "E7", "Am", "G", "F", "E7"] },
+    extensions: { "C Major": ["Cmaj13", "Am9", "Fmaj9", "G13", "Cmaj13", "Am9", "Fmaj9", "G13"], "G Major": ["Gmaj13", "Em9", "Cmaj9", "D13", "Gmaj13", "Em9", "Cmaj9", "D13"], "A Minor": ["Am11", "Fmaj9", "Cmaj9", "E7b9", "Am11", "Fmaj9", "Cmaj9", "E7b9"] },
+    suspended: { "C Major": ["Csus4", "C", "Gsus4", "G", "Csus4", "C", "Gsus4", "G"], "G Major": ["Gsus4", "G", "Dsus4", "D", "Gsus4", "G", "Dsus4", "D"], "A Minor": ["Asus4", "Am", "Esus4", "E", "Asus4", "Am", "Esus4", "E"] },
+    pac: { "C Major": ["C", "Am", "G7", "C", "C", "Am", "G7", "C"], "G Major": ["G", "Em", "D7", "G", "G", "Em", "D7", "G"], "A Minor": ["Am", "F", "E7", "Am", "Am", "F", "E7", "Am"] },
+    plagal: { "C Major": ["C", "Am", "F", "C", "C", "Am", "F", "C"], "G Major": ["G", "Em", "C", "G", "G", "Em", "C", "G"], "A Minor": ["Am", "Dm", "F", "Am", "Am", "Dm", "F", "Am"] },
+    half: { "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"], "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"], "A Minor": ["Am", "F", "Dm", "E", "Am", "F", "Dm", "E"] },
+    fb6: { "C Major": ["C6", "Am6", "F6", "G6", "C6", "Am6", "F6", "G6"], "G Major": ["G6", "Em6", "C6", "D6", "G6", "Em6", "C6", "D6"], "A Minor": ["Am6", "F6", "C6", "E6", "Am6", "F6", "C6", "E6"] },
+    fb64: { "C Major": ["C/G", "Am/E", "F/C", "G/D", "C/G", "Am/E", "F/C", "G/D"], "G Major": ["G/D", "Em/B", "C/G", "D/A", "G/D", "Em/B", "C/G", "D/A"], "A Minor": ["Am/E", "F/C", "C/G", "E/B", "Am/E", "F/C", "C/G", "E/B"] },
+    fb43: { "C Major": ["C7/G", "Am7/E", "F7/C", "G7/D", "C7/G", "Am7/E", "F7/C", "G7/D"], "G Major": ["G7/D", "Em7/B", "C7/G", "D7/A", "G7/D", "Em7/B", "C7/G", "D7/A"], "A Minor": ["Am7/E", "F7/C", "C7/G", "E7/B", "Am7/E", "F7/C", "C7/G", "E7/B"] },
+    fb52: { "C Major": ["C7/Bb", "Am7/G", "F7/Eb", "G7/F", "C7/Bb", "Am7/G", "F7/Eb", "G7/F"], "G Major": ["G7/F", "Em7/D", "C7/Bb", "D7/C", "G7/F", "Em7/D", "C7/Bb", "D7/C"], "A Minor": ["Am7/G", "F7/Eb", "C7/Bb", "E7/D", "Am7/G", "F7/Eb", "C7/Bb", "E7/D"] }
 };
 
 const glossaryData = [
@@ -1045,25 +987,19 @@ const glossaryData = [
 function buildAlphabeticalGlossary() {
     const container = document.getElementById('glossaryContainer');
     container.innerHTML = ""; 
-
     const sortedData = [...glossaryData].sort((a, b) => a.title.localeCompare(b.title));
-
     sortedData.forEach(item => {
         const entryBlock = document.createElement('div');
         entryBlock.className = "glossary-card";
         entryBlock.setAttribute('data-title', item.title.toLowerCase());
         entryBlock.setAttribute('data-def', item.def.toLowerCase());
-        
-        entryBlock.innerHTML = `
-            <h4>${item.title} <span class="glossary-tag">${item.cat}</span></h4>
-            <p class="glossary-def">${item.def}</p>
-        `;
+        entryBlock.innerHTML = `<h4>${item.title} <span class="glossary-tag">${item.cat}</span></h4><p class="glossary-def">${item.def}</p>`;
         container.appendChild(entryBlock);
     });
 }
 
 window.addEventListener('DOMContentLoaded', function() {
-    triggerArrangementMapping("Default System Architecture Reference Track.wav");
+    triggerArrangementMapping("Two Friends Together.wav");
     buildAlphabeticalGlossary();
 });
 </script>
