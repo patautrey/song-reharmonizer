@@ -177,6 +177,16 @@
             margin-bottom: 15px;
             font-weight: bold;
         }
+        .range-toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            background: #131720;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #2c3447;
+            align-items: center;
+        }
         .section-block {
             background: rgba(0, 0, 0, 0.25);
             border-radius: 8px;
@@ -222,6 +232,22 @@
             gap: 8px;
             align-items: center;
             position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .chord-pair-box:hover {
+            background: rgba(0, 210, 211, 0.03);
+            border-color: rgba(0, 210, 211, 0.3);
+        }
+        .chord-pair-box.selected {
+            background: rgba(0, 210, 211, 0.08);
+            border-color: #00d2d3;
+            box-shadow: 0 0 10px rgba(0, 210, 211, 0.2);
+        }
+        .chord-pair-box.pinned {
+            border-color: #1dd1a1;
+            background: rgba(29, 209, 161, 0.03);
         }
         .measure-number {
             position: absolute;
@@ -230,6 +256,17 @@
             font-size: 9px;
             color: #4b5563;
             font-family: monospace;
+        }
+        .lock-indicator {
+            position: absolute;
+            top: 2px;
+            right: 4px;
+            font-size: 9px;
+            color: #1dd1a1;
+            display: none;
+        }
+        .chord-pair-box.pinned .lock-indicator {
+            display: block;
         }
         .chord-wrapper {
             display: flex;
@@ -263,7 +300,10 @@
         .chord-card.transformed {
             background: #10ac84;
             border-color: #1dd1a1;
-            animation: flash 0.3s ease-out;
+        }
+        .chord-pair-box.selected .chord-card.transformed {
+            background: #00d2d3;
+            color: #171a21;
         }
         .divider-arrow {
             color: #2f3542;
@@ -381,11 +421,6 @@
             color: #cbd5e1;
             line-height: 1.6;
         }
-
-        @keyframes flash {
-            0% { background-color: #00d2d3; }
-            100% { background-color: #10ac84; }
-        }
     </style>
 </head>
 <body>
@@ -429,11 +464,18 @@
             <div style="font-weight: bold; font-size: 14px; color: #a4b0be; text-transform: uppercase; margin-bottom: 5px;" id="detectedTitle">Song Map: Default 8-Bar System (Key of C Major)</div>
             <div class="track-metadata" id="trackNameDisplay">Active Track: none (Using internal generator)</div>
             
+            <div class="range-toolbar">
+                <span style="font-size: 12px; font-weight: bold; color: #84817a; text-transform: uppercase;">Range Editor:</span>
+                <button class="action-btn" style="background: #00d2d3; color: #171a21; padding: 6px 12px; font-size: 11px;" onclick="commitSelectedRange()">Commit Selection Changes</button>
+                <button class="tab-btn" style="padding: 6px 12px; font-size: 11px; width: auto; flex: none; margin: 0;" onclick="clearActiveSelections()">Clear Highlights</button>
+                <span id="editorStatusText" style="font-size: 12px; color: #84817a; font-family: monospace; margin-left: auto;">Click chord boxes below to select a range.</span>
+            </div>
+
             <div id="timelineContainer">
                 </div>
 
             <div class="analysis-text" id="explanation">
-                Select any harmonic modification matrix below to parse your structural sections into advanced arrangements.
+                Click to select individual chord boxes above. Then select any matrix category below to apply targeted modifications to only those sections.
             </div>
         </div>
 
@@ -510,6 +552,7 @@
 </div>
 
 <script>
+// Main View Routing Switch Engine
 function switchMainView(viewId) {
     document.querySelectorAll('.app-view').forEach(view => view.classList.remove('active'));
     document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
@@ -518,6 +561,7 @@ function switchMainView(viewId) {
     document.getElementById(viewId + '-btn').classList.add('active');
 }
 
+// UI Ingest Tab Controller Logic
 function switchInputTab(tabId, element) {
     document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -526,6 +570,7 @@ function switchInputTab(tabId, element) {
     element.classList.add('active');
 }
 
+// Global State Tracker Matrix (Updated for cell-level selection properties)
 let currentBaseKey = "C Major";
 let songArrangementMap = [];
 
@@ -541,6 +586,7 @@ function ensureAudioContextInitialized() {
     }
 }
 
+// Procedural Ingestion Generation Engine
 function triggerArrangementMapping(fileName) {
     const seed = fileName.length;
     const availableKeys = ["C Major", "G Major", "A Minor"];
@@ -562,23 +608,37 @@ function triggerArrangementMapping(fileName) {
             ["Am", "G", "F", "E7", "Am", "G", "F", "E7"],
             ["Dm", "Am", "F", "E7", "Dm", "Am", "F", "E7"]
         ]
-    };
+    ];
 
     const targetPool = progressions[currentBaseKey];
     
-    const introChords = targetPool[seed % targetPool.length];
-    const verseChords = targetPool[(seed + 1) % targetPool.length];
-    const chorusChords = targetPool[(seed + 2) % targetPool.length];
+    const intro = targetPool[seed % targetPool.length];
+    const verse = targetPool[(seed + 1) % targetPool.length];
+    const chorus = targetPool[(seed + 2) % targetPool.length];
+
+    // Map each cell configuration as its own independent state object
+    const mapSection = (label, chordList) => {
+        return {
+            label: label,
+            chords: chordList.map(ch => ({
+                base: ch,
+                reharm: ch,
+                isSelected: false,
+                isPinned: false
+            }))
+        };
+    };
 
     songArrangementMap = [
-        { label: "Intro Section", baseChords: [...introChords], reharmChords: [...introChords] },
-        { label: "Verse 1", baseChords: [...verseChords], reharmChords: [...verseChords] },
-        { label: "Chorus", baseChords: [...chorusChords], reharmChords: [...chorusChords] }
+        mapSection("Intro Section", intro),
+        mapSection("Verse 1", verse),
+        mapSection("Chorus", chorus)
     ];
 
     renderTimelineStructure(`Audio Analysis: ${currentBaseKey} Arrangement Mapped`, `Active Track: ${fileName}`);
 }
 
+// 1. Process Audio File Input (.wav, .mp3)
 function processAudioFile() {
     const fileInput = document.getElementById('audioFile');
     if (!fileInput || fileInput.files.length === 0) return;
@@ -603,6 +663,7 @@ function processAudioFile() {
     reader.readAsArrayBuffer(file);
 }
 
+// 2. Process MIDI File Input (.mid)
 function processMidiFile() {
     const fileInput = document.getElementById('midiFile');
     if (!fileInput || fileInput.files.length === 0) return;
@@ -617,6 +678,7 @@ function processMidiFile() {
     }, 1200);
 }
 
+// 3. Live Microphone Stream Engine
 let isRecording = false;
 function toggleLiveRecording() {
     const btn = document.getElementById('recordBtn');
@@ -654,6 +716,98 @@ function toggleLiveRecording() {
     }
 }
 
+// CELL SELECTION TRACKER LISTENER
+function toggleCellSelection(sIdx, cIdx) {
+    const cell = songArrangementMap[sIdx].chords[cIdx];
+    cell.isSelected = !cell.isSelected;
+    
+    // Refresh display layout states
+    const el = document.getElementById(`cell-${sIdx}-${cIdx}`);
+    if(cell.isSelected) {
+        el.classList.add('selected');
+    } else {
+        el.classList.remove('selected');
+    }
+
+    // Count total highlighted targets
+    let totalSelected = 0;
+    songArrangementMap.forEach(sec => sec.chords.forEach(c => { if(c.isSelected) totalSelected++; }));
+    document.getElementById('editorStatusText').innerText = totalSelected > 0 ? `${totalSelected} measures selected for targeted reharm.` : "Click chord boxes below to select a range.";
+}
+
+// RANGE REHARMONIZATION PREVIEW ENGINE
+function applyReharm(key) {
+    const transformationGroup = coreTransformMatrix[key];
+    if (!transformationGroup) return;
+
+    const targetChords = transformationGroup[currentBaseKey];
+    if (!targetChords) return;
+
+    // Check if user has active range selections highlighted
+    let aggregateSelected = 0;
+    songArrangementMap.forEach(sec => sec.chords.forEach(c => { if(c.isSelected) aggregateSelected++; }));
+
+    document.querySelectorAll('.mod-btn').forEach(btn => btn.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+
+    songArrangementMap.forEach((section, sIdx) => {
+        section.chords.forEach((chord, cIdx) => {
+            // RULE: If filters are active, ONLY preview inside user's highlighted selections. If nothing is selected, process globally.
+            if (aggregateSelected === 0 || chord.isSelected) {
+                chord.reharm = targetChords[cIdx % targetChords.length];
+                const displayCard = document.getElementById(`reharm-text-${sIdx}-${cIdx}`);
+                if (displayCard) displayCard.innerText = chord.reharm;
+            }
+        });
+    });
+
+    const conceptualDescriptions = {};
+    glossaryData.forEach(item => {
+        let matrixKey = item.title.toLowerCase().split(" ")[0];
+        if (item.title.includes("ii-V-I")) matrixKey = "iiVI";
+        if (item.title.includes("iii-vi")) matrixKey = "iii-vi";
+        conceptualDescriptions[matrixKey] = item.def;
+    });
+    
+    if(conceptualDescriptions[key]) {
+        document.getElementById('explanation').innerText = conceptualDescriptions[key];
+    }
+}
+
+// COMMIT RANGE SELECTION LOCK
+function commitSelectedRange() {
+    let committedCount = 0;
+    songArrangementMap.forEach((section, sIdx) => {
+        section.chords.forEach((chord, cIdx) => {
+            if (chord.isSelected) {
+                chord.isPinned = true;
+                chord.isSelected = false; // Reset highlight states
+                committedCount++;
+                
+                const box = document.getElementById(`cell-${sIdx}-${cIdx}`);
+                box.classList.remove('selected');
+                box.classList.add('pinned');
+            }
+        });
+    });
+
+    document.querySelectorAll('.mod-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById('editorStatusText').innerText = `Changes committed successfully across ${committedCount} bars.`;
+}
+
+// CLEAR ACTIVE SELECTIONS HIGHLIGHTS
+function clearActiveSelections() {
+    songArrangementMap.forEach((section, sIdx) => {
+        section.chords.forEach((chord, cIdx) => {
+            chord.isSelected = false;
+            const box = document.getElementById(`cell-${sIdx}-${cIdx}`);
+            if (box) box.classList.remove('selected');
+        });
+    });
+    document.getElementById('editorStatusText').innerText = "Highlights cleared. Standby.";
+}
+
+// 8-COLUMN LAYOUT MATRIX SYSTEM COMPILER
 function renderTimelineStructure(titleText, trackMetaText) {
     document.getElementById('detectedTitle').innerText = titleText;
     document.getElementById('trackNameDisplay').innerText = trackMetaText;
@@ -667,18 +821,22 @@ function renderTimelineStructure(titleText, trackMetaText) {
         let rowContent = `<div class="section-header"><span class="section-type">${section.label}</span></div>`;
         rowContent += `<div class="progression-grid">`;
         
-        section.baseChords.forEach((chord, cIdx) => {
+        section.chords.forEach((chord, cIdx) => {
+            const isSelClass = chord.isSelected ? "selected" : "";
+            const isPinClass = chord.isPinned ? "pinned" : "";
+            
             rowContent += `
-                <div class="chord-pair-box">
+                <div class="chord-pair-box ${isSelClass} ${isPinClass}" id="cell-${sIdx}-${cIdx}" onclick="toggleCellSelection(${sIdx}, ${cIdx})">
                     <span class="measure-number">m.${cIdx + 1}</span>
+                    <span class="lock-indicator">🔒</span>
                     <div class="chord-wrapper">
                         <span class="chord-title">Base</span>
-                        <div class="chord-card">${chord}</div>
+                        <div class="chord-card">${chord.base}</div>
                     </div>
                     <div class="divider-arrow">▼</div>
                     <div class="chord-wrapper">
                         <span class="chord-title">Reharm</span>
-                        <div class="chord-card transformed" id="reharm-${sIdx}-${cIdx}">${section.reharmChords[cIdx]}</div>
+                        <div class="chord-card transformed" id="reharm-text-${sIdx}-${cIdx}">${chord.reharm}</div>
                     </div>
                 </div>
             `;
@@ -688,11 +846,9 @@ function renderTimelineStructure(titleText, trackMetaText) {
         block.innerHTML = rowContent;
         container.appendChild(block);
     });
-
-    document.querySelectorAll('.mod-btn').forEach(btn => btn.classList.remove('active'));
-    document.getElementById('explanation').innerText = "Structural layout processed. Select any matrix category below to reharmonize all tracks simultaneously.";
 }
 
+// Global Reharm Mapping Configuration Matrix
 const coreTransformMatrix = {
     tritone: {
         "C Major": ["Cmaj7", "Eb7", "Abmaj7", "Db7", "Cmaj7", "Eb7", "Abmaj7", "Db7"],
@@ -856,6 +1012,7 @@ const coreTransformMatrix = {
     }
 };
 
+// COMPREHENSIVE MUSIC THEORY ACADEMY ACADEMIC GLOSSARY ENTRIES
 const glossaryData = [
     { title: "Andalusian Progression Framework", cat: "Turnarounds", def: "A natural minor modal framework built upon a step-wise descending bass pattern (i - bVII - bVI - V). Widely integrated across Flamenco, Neo-Soul, and heavy scoring structures to enforce perpetual dramatic forward momentum." },
     { title: "Backdoor Dominant (bVII7)", cat: "Dominant Alterations", def: "A sophisticated jazz modulation device where a dominant seventh chord built on the flat-seventh degree (bVII7, like Bb7 in C Major) replaces the default V7 chord. It connects elegantly into your primary major tonic via step-wise voice leading." },
@@ -880,7 +1037,7 @@ const glossaryData = [
     { title: "Perfect Authentic Cadence (PAC)", cat: "Color & Extensions", def: "The strongest resolution closer in western music theory. A root-position dominant seventh chord (V7) resolves cleanly into a root-position tonic major (I) with the tonic note up in the lead melody." },
     { title: "Pedal Tones", cat: "Voice Leading", def: "Locking the lowest bass register onto an unmoving, stationary pitch note while the upper registers transition through different chord changes over top." },
     { title: "Plagal Cadence (Amen Close)", cat: "Color & Extensions", def: "A resolution pattern moving directly from a subdominant major structure (IV) into its root tonic (I). Traditionally known across choir settings as the 'Amen Close'." },
-    { title: "Planing / Parallelism", cat: "Modal Textures", def: "Taking a specific vertical interval or chord shape and sliding it straight up or down the keyboard or fretboard, ignoring the traditional constraints of the key." },
+    { title: "Planing / Parallelism", cat: "Modal Textures", def: "Taking a specific vertical interval or chord shape and slides it chromatically down or up the keyboard or fretboard, ignoring the traditional constraints of the key." },
     { title: "Poly Chords", cat: "Modal Textures", def: "Superimposing two entirely independent major or minor triads over each other simultaneously to unlock massive, dense composite textures." },
     { title: "Relative Chord Intercept", cat: "Passing Shifts", def: "Weaving minor relative variants back and forth seamlessly within a phrase to soften the impact of simple chord transitions." },
     { title: "Secondary Dominants", cat: "Dominant Alterations", def: "Introducing an un-diatonic dominant seventh chord engineered to point toward a target chord in the key, treating it temporarily like a home key." },
@@ -890,61 +1047,6 @@ const glossaryData = [
     { title: "iii-vi-ii-V-I Extended Chain", cat: "Turnarounds", def: "An extension of the classic turnaround pattern that reaches further back up the circle of fifths to create a long, satisfying harmonic descent." },
     { title: "Upper Structures", cat: "Modal Textures", def: "An advanced orchestration approach where the rhythm section stays locked onto simple bass roots while the lead instruments stack extensions (7ths, 9ths, 11ths, 13ths) above." }
 ];
-
-function applyReharm(key) {
-    const transformationGroup = coreTransformMatrix[key];
-    if (!transformationGroup) return;
-
-    const targetChords = transformationGroup[currentBaseKey];
-    if (!targetChords) return;
-
-    document.querySelectorAll('.mod-btn').forEach(btn => btn.classList.remove('active'));
-    event.currentTarget.classList.add('active');
-
-    songArrangementMap.forEach((section, sIdx) => {
-        section.baseChords.forEach((chord, cIdx) => {
-            const cardElement = document.getElementById(`reharm-${sIdx}-${cIdx}`);
-            if (cardElement) {
-                cardElement.innerText = targetChords[cIdx % targetChords.length];
-                cardElement.classList.remove('transformed');
-                void cardElement.offsetWidth;
-                cardElement.classList.add('transformed');
-            }
-        });
-    });
-
-    const conceptualDescriptions = {};
-    glossaryData.forEach(item => {
-        let matrixKey = item.title.toLowerCase().split(" ")[0];
-        if (item.title.includes("ii-V-I")) matrixKey = "iiVI";
-        if (item.title.includes("iii-vi")) matrixKey = "iii-vi";
-        conceptualDescriptions[matrixKey] = item.def;
-    });
-    
-    if(conceptualDescriptions[key]) {
-        document.getElementById('explanation').innerText = conceptualDescriptions[key];
-    }
-}
-
-function buildAlphabeticalGlossary() {
-    const container = document.getElementById('glossaryContainer');
-    container.innerHTML = ""; 
-
-    const sortedData = [...glossaryData].sort((a, b) => a.title.localeCompare(b.title));
-
-    sortedData.forEach(item => {
-        const entryBlock = document.createElement('div');
-        entryBlock.className = "glossary-card";
-        entryBlock.setAttribute('data-title', item.title.toLowerCase());
-        entryBlock.setAttribute('data-def', item.def.toLowerCase());
-        
-        entryBlock.innerHTML = `
-            <h4>${item.title} <span class="glossary-tag">${item.cat}</span></h4>
-            <p class="glossary-def">${item.def}</p>
-        `;
-        container.appendChild(entryBlock);
-    });
-}
 
 function filterGlossaryEntries() {
     const query = document.getElementById('glossarySearchInput').value.toLowerCase();
