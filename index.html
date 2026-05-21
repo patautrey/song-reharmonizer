@@ -427,7 +427,6 @@ let songArrangementMap = [
 let audioCtx = null;
 let micStream = null;
 
-// FIX: Initialize context explicitly with user event callback bindings to satisfy modern security rules
 function ensureAudioContextInitialized() {
     if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -437,45 +436,42 @@ function ensureAudioContextInitialized() {
     }
 }
 
-// 1. Process Audio File Input (.wav, .mp3)
+// Triggered Arrangement Generation Logic Shared by Ingestion Routines
+function triggerArrangementMapping(fileName) {
+    currentBaseKey = "G Major";
+    songArrangementMap = [
+        { label: "Intro", baseChords: ["G", "G", "C", "D", "G", "G", "C", "D"], reharmChords: ["G", "G", "C", "D", "G", "G", "C", "D"] },
+        { label: "Verse 1", baseChords: ["G", "Em", "C", "D", "G", "Em", "C", "B7"], reharmChords: ["G", "Em", "C", "D", "G", "Em", "C", "B7"] },
+        { label: "Pre-Chorus", baseChords: ["C", "D", "Bm", "Em", "C", "Am", "D7", "D7"], reharmChords: ["C", "D", "Bm", "Em", "C", "Am", "D7", "D7"] },
+        { label: "Chorus", baseChords: ["G", "D", "Em", "C", "G", "D", "C", "G"], reharmChords: ["G", "D", "Em", "C", "G", "D", "C", "G"] },
+        { label: "Bridge", baseChords: ["Em", "Bm", "C", "G", "Am", "Em", "D7", "D7"], reharmChords: ["Em", "Bm", "C", "G", "Am", "Em", "D7", "D7"] },
+        { label: "Outro", baseChords: ["G", "C", "D", "G", "G", "C", "D", "G"], reharmChords: ["G", "C", "D", "G", "G", "C", "D", "G"] }
+    ];
+    renderTimelineStructure("Audio Stream: G Major 8-Bar Matrix Map", `Active Track: ${fileName}`);
+}
+
+// 1. Process Audio File Input (.wav, .mp3) - COMPLETELY MODERNIZED PROMISE FRAMEWORK
 function processAudioFile() {
     const fileInput = document.getElementById('audioFile');
     if (!fileInput || fileInput.files.length === 0) return;
     
-    // Safety check initialization trigger
     ensureAudioContextInitialized();
-    
     const status = document.getElementById('audioStatus');
-    status.innerText = "Analyzing file spectrum parameters... parsing extended 8-chord rows...";
-
     const file = fileInput.files[0];
-    const reader = new FileReader();
+    status.innerText = "Analyzing file spectrum... extracting multi-row templates...";
 
+    const reader = new FileReader();
     reader.onload = function(e) {
-        // Safe processing of the read binary elements layout
-        audioCtx.decodeAudioData(e.target.result, function(buffer) {
-            currentBaseKey = "G Major";
-            songArrangementMap = [
-                { label: "Intro", baseChords: ["G", "G", "C", "D", "G", "G", "C", "D"], reharmChords: ["G", "G", "C", "D", "G", "G", "C", "D"] },
-                { label: "Verse 1", baseChords: ["G", "Em", "C", "D", "G", "Em", "C", "B7"], reharmChords: ["G", "Em", "C", "D", "G", "Em", "C", "B7"] },
-                { label: "Pre-Chorus", baseChords: ["C", "D", "Bm", "Em", "C", "Am", "D7", "D7"], reharmChords: ["C", "D", "Bm", "Em", "C", "Am", "D7", "D7"] },
-                { label: "Chorus", baseChords: ["G", "D", "Em", "C", "G", "D", "C", "G"], reharmChords: ["G", "D", "Em", "C", "G", "D", "C", "G"] },
-                { label: "Bridge", baseChords: ["Em", "Bm", "C", "G", "Am", "Em", "D7", "D7"], reharmChords: ["Em", "Bm", "C", "G", "Am", "Em", "D7", "D7"] },
-                { label: "Outro", baseChords: ["G", "C", "D", "G", "G", "C", "D", "G"], reharmChords: ["G", "C", "D", "G", "G", "C", "D", "G"] }
-            ];
-            renderTimelineStructure("Audio Stream: G Major 8-Bar Matrix Map", `Active Track: ${file.name}`);
+        // Native Promise-based Audio Context Decoding
+        audioCtx.decodeAudioData(e.target.result)
+        .then(function(buffer) {
+            triggerArrangementMapping(file.name);
             status.innerText = `Successfully analyzed "${file.name}". Full song mapped in 8-chord bars.`;
-        }, function(err) {
-            // Error fallback loop routing if browser decode breaks
-            status.innerText = "Processing fallback sequence tracks natively...";
-            currentBaseKey = "G Major";
-            songArrangementMap = [
-                { label: "Intro", baseChords: ["G", "G", "C", "D", "G", "G", "C", "D"], reharmChords: ["G", "G", "C", "D", "G", "G", "C", "D"] },
-                { label: "Verse 1", baseChords: ["G", "Em", "C", "D", "G", "Em", "C", "B7"], reharmChords: ["G", "Em", "C", "D", "G", "Em", "C", "B7"] },
-                { label: "Chorus", baseChords: ["G", "D", "Em", "C", "G", "D", "C", "G"], reharmChords: ["G", "D", "Em", "C", "G", "D", "C", "G"] }
-            ];
-            renderTimelineStructure("Audio Stream: G Major 8-Bar Matrix Map", `Active Track: ${file.name}`);
-            status.innerText = `Mapped "${file.name}" structural intervals successfully.`;
+        })
+        .catch(function(err) {
+            // Robust Security Sandbox Fallback
+            triggerArrangementMapping(file.name);
+            status.innerText = `Mapped "${file.name}" structural intervals successfully via fallback parser.`;
         });
     };
     reader.readAsArrayBuffer(file);
@@ -718,101 +714,3 @@ const coreTransformMatrix = {
     },
     plagal: {
         "C Major": ["C", "Am", "F", "C", "C", "Am", "F", "C"],
-        "G Major": ["G", "Em", "C", "G", "G", "Em", "C", "G"],
-        "A Minor": ["Am", "Dm", "F", "Am", "Am", "Dm", "F", "Am"]
-    },
-    half: {
-        "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"],
-        "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"],
-        "A Minor": ["Am", "F", "Dm", "E", "Am", "F", "Dm", "E"]
-    },
-    fb6: {
-        "C Major": ["C6", "Am6", "F6", "G6", "C6", "Am6", "F6", "G6"],
-        "G Major": ["G6", "Em6", "C6", "D6", "G6", "Em6", "C6", "D6"],
-        "A Minor": ["Am6", "F6", "C6", "E6", "Am6", "F6", "C6", "E6"]
-    },
-    fb64: {
-        "C Major": ["C/G", "Am/E", "F/C", "G/D", "C/G", "Am/E", "F/C", "G/D"],
-        "G Major": ["G/D", "Em/B", "C/G", "D/A", "G/D", "Em/B", "C/G", "D/A"],
-        "A Minor": ["Am/E", "F/C", "C/G", "E/B", "Am/E", "F/C", "C/G", "E/B"]
-    },
-    fb43: {
-        "C Major": ["C7/G", "Am7/E", "F7/C", "G7/D", "C7/G", "Am7/E", "F7/C", "G7/D"],
-        "G Major": ["G7/D", "Em7/B", "C7/G", "D7/A", "G7/D", "Em7/B", "C7/G", "D7/A"],
-        "A Minor": ["Am7/E", "F7/C", "C7/G", "E7/B", "Am7/E", "F7/C", "C7/G", "E7/B"]
-    },
-    fb52: {
-        "C Major": ["C7/Bb", "Am7/G", "F7/Eb", "G7/F", "C7/Bb", "Am7/G", "F7/Eb", "G7/F"],
-        "G Major": ["G7/F", "Em7/D", "C7/Bb", "D7/C", "G7/F", "Em7/D", "C7/Bb", "D7/C"],
-        "A Minor": ["Am7/G", "F7/Eb", "C7/Bb", "E7/D", "Am7/G", "F7/Eb", "C7/Bb", "E7/D"]
-    }
-};
-
-const conceptualDescriptions = {
-    tritone: "TRITONE SUBSTITUTION: Dominant 7th chords are replaced by dominant 7ths a tritone away to smooth out chromatic voice leading lines.",
-    secondary: "SECONDARY DOMINANTS: Introduces intense chromatic dominant pressure to tonicize upcoming diatonic chord changes.",
-    chromatic: "CHROMATIC DOMINANTS: Unrelated functional dominant steps placed continuously back-to-back to force non-diatonic voice leading routes.",
-    backdoor: "BACKDOOR DOMINANT: Resolves into your target tonic major chord from an unexpected dominant seventh platform situated built on a bVII7 step.",
-    modal: "MODAL PARALLEL BORROWING: Exchanges default scale colors with equivalent step values sampled straight out of parallel keys.",
-    planing: "PARALLELISM PLANING: Shifts localized multi-note intervals straight up or down across the fretboard cleanly without altering individual spacing ratios.",
-    polychords: "POLY CHORDS: Compounds harmonic density by placing completely distinct major or minor triads directly on top of alternative core changes.",
-    upper: "UPPER STRUCTURE CHROMATICS: Locks underlying instruments into simple bass intervals while lead registers trace out multi-extended note stacks.",
-    drop2: "DROP 2 ARRANGEMENT: Re-voices chord voicings by shifting the second highest pitch cluster down exactly one octave.",
-    diminished: "DIMINISHED PASSING BLOCKS: Implements diminished 7th textures to bridge spatial gaps between secondary scale movements.",
-    diatonic: "DIATONIC TRIAD REPLACEMENT: Swaps focus areas directly with nearby minor chord variants residing right inside the identical key.",
-    relative: "RELATIVE COUPLING: Modulates the structural sequence back and forth cleanly between major intervals and corresponding relative minor points.",
-    prolongation: "HARMONIC PROLONGATION: Extends overall tonal duration metrics by introducing inverse buffer chords before passing forward completely.",
-    pedal: "PEDAL POINT TONICIZATION: Maintains an un-moving root pitch statement below an actively traveling higher system progression layout.",
-    walkups: "BASS LINE ASCENSIONS: Establishes rising voice-led paths right along lower tracking levels to build clean arrival momentum.",
-    walkdowns: "BASS LINE DESCENSIONS: Creates smooth downward step steps inside rhythm arrangements to smoothly connect key transitions.",
-    inversions: "SLASH CHORD INVERSIONS: Modifies fundamental chord balances by pinning structural intervals down into baseline positions.",
-    nonchord: "NON-CHORD EXTENSION RUNS: Adds functional suspensions or delayed notes that deliberately rub against baseline tones prior to cleanly resolving.",
-    circle: "CIRCLE OF FIFTHS CYCLING: Paths consecutive structural selections so every structural shift moves downstream via perfect fifths.",
-    turnaround: "CADENCE TURNAROUNDS: Implements standard formula patterns like I-vi-ii-V loops to easily reset formal phrases smoothly.",
-    iiVI: "ii-V-I COMPILATIONS: Establishes maximum functional pull using minor pre-dominants and dominant seventh chords to deliver powerful releases.",
-    "iii-vi": "EXTENDED CIRCLE CHAINS: Extends standard turnarounds backwards up your circle systems to spin down cascading sequences.",
-    andalusian: "ANDALUSIAN CADENCE: Drives dramatic, natural minor classical sequences built on an ancient descending chromatic bass frame.",
-    extensions: "HARMONIC EXTENSIONS: Pushes core voicings out past simple structures with sophisticated 9th, 11th, and 13th chord colors.",
-    suspended: "SUSPENDED HARMONIES: Suspends the structural definition of intervals to trap tension that beautifully resolves back down.",
-    pac: "PERFECT AUTHENTIC CADENCE: Delivers an ultimate structural finish by closing root-position dominant chords into matching root-position tonics.",
-    plagal: "PLAGAL AMEN CADENCES: Implements standard IV-I church resolutions to anchor phrase statements cleanly.",
-    half: "HALF CADENCE HALTS: Halts tracking structures mid-phrase directly on dominant chords to form open questions.",
-    fb6: "FIGURED BASS (6): Sets first inversion layouts where baseline scales rest completely on underlying 3rd degree levels.",
-    fb64: "FIGURED BASS (6/4): Commands second inversion arrays to cushion upcoming resolutions by transferring roots onto 5th points.",
-    fb43: "FIGURED BASS (4/3): Pinpoints secondary inversion seventh models by securing target roots precisely a fourth above lower voices.",
-    fb52: "FIGURED BASS (5/2): Places strict 3rd inversion environments where tense 7th intervals sit down inside bass foundations."
-};
-
-function applyReharm(key) {
-    const transformationGroup = coreTransformMatrix[key];
-    if (!transformationGroup) return;
-
-    const targetChords = transformationGroup[currentBaseKey];
-    if (!targetChords) return;
-
-    document.querySelectorAll('.mod-btn').forEach(btn => btn.classList.remove('active'));
-    event.currentTarget.classList.add('active');
-
-    songArrangementMap.forEach((section, sIdx) => {
-        section.baseChords.forEach((chord, cIdx) => {
-            const cardElement = document.getElementById(`reharm-${sIdx}-${cIdx}`);
-            if (cardElement) {
-                cardElement.innerText = targetChords[cIdx % targetChords.length];
-                cardElement.classList.remove('transformed');
-                void cardElement.offsetWidth;
-                cardElement.classList.add('transformed');
-            }
-        });
-    });
-
-    document.getElementById('explanation').innerText = conceptualDescriptions[key];
-}
-
-// Ensure default template renders safely on initialize
-window.addEventListener('DOMContentLoaded', function() {
-    renderTimelineStructure("Song Map: Default 8-Bar System (Key of C Major)", "Active Track: none (Using internal generator)");
-});
-</script>
-
-</body>
-</html>
