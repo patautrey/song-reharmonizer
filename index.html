@@ -570,7 +570,7 @@ function switchInputTab(tabId, element) {
     element.classList.add('active');
 }
 
-// Global State Tracker Matrix (Updated for cell-level selection properties)
+// Global State Tracker Matrix
 let currentBaseKey = "C Major";
 let songArrangementMap = [];
 
@@ -608,7 +608,7 @@ function triggerArrangementMapping(fileName) {
             ["Am", "G", "F", "E7", "Am", "G", "F", "E7"],
             ["Dm", "Am", "F", "E7", "Dm", "Am", "F", "E7"]
         ]
-    ];
+    };
 
     const targetPool = progressions[currentBaseKey];
     
@@ -616,7 +616,6 @@ function triggerArrangementMapping(fileName) {
     const verse = targetPool[(seed + 1) % targetPool.length];
     const chorus = targetPool[(seed + 2) % targetPool.length];
 
-    // Map each cell configuration as its own independent state object
     const mapSection = (label, chordList) => {
         return {
             label: label,
@@ -721,7 +720,6 @@ function toggleCellSelection(sIdx, cIdx) {
     const cell = songArrangementMap[sIdx].chords[cIdx];
     cell.isSelected = !cell.isSelected;
     
-    // Refresh display layout states
     const el = document.getElementById(`cell-${sIdx}-${cIdx}`);
     if(cell.isSelected) {
         el.classList.add('selected');
@@ -729,7 +727,6 @@ function toggleCellSelection(sIdx, cIdx) {
         el.classList.remove('selected');
     }
 
-    // Count total highlighted targets
     let totalSelected = 0;
     songArrangementMap.forEach(sec => sec.chords.forEach(c => { if(c.isSelected) totalSelected++; }));
     document.getElementById('editorStatusText').innerText = totalSelected > 0 ? `${totalSelected} measures selected for targeted reharm.` : "Click chord boxes below to select a range.";
@@ -743,7 +740,6 @@ function applyReharm(key) {
     const targetChords = transformationGroup[currentBaseKey];
     if (!targetChords) return;
 
-    // Check if user has active range selections highlighted
     let aggregateSelected = 0;
     songArrangementMap.forEach(sec => sec.chords.forEach(c => { if(c.isSelected) aggregateSelected++; }));
 
@@ -752,7 +748,6 @@ function applyReharm(key) {
 
     songArrangementMap.forEach((section, sIdx) => {
         section.chords.forEach((chord, cIdx) => {
-            // RULE: If filters are active, ONLY preview inside user's highlighted selections. If nothing is selected, process globally.
             if (aggregateSelected === 0 || chord.isSelected) {
                 chord.reharm = targetChords[cIdx % targetChords.length];
                 const displayCard = document.getElementById(`reharm-text-${sIdx}-${cIdx}`);
@@ -781,7 +776,7 @@ function commitSelectedRange() {
         section.chords.forEach((chord, cIdx) => {
             if (chord.isSelected) {
                 chord.isPinned = true;
-                chord.isSelected = false; // Reset highlight states
+                chord.isSelected = false; 
                 committedCount++;
                 
                 const box = document.getElementById(`cell-${sIdx}-${cIdx}`);
@@ -1012,7 +1007,6 @@ const coreTransformMatrix = {
     }
 };
 
-// COMPREHENSIVE MUSIC THEORY ACADEMY ACADEMIC GLOSSARY ENTRIES
 const glossaryData = [
     { title: "Andalusian Progression Framework", cat: "Turnarounds", def: "A natural minor modal framework built upon a step-wise descending bass pattern (i - bVII - bVI - V). Widely integrated across Flamenco, Neo-Soul, and heavy scoring structures to enforce perpetual dramatic forward momentum." },
     { title: "Backdoor Dominant (bVII7)", cat: "Dominant Alterations", def: "A sophisticated jazz modulation device where a dominant seventh chord built on the flat-seventh degree (bVII7, like Bb7 in C Major) replaces the default V7 chord. It connects elegantly into your primary major tonic via step-wise voice leading." },
@@ -1048,19 +1042,23 @@ const glossaryData = [
     { title: "Upper Structures", cat: "Modal Textures", def: "An advanced orchestration approach where the rhythm section stays locked onto simple bass roots while the lead instruments stack extensions (7ths, 9ths, 11ths, 13ths) above." }
 ];
 
-function filterGlossaryEntries() {
-    const query = document.getElementById('glossarySearchInput').value.toLowerCase();
-    const cards = document.querySelectorAll('.glossary-card');
+function buildAlphabeticalGlossary() {
+    const container = document.getElementById('glossaryContainer');
+    container.innerHTML = ""; 
 
-    cards.forEach(card => {
-        const titleText = card.getAttribute('data-title');
-        const defText = card.getAttribute('data-def');
+    const sortedData = [...glossaryData].sort((a, b) => a.title.localeCompare(b.title));
+
+    sortedData.forEach(item => {
+        const entryBlock = document.createElement('div');
+        entryBlock.className = "glossary-card";
+        entryBlock.setAttribute('data-title', item.title.toLowerCase());
+        entryBlock.setAttribute('data-def', item.def.toLowerCase());
         
-        if (titleText.includes(query) || defText.includes(query)) {
-            card.style.display = "block";
-        } else {
-            card.style.display = "none";
-        }
+        entryBlock.innerHTML = `
+            <h4>${item.title} <span class="glossary-tag">${item.cat}</span></h4>
+            <p class="glossary-def">${item.def}</p>
+        `;
+        container.appendChild(entryBlock);
     });
 }
 
