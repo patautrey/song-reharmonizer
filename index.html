@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Song Reharmonization Workspace</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0f1115;
+            color: #e0e6ed;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background: #171a21;
+            padding: 35px;
+            border-radius: 14px;
+            box-shadow: 0 6px 25px rgba(0,0,0,0.6);
+        }
+        h1 {
+            text-align: center;
+            color: #00d2d3;
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #84817a;
+            margin-bottom: 30px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+        .display-deck {
+            background: #1e232e;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-left: 5px solid #00d2d3;
+        }
+        .progression-row {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 15px 0;
+            padding: 10px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 6px;
+        }
+        .chord-card {
+            text-align: center;
+            background: #2c3447;
+            padding: 12px 20px;
+            border-radius: 6px;
+            min-width: 80px;
+            font-weight: bold;
+            font-size: 18px;
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        .chord-card.transformed {
+            background: #10ac84;
+            animation: flash 0.3s ease-out;
+        }
+        .arrow {
+            font-size: 24px;
+            color: #57606f;
+        }
+        .analysis-text {
+            font-size: 14px;
+            color: #00d2d3;
+            background: #131720;
+            padding: 12px;
+            border-radius: 6px;
+            font-family: monospace;
+            margin-top: 15px;
+        }
+        .matrix-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+        }
+        .matrix-category {
+            background: #1e232e;
+            padding: 18px;
+            border-radius: 8px;
+            border-top: 3px solid #576574;
+        }
+        .matrix-category h3 {
+            margin-top: 0;
+            color: #a4b0be;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #2c3447;
+            padding-bottom: 5px;
+        }
+        .mod-btn {
+            display: block;
+            width: 100%;
+            background: #2c3447;
+            color: #dcdde1;
+            border: 1px solid #3d4862;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            text-align: left;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .mod-btn:hover {
+            background: #3d4862;
+            color: #fff;
+            border-color: #00d2d3;
+        }
+        .mod-btn.active {
+            background: #00d2d3;
+            color: #171a21;
+            font-weight: bold;
+            border-color: #fff;
+        }
+        @keyframes flash {
+            0% { background-color: #00d2d3; }
+            100% { background-color: #10ac84; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Song Reharmonization Workspace</h1>
+    <div class="subtitle">Advanced harmonic transformation lab</div>
+
+    <div class="display-deck">
+        <div style="font-weight: bold; font-size: 12px; color: #84817a; text-transform: uppercase;">Standard Base Progression (Key of C Major)</div>
+        <div class="progression-row">
+            <div class="chord-card">C</div>
+            <div class="arrow">→</div>
+            <div class="chord-card">Am</div>
+            <div class="arrow">→</div>
+            <div class="chord-card">F</div>
+            <div class="arrow">→</div>
+            <div class="chord-card">G</div>
+        </div>
+
+        <div style="font-weight: bold; font-size: 12px; color: #10ac84; text-transform: uppercase; margin-top: 20px;">Reharmonized Transformation</div>
+        <div class="progression-row">
+            <div class="chord-card transformed" id="ch1">C</div>
+            <div class="arrow">→</div>
+            <div class="chord-card transformed" id="ch2">Am</div>
+            <div class="arrow">→</div>
+            <div class="chord-card transformed" id="ch3">F</div>
+            <div class="arrow">→</div>
+            <div class="chord-card transformed" id="ch4">G</div>
+        </div>
+
+        <div class="analysis-text" id="explanation">
+            Select any harmonic module below to transform the standard pop chord progression using advanced arranging frameworks.
+        </div>
+    </div>
+
+    <div class="matrix-grid">
+        <div class="matrix-category">
+            <h3>Dominant Alterations</h3>
+            <button class="mod-btn" onclick="applyReharm('tritone')">Tritone Substitution</button>
+            <button class="mod-btn" onclick="applyReharm('secondary')">Secondary Dominants</button>
+            <button class="mod-btn" onclick="applyReharm('chromatic')">Chromatic Dominants</button>
+            <button class="mod-btn" onclick="applyReharm('backdoor')">Backdoor Dominant</button>
+        </div>
+
+        <div class="matrix-category">
+            <h3>Modal & Voicing Textures</h3>
+            <button class="mod-btn" onclick="applyReharm('modal')">Modal Parallel Borrowing</button>
+            <button class="mod-btn" onclick="applyReharm('planing')">Planing / Parallelism</button>
+            <button class="mod-btn" onclick="applyReharm('polychords')">Poly Chords</button>
+            <button class="mod-btn" onclick="applyReharm('upper')">Upper Structures</button>
+            <button class="mod-btn" onclick="applyReharm('drop2')">Drop 2 Voicing</button>
+        </div>
+
+        <div class="matrix-category">
+            <h3>Passing & Functional Shifts</h3>
+            <button class="mod-btn" onclick="applyReharm('diminished')">Diminished Passing Chords</button>
+            <button class="mod-btn" onclick="applyReharm('diatonic')">Diatonic Substitution</button>
+            <button class="mod-btn" onclick="applyReharm('relative')">Relative Chord Intercept</button>
+            <button class="mod-btn" onclick="applyReharm('prolongation')">Harmonic Prolongation</button>
+        </div>
+
+        <div class="matrix-category">
+            <h3>Voice Leading & Basslines</h3>
+            <button class="mod-btn" onclick="applyReharm('pedal')">Pedal Tones</button>
+            <button class="mod-btn" onclick="applyReharm('walkups')">Bass Walk-Ups</button>
+            <button class="mod-btn" onclick="applyReharm('walkdowns')">Bass Walk-Downs</button>
+            <button class="mod-btn" onclick="applyReharm('inversions')">Inversions (Slash Chords)</button>
+            <button class="mod-btn" onclick="applyReharm('nonchord')">Non-Chord Tones (Sustained Lines)</button>
+        </div>
+
+        <div class="matrix-category">
+            <h3>Turnarounds & Root Paths</h3>
+            <button class="mod-btn" onclick="applyReharm('circle')">Circle of 5ths Cycle</button>
+            <button class="mod-btn" onclick="applyReharm('turnaround')">Standard Turnaround</button>
+            <button class="mod-btn" onclick="applyReharm('iiVI')">ii-V-I & ii°-V7-i Cadences</button>
+            <button class="mod-btn" onclick="applyReharm('iii-vi')">iii-vi-ii-V-I Extended Chain</button>
+            <button class="mod-btn" onclick="applyReharm('andalusian')">Andalusian Progression Framework</button>
+        </div>
+
+        <div class="matrix-category">
+            <h3>Color, Extensions & Cadences</h3>
+            <button class="mod-btn" onclick="applyReharm('extensions')">Extensions (9ths, 11ths, 13ths)</button>
+            <button class="mod-btn" onclick="applyReharm('suspended')">Suspended (sus4 / sus2) Delay</button>
+            <button class="mod-btn" onclick="applyReharm('pac')">Perfect Authentic Cadence (PAC)</button>
+            <button class="mod-btn" onclick="applyReharm('plagal')">Plagal Cadence (Amen Close)</button>
+            <button class="mod-btn" onclick="applyReharm('half')">Half Cadence Break</button>
+        </div>
+
+        <div class="matrix-category">
+            <h3>Figured Bass Inversions</h3>
+            <button class="mod-btn" onclick="applyReharm('fb6')">Figured Bass: 6 (Root Triad Inv)</button>
+            <button class="mod-btn" onclick="applyReharm('fb64')">Figured Bass: 6/4 (Second Inv)</button>
+            <button class="mod-btn" onclick="applyReharm('fb43')">Figured Bass: 4/3 (7th Chord 2nd Inv)</button>
+            <button class="mod-btn" onclick="applyReharm('fb52')">Figured Bass: 5/2 (7th Chord 3rd Inv)</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const data = {
+    tritone: { chords: ["Cmaj7", "Eb7", "Abmaj7", "Db7"], desc: "TRITONE SUBSTITUTION: Dominant 7th chords are replaced by dominant 7ths a tritone away (Db7 replaces G7, Eb7 replaces E7/A7) using shared guide tones (3rd and 7th) to create smooth chromatic descending voice leading." },
+    secondary: { chords: ["C", "E7", "Am", "D7"], desc: "SECONDARY DOMINANTS: Introduces non-diatonic dominant chords (like E7 preceding Am, or D7 preceding G) to temporarily build intense tonicizing pressure toward upcoming chords." },
+    chromatic: { chords: ["C", "Bb7", "Ab7", "Db7"], desc: "CHROMATIC DOMINANTS: Unrelated or un-diatonic dominant structures placed back-to-back to enforce continuous tension over deep voice leading paths." },
+    backdoor: { chords: ["Cmaj7", "Am7", "Fm7", "Bb7"], desc: "BACKDOOR DOMINANT: Replaces a typical V7 (G7) with a bVII7 chord (Bb7), resolving stepwise upward into the tonic Cmaj7. Highly popular in jazz and classic cinematic charts." },
+    modal: { chords: ["Cmaj7", "Abmaj7", "Fm7", "Bb7"], desc: "MODAL PARALLEL BORROWING: Borrows harmonic colors directly from the parallel minor mode (C Aeolian). Adds dramatic emotional shifts via Abmaj7 and Fm7 chords." },
+    planing: { chords: ["Cmaj7", "A#maj7", "Amaj7", "G#maj7"], desc: "PLANING (PARALLELISM): Locks a specific chord shape shape in place and slides it chromatically down or up across the fretboard/keyboard regardless of scale rules." },
+    polychords: { chords: ["D/C", "F#/Am", "G/F", "F/G"], desc: "POLY CHORDS: Layers two completely distinct chord triads on top of each other simultaneously (e.g., a D major triad played on top of a C major bass triad) to form massive composite jazz colors." },
+    upper: { chords: ["Cmaj9", "Am11", "Fmaj13", "G7b9"], desc: "UPPER STRUCTURES: Focuses the instrumentation strictly on complex chord extensions (7ths, 9ths, 11ths, 13ths) while keeping the rhythm section locked onto basic root notes." },
+    drop2: { chords: ["C (Drop 2)", "Am (Drop 2)", "F (Drop 2)", "G (Drop 2)"], desc: "DROP 2 VOICING: Takes the second highest note of a close-positioned keyboard voicing and drops it down an octave to open up a spacious texture preferred by solo jazz arrangers." },
+    diminished: { chords: ["C", "C#dim7", "Dm7", "D#dim7"], desc: "DIMINISHED PASSING CHORDS: Inserts fully diminished 7th chords between diatonic steps (like C#dim7 bridging C and Dm7) to generate voice-led tension." },
+    diatonic: { chords: ["Em", "F", "Dm", "Em"], desc: "DIATONIC SUBSTITUTION: Swaps core triads out for related chords inside the same key that share similar note definitions (e.g., replacing C with its relative minor Em)." },
+    relative: { chords: ["Am", "C", "Dm", "F"], desc: "RELATIVE CHORD INTERCEPT: Bounces directly back and forth between major structures and their exact relative minor structures to disguise simple chord loops." },
+    prolongation: { chords: ["C", "F/C", "G/C", "C"], desc: "HARMONIC PROLONGATION: Extends the perceived stay of a single target chord by padding it with neighboring or passing inversion patterns before it officially changes." },
+    pedal: { chords: ["C", "Am/C", "F/C", "G/C"], desc: "PEDAL TONES: Locks the lowest bass note strictly onto a single stationary pitch (C) while the higher chord progressions shift dynamically over top." },
+    walkups: { chords: ["C", "C/E", "F", "G"], desc: "BASS WALK-UPS: Constructs step-wise ascending paths directly into the bass voices to create active, rising counter-melodies below the main chords." },
+    walkdowns: { chords: ["C", "G/B", "Am", "Am/G"], desc: "BASS WALK-DOWN: Utilizes downward stepwise voice lines in the bass to drive smooth, classical or acoustic styled root progressions." },
+    inversions: { chords: ["C/E", "Am/C", "F/A", "G/B"], desc: "INVERSIONS (SLASH CHORDS): Flips chords on their head by placing the 3rd, 5th, or 7th scale degree down into the lowest bass position for cleaner voice connection." },
+    nonchord: { chords: ["Cadd9", "Asus4", "Fadd9", "G7sus4"], desc: "NON-CHORD TONES: Suspends or adds notes outside the base triad (like 9ths or suspensions) that rub against the main chords before resolving down." },
+    circle: { chords: ["Cmaj7", "Fmaj7", "Bdim7", "E7"], desc: "CIRCLE OF 5THS CYCLE: Arranges structural sequences so that each subsequent chord root steps backward by an interval of a perfect fifth." },
+    turnaround: { chords: ["Cmaj7", "Am7", "Dm7", "G7"], desc: "STANDARD TURNAROUND: The classic I-vi-ii-V progression loop used at the conclusion of phrases to establish structural stability and spiral smoothly back to the tonic." },
+    iiVI: { chords: ["Dm7", "G7", "Cmaj7", "Ddim7"], desc: "ii-V-I & ii°-V7-i CADENCES: The structural pillar of jazz writing. Establishes maximum functional pull via a minor pre-dominant, a dominant seventh, and a resolution." },
+    "iii-vi": { chords: ["Em7", "Am7", "Dm7", "G7"], desc: "iii-vi-ii-V-I EXTENDED CHAIN: Compounds the standard turnaround by stacking an extra step further back up the circle of fifths to build a cascading sequence." },
+    andalusian: { chords: ["Am", "G", "F", "E7"], desc: "ANDALUSIAN PROGRESSION: A classical natural minor descending loop built on a i - bVII - bVI - V framework, highly prominent in flamenco and dramatic arrangements." },
+    extensions: { chords: ["Cmaj13", "Am9", "Fmaj9", "G13"], desc: "EXTENSIONS: Colors baseline chords up past the octave with sophisticated jazz stack additions without rewriting the actual structural framework." },
+    suspended: { chords: ["Csus4", "C", "Gsus4", "G"], desc: "SUSPENDED DELAY: Temporarily replaces the defining 3rd of a triad with a 4th or 2nd scale degree, hanging an active harmonic suspension that yearns to resolve." },
+    pac: { chords: ["C", "Am", "G7", "C"], desc: "PERFECT AUTHENTIC CADENCE (PAC): The ultimate terminal close. A root-position V7 chord resolving directly onto a root-position I chord with the tonic note up in the lead melody." },
+    plagal: { chords: ["C", "Am", "F", "C"], desc: "PLAGAL CADENCE: The iconic IV to I resolution mechanism widely known as the 'Amen Close' across traditional church hymns and choral frameworks." },
+    half: { chords: ["C", "Am", "F", "G"], desc: "HALF CADENCE BREAK: Halts a musical phrase abruptly right on a dominant chord (G), producing an open-ended question that demands structural continuation." },
+    fb6: { chords: ["C6", "Am6", "F6", "G6"], desc: "FIGURED BASS (6): Indicates a first inversion setup. The baseline structural triad rests directly on its 3rd scale interval instead of its normal root." },
+    fb64: { chords: ["C/G", "Am/E", "F/C", "G/D"], desc: "FIGURED BASS (6/4): Indicates a second inversion setup. The triad shifts onto its 5th scale degree, commonly used to buffer heavy arrivals on the tonic." },
+    fb43: { chords: ["C7/G", "Am7/E", "F7/C", "G7/D"], desc: "FIGURED BASS (4/3): Defines a second inversion structural seventh chord. The root note is placed an interval of a fourth above the lowest tone." },
+    fb52: { chords: ["C7/Bb", "Am7/G", "F7/Eb", "G7/F"], desc: "FIGURED BASS (5/2): Defines a third inversion structural seventh chord where the tense seventh interval rests directly down in the lowest bass position." }
+};
+
+function applyReharm(key) {
+    const activeData = data[key];
+    if (!activeData) return;
+
+    document.querySelectorAll('.mod-btn').forEach(btn => btn.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+
+    document.getElementById('ch1').innerText = activeData.chords[0];
+    document.getElementById('ch2').innerText = activeData.chords[1];
+    document.getElementById('ch3').innerText = activeData.chords[2];
+    document.getElementById('ch4').innerText = activeData.chords[3];
+
+    document.getElementById('explanation').innerText = activeData.desc;
+}
+</script>
+
+</body>
+</html>
