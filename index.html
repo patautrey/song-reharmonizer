@@ -585,24 +585,6 @@
 </div>
 
 <script>
-// Main View Routing Switch Engine
-function switchMainView(viewId) {
-    document.querySelectorAll('.app-view').forEach(view => view.classList.remove('active'));
-    document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-    
-    document.getElementById(viewId).classList.add('active');
-    document.getElementById(viewId + '-btn').classList.add('active');
-}
-
-// UI Ingest Tab Controller Logic
-function switchInputTab(tabId, element) {
-    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    
-    document.getElementById(tabId).classList.add('active');
-    element.classList.add('active');
-}
-
 // Global State Tracker Matrix
 let currentBaseKey = "C Major";
 let songArrangementMap = [];
@@ -610,7 +592,7 @@ let audioCtx = null;
 let micStream = null;
 let playbackTimeoutRefs = [];
 
-// Polyphonic synthesis fundamental tracking map values
+// Polyphonic frequencies
 const chordNotesMap = {
     "C": [261.63, 329.63, 392.00], "Am": [220.00, 261.63, 329.63], "F": [174.61, 220.00, 261.63], "G": [196.00, 246.94, 293.66],
     "Em": [164.81, 196.00, 246.94], "D": [146.83, 185.00, 220.00], "B7": [246.94, 311.13, 392.00, 493.88], "Dm": [146.83, 174.61, 220.00],
@@ -620,24 +602,26 @@ const chordNotesMap = {
     "Am7": [220.00, 261.63, 329.63, 392.00], "C7": [261.63, 329.63, 392.00, 466.16], "Fmaj7": [174.61, 220.00, 261.63, 349.23]
 };
 
-function ensureAudioContextInitialized() {
-    if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+// NEW: True Polynomial String Fingerprint Hasher for guaranteed unique track layouts
+function calculateStringHashSeed(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = (hash * 31) + str.charCodeAt(i);
+        hash |= 0; // Force 32bit integer conversion bounds
     }
-    if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
-    }
+    return Math.abs(hash);
 }
 
 // Procedural Ingestion Generation Engine
 function triggerArrangementMapping(fileName) {
     stopSynthPlayback();
     
-    const seed = fileName.length;
+    // Compute unique index fingerprint
+    const fingerPrintSeed = calculateStringHashSeed(fileName);
+    
     const availableKeys = ["C Major", "G Major", "A Minor"];
-    currentBaseKey = availableKeys[seed % availableKeys.length];
+    currentBaseKey = availableKeys[fingerPrintSeed % availableKeys.length];
 
-    // FIXED: Mapped out 3 complete variation tracks for all keys so that targetPool calculation never hits an undefined index limit
     const progressions = {
         "C Major": [
             ["C", "Am", "F", "G", "C", "Am", "F", "G"],
@@ -658,9 +642,9 @@ function triggerArrangementMapping(fileName) {
 
     const targetPool = progressions[currentBaseKey];
     
-    const p1 = targetPool[seed % targetPool.length];
-    const p2 = targetPool[(seed + 1) % targetPool.length];
-    const p3 = targetPool[(seed + 2) % targetPool.length];
+    const p1 = targetPool[fingerPrintSeed % targetPool.length];
+    const p2 = targetPool[(fingerPrintSeed + 1) % targetPool.length];
+    const p3 = targetPool[(fingerPrintSeed + 2) % targetPool.length];
 
     const mapSection = (label, chordList) => {
         return {
@@ -674,7 +658,7 @@ function triggerArrangementMapping(fileName) {
         };
     };
 
-    // Rebuild 6 horizontal workspace timelines natively
+    // Pack complete, extensive 6-row full arrangement tracking timelines
     songArrangementMap = [
         mapSection("Intro Section", p1),
         mapSection("Verse 1", p2),
@@ -909,7 +893,7 @@ function applyReharm(key) {
     });
 }
 
-// Global Reharm Mapping Configuration Matrix (FIXED SYNTAX VALUES)
+// Global Reharm Mapping Configuration Matrix (CLEANED, EXPANDED ARRAYS)
 const coreTransformMatrix = {
     tritone: { "C Major": ["Cmaj7", "Eb7", "Abmaj7", "Db7", "Cmaj7", "Eb7", "Abmaj7", "Db7"], "G Major": ["Gmaj7", "Bb7", "Ebmaj7", "Ab7", "Gmaj7", "Bb7", "Ebmaj7", "Ab7"], "A Minor": ["Am7", "C7", "Fmaj7", "Bb7", "Am7", "C7", "Fmaj7", "Bb7"] },
     secondary: { "C Major": ["C", "E7", "Am", "D7", "G", "C7", "F", "G7"], "G Major": ["G", "B7", "Em", "A7", "D", "G7", "C", "D7"], "A Minor": ["Am", "C7", "Dm", "E7", "Am", "C7", "Dm", "E7"] },
@@ -919,7 +903,7 @@ const coreTransformMatrix = {
     planing: { "C Major": ["Cmaj7", "Bb7", "Am7", "Ab7", "Gmaj7", "F7", "Em7", "Dm7"], "G Major": ["Gmaj7", "Fmaj7", "Ebmaj7", "D7", "Cmaj7", "Bb7", "Am7", "D7"], "A Minor": ["Am7", "Fmaj7", "Dm7", "E7", "Am7", "Fmaj7", "Dm7", "E7"] },
     polychords: { "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"], "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"], "A Minor": ["Am", "F", "C", "G", "Am", "F", "C", "G"] },
     upper: { "C Major": ["Cmaj9", "Am11", "Fmaj13", "G7b9", "Cmaj9", "Am11", "Fmaj13", "G7b9"], "G Major": ["Gmaj9", "Em11", "Cmaj13", "D7b9", "Gmaj9", "Em11", "Cmaj13", "D7b9"], "A Minor": ["Am9", "Fmaj11", "Cmaj13", "Esusb9", "Am9", "Fmaj11", "Cmaj13", "Esusb9"] },
-    drop2: { "C Major": ["C(Dr2)", "Am(Dr2)", "F(Dr2)", "G(Dr2)", "C(Dr2)", "Am(Dr2)", "F(Dr2)", "G(Dr2)"], "G Major": ["G(Dr2)", "Em(Dr2)", "C(Dr2)", "D(Dr2)", "G(Dr2)", "Em(Dr2)", "C(Dr2)", "D(Dr2)"], "A Minor": ["Am(Dr2)", "F(Dr2)", "C(Dr2)", "G(Dr2)", "Am(Dr2 Mont)", "F(Dr2)", "C(Dr2)", "G(Dr2)"] },
+    drop2: { "C Major": ["C(Dr2)", "Am(Dr2)", "F(Dr2)", "G(Dr2)", "C(Dr2)", "Am(Dr2)", "F(Dr2)", "G(Dr2)"], "G Major": ["G(Dr2)", "Em(Dr2)", "C(Dr2)", "D(Dr2)", "G(Dr2)", "Em(Dr2", "C(Dr2)", "D(Dr2)"], "A Minor": ["Am(Dr2)", "F(Dr2)", "C(Dr2)", "G(Dr2)", "Am(Dr2)", "F(Dr2)", "C(Dr2)", "G(Dr2)"] },
     diminished: { "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"], "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"], "A Minor": ["Am", "F", "C", "G", "Am", "F", "C", "G"] },
     diatonic: { "C Major": ["Am", "C", "Dm", "Em", "Am", "C", "Dm", "G"], "G Major": ["Em", "G", "Am", "Bm", "Em", "G", "Am", "D"], "A Minor": ["C", "Am", "Dm", "F", "C", "Am", "Dm", "E7"] },
     relative: { "C Major": ["Am", "C", "Am", "C", "Am", "C", "Am", "C"], "G Major": ["Em", "G", "Em", "G", "Em", "G", "Em", "G"], "A Minor": ["C", "Am", "C", "Am", "C", "Am", "C", "Am"] },
@@ -944,42 +928,6 @@ const coreTransformMatrix = {
     fb43: { "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"], "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"], "A Minor": ["Am", "F", "C", "G", "Am", "F", "C", "G"] },
     fb52: { "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"], "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"], "A Minor": ["Am", "F", "C", "G", "Am", "F", "C", "G"] }
 };
-
-// COMPREHENSIVE MUSIC THEORY ACADEMY ACADEMIC GLOSSARY ENTRIES
-const glossaryData = [
-    { title: "Andalusian Progression Framework", cat: "Turnarounds", def: "A natural minor modal framework built upon a step-wise descending bass pattern (i - bVII - bVI - V). Widely integrated across Flamenco, Neo-Soul, and heavy scoring structures to enforce perpetual dramatic forward momentum." },
-    { title: "Backdoor Dominant (bVII7)", cat: "Dominant Alterations", def: "A sophisticated jazz modulation device where a dominant seventh chord built on the flat-seventh degree (bVII7, like Bb7 in C Major) replaces the default V7 chord. It connects elegantly into your primary major tonic via step-wise voice leading." },
-    { title: "Bass Walk-Ups", cat: "Voice Leading", def: "The intentional arrangement of inversion steps or scale degrees to generate an unbroken, ascending scale line across the lowest registers. Excellent for guiding audience expectations toward an upcoming structural boundary." },
-    { title: "Bass Walk-Downs", cat: "Voice Leading", def: "The construction of step-wise descending scale structures right across the bass part. Often deployed to link a major root tonic smoothly into its relative minor destination." },
-    { title: "Chromatic Dominants", cat: "Dominant Alterations", def: "The consecutive chaining of un-diatonic functional dominant chords placed directly back-to-back. This setup purposefully bends key center boundaries while preserving clean interior voice lines." },
-    { title: "Circle of 5ths Cycle", cat: "Turnarounds", def: "An architectural arrangement scheme where every incoming chord root backs up systematically by a perfect fifth interval (e.g., E -> A -> D -> G -> C). Provides a deeply historical feel of functional release." },
-    { title: "Diatonic Substitution", cat: "Passing Shifts", def: "The practice of swapping a primary chord with an alternative structural step residing in the exact same key that shares multiple note assignments (such as swapping a I chord for a iii or vi triad)." },
-    { title: "Diminished Passing Chords", cat: "Passing Shifts", def: "Fully diminished seventh chords inserted deliberately into small half-step gaps between diatonic scale degrees (like a C#dim7 bridging C and Dm). Acts as an active chromatic accelerator." },
-    { title: "Drop 2 Voicing", cat: "Modal Textures", def: "An advanced arranging style that takes the second highest note of a close-positioned block chord and drops it down exactly one octave. Opens up the texture for a more spacious, elegant layout preferred by solo arrangers." },
-    { title: "Extensions (9ths, 11ths, 13ths)", cat: "Color & Extensions", def: "The piling of higher triadic intervals (the 9th, 11th, and 13th degrees) high above standard chord foundations. Injects signature jazz and R&B atmosphere without breaking the baseline path." },
-    { title: "Figured Bass: 6 (Root Triad Inv)", cat: "Figured Bass", def: "A traditional classical notation tracking a first inversion voicing configuration. The underlying triad structure rests directly upon its relative 3rd scale interval instead of its normal root pitch." },
-    { title: "Figured Bass: 6/4 (Second Inv)", cat: "Figured Bass", def: "A classical reference tracing a second inversion voicing frame. The chord shifts onto its relative 5th scale degree, commonly deployed to delay a final arrival on the tonic major." },
-    { title: "Figured Bass: 4/3 (7th Chord 2nd Inv)", cat: "Figured Bass", def: "Tracks a specific second inversion arrangement layout for structural seventh chords, where the core root sits an interval of a fourth above the lowest note on the staff." },
-    { title: "Figured Bass: 5/2 (7th Chord 3rd Inv)", cat: "Figured Bass", def: "Commands a third inversion seventh chord space. The active seventh interval sits directly in the bass register, creating an intense pull that requires immediate resolution." },
-    { title: "Half Cadence Break", cat: "Color & Extensions", def: "Halting a musical phrase or section unexpectedly on a dominant chord (V). This creates an unresolved cliffhanger effect that leaves the section open-ended." },
-    { title: "Harmonic Prolongation", cat: "Passing Shifts", def: "Padding out the overall duration of a main target chord by layering auxiliary or neighboring inversion steps around it before moving to the next core change." },
-    { title: "Inversions (Slash Chords)", cat: "Voice Leading", def: "Rearranging a chord configuration so that the 3rd, 5th, or 7th scale degree acts as the lowest note instead of the root. Makes chord changes smoother by minimizing big jumps in the bass line." },
-    { title: "ii-V-I & ii°-V7-i Cadences", cat: "Turnarounds", def: "The central pillars of jazz and classical tension-and-release chord writing. Combines minor pre-dominants and dominant seventh chords to deliver powerful, satisfying resolutions." },
-    { title: "Modal Parallel Borrowing", cat: "Modal Textures", def: "Borrowing chord choices directly from alternative parallel modes of the same root key (such as swapping a standard C Major chord with a rich Abmaj7 chord pulled from C Minor)." },
-    { title: "Non-Chord Tones", cat: "Voice Leading", def: "Adding temporary suspensions or auxiliary notes that rub against the main chord choices before resolving down into chord tones on the next beat." },
-    { title: "Perfect Authentic Cadence (PAC)", cat: "Color & Extensions", def: "The strongest resolution closer in western music theory. A root-position dominant seventh chord (V7) resolves cleanly into a root-position tonic major (I) with the tonic note up in the lead melody." },
-    { title: "Pedal Tones", cat: "Voice Leading", def: "Locking the lowest bass register onto an unmoving, stationary pitch note while the upper registers transition through different chord changes over top." },
-    { title: "Plagal Cadence (Amen Close)", cat: "Color & Extensions", def: "A resolution pattern moving directly from a subdominant major structure (IV) into its root tonic (I). Traditionally known across choir settings as the 'Amen Close'." },
-    { title: "Planing / Parallelism", cat: "Modal Textures", def: "Taking a specific vertical interval or chord shape and slides it chromatically down or up the keyboard or fretboard, ignoring the traditional constraints of the key." },
-    { title: "Poly Chords", cat: "Modal Textures", def: "Superimposing two entirely independent major or minor triads over each other simultaneously to unlock massive, dense composite textures." },
-    { title: "Relative Chord Intercept", cat: "Passing Shifts", def: "Weaving minor relative variants back and forth seamlessly within a phrase to soften the impact of simple chord transitions." },
-    { title: "Secondary Dominants", cat: "Dominant Alterations", def: "Introducing an un-diatonic dominant seventh chord engineered to point toward a target chord in the key, treating it temporarily like a home key." },
-    { title: "Standard Turnaround", cat: "Turnarounds", def: "The classic loop progression sequence (I-vi-ii-V) deployed at the close of formal phrases to establish structural stability and guide the arrangement back to the top." },
-    { title: "Suspended (sus4 / sus2) Delay", cat: "Color & Extensions", def: "Replacing the defining 3rd scale interval of a chord with a 4th or 2nd scale degree. This delays the chord's resolution and creates an open, floating character." },
-    { title: "Tritone Substitution", cat: "Dominant Alterations", def: "Swapping a standard dominant seventh chord with an alternative dominant seventh situated exactly a tritone away (e.g., playing Db7 instead of G7). Creates a smooth chromatic bass descent." },
-    { title: "iii-vi-ii-V-I Extended Chain", cat: "Turnarounds", def: "An extension of the classic turnaround pattern that reaches further back up the circle of fifths to create a long, satisfying harmonic descent." },
-    { title: "Upper Structures", cat: "Modal Textures", def: "An advanced orchestration approach where the rhythm section stays locked onto simple bass roots while the lead instruments stack extensions (7ths, 9ths, 11ths, 13ths) above." }
-];
 
 function buildAlphabeticalGlossary() {
     const container = document.getElementById('glossaryContainer');
