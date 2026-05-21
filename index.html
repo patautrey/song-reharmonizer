@@ -510,7 +510,6 @@
 </div>
 
 <script>
-// Main View Routing Switch Engine
 function switchMainView(viewId) {
     document.querySelectorAll('.app-view').forEach(view => view.classList.remove('active'));
     document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
@@ -519,7 +518,6 @@ function switchMainView(viewId) {
     document.getElementById(viewId + '-btn').classList.add('active');
 }
 
-// UI Ingest Tab Controller Logic
 function switchInputTab(tabId, element) {
     document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -528,7 +526,6 @@ function switchInputTab(tabId, element) {
     element.classList.add('active');
 }
 
-// Global Core Structural Map State Definition
 let currentBaseKey = "C Major";
 let songArrangementMap = [];
 
@@ -544,7 +541,6 @@ function ensureAudioContextInitialized() {
     }
 }
 
-// Procedural Ingestion Generation Engine. Computes unique keys and chord blocks using string length values as generation seeds.
 function triggerArrangementMapping(fileName) {
     const seed = fileName.length;
     const availableKeys = ["C Major", "G Major", "A Minor"];
@@ -566,7 +562,7 @@ function triggerArrangementMapping(fileName) {
             ["Am", "G", "F", "E7", "Am", "G", "F", "E7"],
             ["Dm", "Am", "F", "E7", "Dm", "Am", "F", "E7"]
         ]
-    ];
+    };
 
     const targetPool = progressions[currentBaseKey];
     
@@ -583,7 +579,6 @@ function triggerArrangementMapping(fileName) {
     renderTimelineStructure(`Audio Analysis: ${currentBaseKey} Arrangement Mapped`, `Active Track: ${fileName}`);
 }
 
-// 1. Process Audio File Input (.wav, .mp3)
 function processAudioFile() {
     const fileInput = document.getElementById('audioFile');
     if (!fileInput || fileInput.files.length === 0) return;
@@ -608,7 +603,6 @@ function processAudioFile() {
     reader.readAsArrayBuffer(file);
 }
 
-// 2. Process MIDI File Input (.mid)
 function processMidiFile() {
     const fileInput = document.getElementById('midiFile');
     if (!fileInput || fileInput.files.length === 0) return;
@@ -623,7 +617,6 @@ function processMidiFile() {
     }, 1200);
 }
 
-// 3. Live Microphone Stream Engine
 let isRecording = false;
 function toggleLiveRecording() {
     const btn = document.getElementById('recordBtn');
@@ -661,7 +654,6 @@ function toggleLiveRecording() {
     }
 }
 
-// DYNAMIC 8-COLUMN TIMELINE RENDERER
 function renderTimelineStructure(titleText, trackMetaText) {
     document.getElementById('detectedTitle').innerText = titleText;
     document.getElementById('trackNameDisplay').innerText = trackMetaText;
@@ -701,7 +693,6 @@ function renderTimelineStructure(titleText, trackMetaText) {
     document.getElementById('explanation').innerText = "Structural layout processed. Select any matrix category below to reharmonize all tracks simultaneously.";
 }
 
-// Global Reharm Mapping Configuration Matrix (CLEAN VALIDATED VERSION)
 const coreTransformMatrix = {
     tritone: {
         "C Major": ["Cmaj7", "Eb7", "Abmaj7", "Db7", "Cmaj7", "Eb7", "Abmaj7", "Db7"],
@@ -865,7 +856,6 @@ const coreTransformMatrix = {
     }
 };
 
-// COMPREHENSIVE MUSIC THEORY ACADEMY ACADEMIC GLOSSARY ENTRIES
 const glossaryData = [
     { title: "Andalusian Progression Framework", cat: "Turnarounds", def: "A natural minor modal framework built upon a step-wise descending bass pattern (i - bVII - bVI - V). Widely integrated across Flamenco, Neo-Soul, and heavy scoring structures to enforce perpetual dramatic forward momentum." },
     { title: "Backdoor Dominant (bVII7)", cat: "Dominant Alterations", def: "A sophisticated jazz modulation device where a dominant seventh chord built on the flat-seventh degree (bVII7, like Bb7 in C Major) replaces the default V7 chord. It connects elegantly into your primary major tonic via step-wise voice leading." },
@@ -972,7 +962,6 @@ function filterGlossaryEntries() {
     });
 }
 
-// Render Initial UI State Safely
 window.addEventListener('DOMContentLoaded', function() {
     triggerArrangementMapping("Default System Architecture Reference Track.wav");
     buildAlphabeticalGlossary();
