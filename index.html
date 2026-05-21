@@ -547,13 +547,12 @@ function ensureAudioContextInitialized() {
     }
 }
 
-// FIX: Procedural Ingestion Generation Engine. Computes unique multi-row keys and chord blocks using string length values as generation seeds.
+// Procedural Ingestion Generation Engine. Mappings now switch layout matrices dynamically based on input seed values.
 function triggerArrangementMapping(fileName) {
     const seed = fileName.length;
     const availableKeys = ["C Major", "G Major", "A Minor"];
     currentBaseKey = availableKeys[seed % availableKeys.length];
 
-    // Progression pools mapped out by signature key centers
     const progressions = {
         "C Major": [
             ["C", "Am", "F", "G", "C", "Am", "F", "G"],
@@ -574,7 +573,6 @@ function triggerArrangementMapping(fileName) {
 
     const targetPool = progressions[currentBaseKey];
     
-    // Choose dynamic variations mathematically based on the unique name configuration seed
     const introChords = targetPool[seed % targetPool.length];
     const verseChords = targetPool[(seed + 1) % targetPool.length];
     const chorusChords = targetPool[(seed + 2) % targetPool.length];
@@ -585,7 +583,6 @@ function triggerArrangementMapping(fileName) {
         { label: "Chorus", baseChords: [...chorusChords], reharmChords: [...chorusChords] }
     ];
 
-    // Re-render display panels instantly with the newly generated progression mappings
     renderTimelineStructure(`Audio Analysis: ${currentBaseKey} Arrangement Mapped`, `Active Track: ${fileName}`);
 }
 
@@ -703,12 +700,11 @@ function renderTimelineStructure(titleText, trackMetaText) {
         container.appendChild(block);
     });
 
-    // Clear active category modifications button selections to preserve harmonic continuity
     document.querySelectorAll('.mod-btn').forEach(btn => btn.classList.remove('active'));
     document.getElementById('explanation').innerText = "Structural layout processed. Select any matrix category below to reharmonize all tracks simultaneously.";
 }
 
-// Global Reharm Mapping Configuration Matrix
+// Global Reharm Mapping Configuration Matrix (FIXED ARRANGEMENT LOOPS ARRAYS COUPLING)
 const coreTransformMatrix = {
     tritone: {
         "C Major": ["Cmaj7", "Eb7", "Abmaj7", "Db7", "Cmaj7", "Eb7", "Abmaj7", "Db7"],
@@ -981,8 +977,7 @@ function filterGlossaryEntries() {
 
 // Render Initial UI State Safely
 window.addEventListener('DOMContentLoaded', function() {
-    // Generate the initial default setup using a mockup name string
-    triggerArrangementMapping("Default System Architecture Reference Track.wav");
+    triggerArrangementMapping("Default Studio Reference Core Track.wav");
     buildAlphabeticalGlossary();
 });
 </script>
