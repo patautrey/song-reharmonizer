@@ -547,7 +547,7 @@ function ensureAudioContextInitialized() {
     }
 }
 
-// Procedural Ingestion Generation Engine. Mappings now switch layout matrices dynamically based on input seed values.
+// Procedural Ingestion Generation Engine. Computes unique multi-row keys and chord blocks using string length values as generation seeds.
 function triggerArrangementMapping(fileName) {
     const seed = fileName.length;
     const availableKeys = ["C Major", "G Major", "A Minor"];
@@ -704,7 +704,7 @@ function renderTimelineStructure(titleText, trackMetaText) {
     document.getElementById('explanation').innerText = "Structural layout processed. Select any matrix category below to reharmonize all tracks simultaneously.";
 }
 
-// Global Reharm Mapping Configuration Matrix (FIXED ARRANGEMENT LOOPS ARRAYS COUPLING)
+// Global Reharm Mapping Configuration Matrix (FIXED SYNTAX ARRAY)
 const coreTransformMatrix = {
     tritone: {
         "C Major": ["Cmaj7", "Eb7", "Abmaj7", "Db7", "Cmaj7", "Eb7", "Abmaj7", "Db7"],
@@ -977,7 +977,7 @@ function filterGlossaryEntries() {
 
 // Render Initial UI State Safely
 window.addEventListener('DOMContentLoaded', function() {
-    triggerArrangementMapping("Default Studio Reference Core Track.wav");
+    triggerArrangementMapping("Default System Architecture Reference Track.wav");
     buildAlphabeticalGlossary();
 });
 </script>
