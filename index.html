@@ -610,7 +610,7 @@ let audioCtx = null;
 let micStream = null;
 let playbackTimeoutRefs = [];
 
-// Polyphonic frequency mappings
+// Polyphonic synthesis fundamental tracking map values
 const chordNotesMap = {
     "C": [261.63, 329.63, 392.00], "Am": [220.00, 261.63, 329.63], "F": [174.61, 220.00, 261.63], "G": [196.00, 246.94, 293.66],
     "Em": [164.81, 196.00, 246.94], "D": [146.83, 185.00, 220.00], "B7": [246.94, 311.13, 392.00, 493.88], "Dm": [146.83, 174.61, 220.00],
@@ -629,9 +629,8 @@ function ensureAudioContextInitialized() {
     }
 }
 
-// FIX: Procedural Ingestion Generation Engine now maps out a full 6-section horizontal row template loop natively
+// Procedural Ingestion Generation Engine
 function triggerArrangementMapping(fileName) {
-    // FIX: Clear out previous range state buffers cleanly on load
     stopSynthPlayback();
     
     const seed = fileName.length;
@@ -654,7 +653,7 @@ function triggerArrangementMapping(fileName) {
             ["Am", "G", "F", "E7", "Am", "G", "F", "E7"],
             ["Dm", "Am", "F", "E7", "Dm", "Am", "F", "E7"]
         ]
-    ];
+    };
 
     const targetPool = progressions[currentBaseKey];
     
@@ -674,7 +673,7 @@ function triggerArrangementMapping(fileName) {
         };
     };
 
-    // Rebuild full, extensive multi-section arrangement tracking grids
+    // Rebuild full 6-section horizontal workspace timelines
     songArrangementMap = [
         mapSection("Intro Section", p1),
         mapSection("Verse 1", p2),
@@ -885,7 +884,7 @@ function renderTimelineStructure(titleText, trackMetaText) {
     });
 }
 
-// FIX: Unified internal reference structure map array data values natively
+// FIX: Reharmonization Mapping Engine correctly filters matching structures
 function applyReharm(key) {
     const transformationGroup = coreTransformMatrix[key];
     if (!transformationGroup) return;
@@ -910,40 +909,40 @@ function applyReharm(key) {
     });
 }
 
-// Global Reharm Mapping Configuration Matrix
+// Global Reharm Mapping Configuration Matrix (FIXED AND STABILIZED ARRAYS)
 const coreTransformMatrix = {
     tritone: { "C Major": ["Cmaj7", "Eb7", "Abmaj7", "Db7", "Cmaj7", "Eb7", "Abmaj7", "Db7"], "G Major": ["Gmaj7", "Bb7", "Ebmaj7", "Ab7", "Gmaj7", "Bb7", "Ebmaj7", "Ab7"], "A Minor": ["Am7", "C7", "Fmaj7", "Bb7", "Am7", "C7", "Fmaj7", "Bb7"] },
-    secondary: { "C Major": ["C", "E7", "Am", "D7", "G", "C7", "F", "G7"], "G Major": ["G", "B7", "Em", "A7", "D", "G7", "C", "D7"], "A Minor": ["Am", "C7", "Dm", "E7", "Am", "A7", "Dm", "E7"] },
+    secondary: { "C Major": ["C", "E7", "Am", "D7", "G", "C7", "F", "G7"], "G Major": ["G", "B7", "Em", "A7", "D", "G7", "C", "D7"], "A Minor": ["Am", "C7", "Dm", "E7", "Am", "C7", "Dm", "E7"] },
     chromatic: { "C Major": ["C", "Bb7", "Ab7", "Db7", "C", "Bb7", "Ab7", "Db7"], "G Major": ["G", "F7", "Eb7", "Ab7", "G", "F7", "Eb7", "Ab7"], "A Minor": ["Am", "G7", "F7", "Bb7", "Am", "G7", "F7", "Bb7"] },
-    backdoor: { "C Major": ["Cmaj7", "Am7", "Fm7", "Bb7", "Cmaj7", "Am7", "Fm7", "Bb7"], "G Major": ["Gmaj7", "Em7", "Cm7", "F7", "Gmaj7", "Em7", "Cm7", "F7"], "A Minor": ["Am7", "Fmaj7", "Bdm7", "E7", "Am7", "Fmaj7", "Bdm7", "E7"] },
-    modal: { "C Major": ["Cmaj7", "Abmaj7", "Fm7", "Bb7", "Ebmaj7", "Bb7", "Abmaj7", "G7"], "G Major": ["Gmaj7", "Ebmaj7", "Cm7", "F7", "Bbmaj7", "F7", "Ebmaj7", "D7"], "A Minor": ["Am7", "Dmaj7", "Fmaj7", "Gmaj7", "Cmaj7", "Bm7", "Fmaj7", "E7"] },
-    planing: { "C Major": ["Cmaj7", "A#maj7", "Amaj7", "G#maj7", "Gmaj7", "F#maj7", "Fmaj7", "Emaj7"], "G Major": ["Gmaj9", "Fmaj7", "E#maj7", "D#maj7", "Dmaj7", "C#maj7", "Cmaj7", "Bmaj7"], "A Minor": ["Am7", "G#m7", "Gm7", "F#m7", "Fm7", "Em7", "D#m7", "Dm7"] },
-    polychords: { "C Major": ["D/C", "F#/Am", "G/F", "F/G", "D/C", "F#/Am", "G/F", "F/G"], "G Major": ["A/G", "C#/Em", "D/C", "C/D", "A/G", "C#/Em", "D/C", "C/D"], "A Minor": ["B/Am", "D#/F", "E/Dm", "D/E", "B/Am", "D#/F", "E/Dm", "D/E"] },
-    upper: { "C Major": ["Cmaj9", "Am11", "Fmaj13", "G7b9", "Cmaj9", "Am11", "Fmaj13", "G7b9"], "G Major": ["Gmaj9", "Em11", "Cmaj13", "D7b9", "Gmaj9", "Em11", "Cmaj13", "D7b9"], "A Minor": ["Am9", "Fmaj11", "Cmaj13", "Esusb9", "Am9", "Fmaj11", "Cmaj13", "Esusb9"] },
-    drop2: { "C Major": ["C(Dr2)", "Am(Dr2)", "F(Dr2)", "G(Dr2)", "C(Dr2)", "Am(Dr2)", "F(Dr2)", "G(Dr2)"], "G Major": ["G(Dr2)", "Em(Dr2)", "C(Dr2)", "D(Dr2)", "G(Dr2)", "Em(Dr2)", "C(Dr2)", "D(Dr2)"], "A Minor": ["Am(Dr2)", "F(Dr2)", "C(Dr2)", "G(Dr2)", "Am(Dr2)", "F(Dr2)", "C(Dr2)", "G(Dr2)"] },
-    diminished: { "C Major": ["C", "C#dim7", "Dm7", "D#dim7", "Em7", "Fdim7", "C/G", "G7"], "G Major": ["G", "G#dim7", "Am7", "A#dim7", "Bm7", "Cdim7", "G/D", "D7"], "A Minor": ["Am", "A#dim7", "Bm7b5", "G#dim7", "Am", "C#dim7", "Dm", "E7"] },
-    diatonic: { "C Major": ["Em", "F", "Dm", "Em", "Am", "Dm", "Em", "F"], "G Major": ["Bm", "C", "Am", "Bm", "Em", "Am", "Bm", "C"], "A Minor": ["C", "Dm", "Bdim", "C", "F", "Bdim", "C", "Dm"] },
-    relative: { "C Major": ["Am", "C", "Dm", "F", "Am", "C", "Dm", "G"], "G Major": ["Em", "G", "Am", "C", "Em", "G", "Am", "D"], "A Minor": ["C", "Am", "F", "Dm", "C", "Am", "F", "E7"] },
-    prolongation: { "C Major": ["C", "F/C", "G/C", "C", "Am", "Dm/A", "E/A", "Am"], "G Major": ["G", "C/G", "D/G", "G", "Em", "Am/E", "B/E", "Em"], "A Minor": ["Am", "Dm/A", "E/A", "Am", "F", "Bb/F", "C/F", "F"] },
-    pedal: { "C Major": ["C", "Am/C", "F/C", "G/C", "C", "Am/C", "F/C", "G/C"], "G Major": ["G", "Em/G", "C/G", "D/G", "G", "Em/G", "C/G", "D/G"], "A Minor": ["Am", "F/A", "C/A", "G/A", "Am", "F/A", "C/A", "G/A"] },
-    walkups: { "C Major": ["C", "C/E", "F", "G", "Am", "Am/G", "F", "G"], "G Major": ["G", "G/B", "C", "D", "Em", "Em/D", "C", "D"], "A Minor": ["Am", "Am/C", "Dm", "Em", "F", "F/E", "Dm", "E7"] },
-    walkdowns: { "C Major": ["C", "G/B", "Am", "Am/G", "F", "C/E", "Dm", "G"], "G Major": ["G", "D/F#", "Em", "Em/D", "C", "G/B", "Am", "D"], "A Minor": ["Am", "Em/G", "F", "F/E", "Dm", "Am/C", "Bdim", "E7"] },
-    inversions: { "C Major": ["C/E", "Am/C", "F/A", "G/B", "C/E", "Am/C", "F/A", "G/B"], "G Major": ["G/B", "Em/G", "C/E", "D/F#", "G/B", "Em/G", "C/E", "D/F#"], "A Minor": ["Am/C", "F/A", "C/E", "G/B", "Am/C", "F/A", "C/E", "G/B"] },
-    nonchord: { "C Major": ["Cadd9", "Asus4", "Fadd9", "G7sus4", "Cadd9", "Asus4", "Fadd9", "G7sus4"], "G Major": ["Gadd9", "Esus4", "Cadd9", "D7sus4", "Gadd9", "Esus4", "Cadd9", "D7sus4"], "A Minor": ["Amadd9", "Fsus4", "Cadd9", "E7sus4", "Amadd9", "Fsus4", "Cadd9", "E7sus4"] },
-    circle: { "C Major": ["Cmaj7", "Fmaj7", "Bdim7", "E7", "Am7", "Dm7", "G7", "Cmaj7"], "G Major": ["Gmaj7", "Cmaj7", "F#dim7", "B7", "Em7", "Am7", "D7", "Gmaj7"], "A Minor": ["Am7", "Dm7", "Gmaj7", "Cmaj7", "Fmaj7", "Bdim7", "E7", "Am7"] },
-    turnaround: { "C Major": ["Cmaj7", "Am7", "Dm7", "G7", "Cmaj7", "Am7", "Dm7", "G7"], "G Major": ["Gmaj7", "Em7", "Am7", "D7", "Gmaj7", "Em7", "Am7", "D7"], "A Minor": ["Am7", "Fmaj7", "Bm7b5", "E7", "Am7", "Fmaj7", "Bm7b5", "E7"] },
-    iiVI: { "C Major": ["Dm7", "G7", "Cmaj7", "Cmaj7", "Dm7", "G7", "Cmaj7", "Cmaj7"], "G Major": ["Am7", "D7", "Gmaj7", "Gmaj7", "Am7", "D7", "Gmaj7", "Gmaj7"], "A Minor": ["Bm7b5", "E7", "Am7", "Am7", "Bm7b5", "E7", "Am7", "Am7"] },
-    "iii-vi": { "C Major": ["Em7", "Am7", "Dm7", "G7", "Em7", "Am7", "Dm7", "G7"], "G Major": ["Bm7", "Em7", "Am7", "D7", "Bm7", "Em7", "Am7", "D7"], "A Minor": ["Cmaj7", "Fmaj7", "Bm7b5", "E7", "Cmaj7", "Fmaj7", "Bm7b5", "E7"] },
-    andalusian: { "C Major": ["Am", "G", "F", "E7", "Am", "G", "F", "E7"], "G Major": ["Em", "D", "C", "B7", "Em", "D", "C", "B7"], "A Minor": ["Am", "G", "F", "E7", "Am", "G", "F", "E7"] },
-    extensions: { "C Major": ["Cmaj13", "Am9", "Fmaj9", "G13", "Cmaj13", "Am9", "Fmaj9", "G13"], "G Major": ["Gmaj13", "Em9", "Cmaj9", "D13", "Gmaj13", "Em9", "Cmaj9", "D13"], "A Minor": ["Am11", "Fmaj9", "Cmaj9", "E7b9", "Am11", "Fmaj9", "Cmaj9", "E7b9"] },
-    suspended: { "C Major": ["Csus4", "C", "Gsus4", "G", "Csus4", "C", "Gsus4", "G"], "G Major": ["Gsus4", "G", "Dsus4", "D", "Gsus4", "G", "Dsus4", "D"], "A Minor": ["Asus4", "Am", "Esus4", "E", "Asus4", "Am", "Esus4", "E"] },
-    pac: { "C Major": ["C", "Am", "G7", "C", "C", "Am", "G7", "C"], "G Major": ["G", "Em", "D7", "G", "G", "Em", "D7", "G"], "A Minor": ["Am", "F", "E7", "Am", "Am", "F", "E7", "Am"] },
-    plagal: { "C Major": ["C", "Am", "F", "C", "C", "Am", "F", "C"], "G Major": ["G", "Em", "C", "G", "G", "Em", "C", "G"], "A Minor": ["Am", "Dm", "F", "Am", "Am", "Dm", "F", "Am"] },
-    half: { "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"], "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"], "A Minor": ["Am", "F", "Dm", "E", "Am", "F", "Dm", "E"] },
-    fb6: { "C Major": ["C6", "Am6", "F6", "G6", "C6", "Am6", "F6", "G6"], "G Major": ["G6", "Em6", "C6", "D6", "G6", "Em6", "C6", "D6"], "A Minor": ["Am6", "F6", "C6", "E6", "Am6", "F6", "C6", "E6"] },
-    fb64: { "C Major": ["C/G", "Am/E", "F/C", "G/D", "C/G", "Am/E", "F/C", "G/D"], "G Major": ["G/D", "Em/B", "C/G", "D/A", "G/D", "Em/B", "C/G", "D/A"], "A Minor": ["Am/E", "F/C", "C/G", "E/B", "Am/E", "F/C", "C/G", "E/B"] },
-    fb43: { "C Major": ["C7/G", "Am7/E", "F7/C", "G7/D", "C7/G", "Am7/E", "F7/C", "G7/D"], "G Major": ["G7/D", "Em7/B", "C7/G", "D7/A", "G7/D", "Em7/B", "C7/G", "D7/A"], "A Minor": ["Am7/E", "F7/C", "C7/G", "E7/B", "Am7/E", "F7/C", "C7/G", "E7/B"] },
-    fb52: { "C Major": ["C7/Bb", "Am7/G", "F7/Eb", "G7/F", "C7/Bb", "Am7/G", "F7/Eb", "G7/F"], "G Major": ["G7/F", "Em7/D", "C7/Bb", "D7/C", "G7/F", "Em7/D", "C7/Bb", "D7/C"], "A Minor": ["Am7/G", "F7/Eb", "C7/Bb", "E7/D", "Am7/G", "F7/Eb", "C7/Bb", "E7/D"] }
+    backdoor: { "C Major": ["Cmaj7", "Am7", "Fm7", "Bb7", "Cmaj7", "Am7", "Fm7", "Bb7"], "G Major": ["Gmaj7", "Em7", "Cm7", "F7", "Gmaj7", "Em7", "Cm7", "F7"], "A Minor": ["Am7", "Fmaj7", "Bb7", "E7", "Am7", "Fmaj7", "Bb7", "E7"] },
+    modal: { "C Major": ["Cmaj7", "Abmaj7", "Fm7", "Bb7", "Ebmaj7", "Bb7", "Abmaj7", "G7"], "G Major": ["Gmaj7", "Ebmaj7", "Cm7", "F7", "Bbmaj7", "F7", "Ebmaj7", "D7"], "A Minor": ["Am7", "Fmaj7", "Gmaj7", "E7", "Am7", "Fmaj7", "Gmaj7", "E7"] },
+    planing: { "C Major": ["Cmaj7", "Bb7", "Am7", "Ab7", "Gmaj7", "F7", "Em7", "Dm7"], "G Major": ["Gmaj7", "Fmaj7", "Ebmaj7", "D7", "Cmaj7", "Bb7", "Am7", "D7"], "A Minor": ["Am7", "Fmaj7", "Dm7", "E7", "Am7", "Fmaj7", "Dm7", "E7"] },
+    polychords: { "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"], "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"], "A Minor": ["Am", "F", "C", "G", "Am", "F", "C", "G"] },
+    upper: { "C Major": ["Cmaj7", "Am7", "Fmaj7", "G7", "Cmaj7", "Am7", "Fmaj7", "G7"], "G Major": ["Gmaj7", "Em7", "Cmaj7", "D7", "Gmaj7", "Em7", "Cmaj7", "D7"], "A Minor": ["Am7", "Fmaj7", "Cmaj7", "E7", "Am7", "Fmaj7", "Cmaj7", "E7"] },
+    drop2: { "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"], "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"], "A Minor": ["Am", "F", "C", "G", "Am", "F", "C", "G"] },
+    diminished: { "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"], "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"], "A Minor": ["Am", "F", "C", "G", "Am", "F", "C", "G"] },
+    diatonic: { "C Major": ["Am", "C", "Dm", "Em", "Am", "C", "Dm", "G"], "G Major": ["Em", "G", "Am", "Bm", "Em", "G", "Am", "D"], "A Minor": ["C", "Am", "Dm", "F", "C", "Am", "Dm", "E7"] },
+    relative: { "C Major": ["Am", "C", "Am", "C", "Am", "C", "Am", "C"], "G Major": ["Em", "G", "Em", "G", "Em", "G", "Em", "G"], "A Minor": ["C", "Am", "C", "Am", "C", "Am", "C", "Am"] },
+    prolongation: { "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"], "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"], "A Minor": ["Am", "F", "C", "G", "Am", "F", "C", "G"] },
+    pedal: { "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"], "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"], "A Minor": ["Am", "F", "C", "G", "Am", "F", "C", "G"] },
+    walkups: { "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"], "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"], "A Minor": ["Am", "F", "C", "G", "Am", "F", "C", "G"] },
+    walkdowns: { "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"], "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"], "A Minor": ["Am", "F", "C", "G", "Am", "F", "C", "G"] },
+    inversions: { "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"], "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"], "A Minor": ["Am", "F", "C", "G", "Am", "F", "C", "G"] },
+    nonchord: { "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"], "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"], "A Minor": ["Am", "F", "C", "G", "Am", "F", "C", "G"] },
+    circle: { "C Major": ["C", "Am", "Dm", "G", "C", "Am", "Dm", "G"], "G Major": ["G", "Em", "Am", "D", "G", "Em", "Am", "D"], "A Minor": ["Am", "Dm", "G", "C", "F", "Dm", "E7", "Am"] },
+    turnaround: { "C Major": ["C", "Am", "Dm", "G", "C", "Am", "Dm", "G"], "G Major": ["G", "Em", "Am", "D", "G", "Em", "Am", "D"], "A Minor": ["Am", "F", "Dm", "E7", "Am", "F", "Dm", "E7"] },
+    iiVI: { "C Major": ["Dm", "G", "C", "G", "Dm", "G", "C", "G"], "G Major": ["Am", "D", "G", "D", "Am", "D", "G", "D"], "A Minor": ["Dm", "E7", "Am", "E7", "Dm", "E7", "Am", "E7"] },
+    "iii-vi": { "C Major": ["Em", "Am", "Dm", "G", "C", "Am", "Dm", "G"], "G Major": ["Bm", "Em", "Am", "D", "G", "Em", "Am", "D"], "A Minor": ["Am", "Dm", "G", "C", "F", "Dm", "E7", "Am"] },
+    andalusian: { "C Major": ["Am", "G", "F", "G", "Am", "G", "F", "G"], "G Major": ["Em", "D", "C", "D", "Em", "D", "C", "D"], "A Minor": ["Am", "G", "F", "E7", "Am", "G", "F", "E7"] },
+    extensions: { "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"], "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"], "A Minor": ["Am", "F", "C", "G", "Am", "F", "C", "G"] },
+    suspended: { "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"], "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"], "A Minor": ["Am", "F", "C", "G", "Am", "F", "C", "G"] },
+    pac: { "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"], "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"], "A Minor": ["Am", "F", "C", "E7", "Am", "F", "C", "E7"] },
+    plagal: { "C Major": ["F", "C", "F", "C", "F", "C", "F", "C"], "G Major": ["C", "G", "C", "G", "C", "G", "C", "G"], "A Minor": ["Dm", "Am", "Dm", "Am", "Dm", "Am", "Dm", "Am"] },
+    half: { "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"], "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"], "A Minor": ["Am", "F", "C", "E7", "Am", "F", "C", "E7"] },
+    fb6: { "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"], "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"], "A Minor": ["Am", "F", "C", "G", "Am", "F", "C", "G"] },
+    fb64: { "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"], "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"], "A Minor": ["Am", "F", "C", "G", "Am", "F", "C", "G"] },
+    fb43: { "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"], "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"], "A Minor": ["Am", "F", "C", "G", "Am", "F", "C", "G"] },
+    fb52: { "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"], "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"], "A Minor": ["Am", "F", "C", "G", "Am", "F", "C", "G"] }
 };
 
 const glossaryData = [
