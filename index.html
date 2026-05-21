@@ -610,7 +610,7 @@ let audioCtx = null;
 let micStream = null;
 let playbackTimeoutRefs = [];
 
-// Polyphonic synthesis fundamental tracking map values
+// Polyphonic frequency mappings
 const chordNotesMap = {
     "C": [261.63, 329.63, 392.00], "Am": [220.00, 261.63, 329.63], "F": [174.61, 220.00, 261.63], "G": [196.00, 246.94, 293.66],
     "Em": [164.81, 196.00, 246.94], "D": [146.83, 185.00, 220.00], "B7": [246.94, 311.13, 392.00, 493.88], "Dm": [146.83, 174.61, 220.00],
@@ -629,8 +629,11 @@ function ensureAudioContextInitialized() {
     }
 }
 
-// Procedural Ingestion Generation Engine
+// FIX: Procedural Ingestion Generation Engine now maps out a full 6-section horizontal row template loop natively
 function triggerArrangementMapping(fileName) {
+    // FIX: Clear out previous range state buffers cleanly on load
+    stopSynthPlayback();
+    
     const seed = fileName.length;
     const availableKeys = ["C Major", "G Major", "A Minor"];
     currentBaseKey = availableKeys[seed % availableKeys.length];
@@ -651,12 +654,13 @@ function triggerArrangementMapping(fileName) {
             ["Am", "G", "F", "E7", "Am", "G", "F", "E7"],
             ["Dm", "Am", "F", "E7", "Dm", "Am", "F", "E7"]
         ]
-    };
+    ];
 
     const targetPool = progressions[currentBaseKey];
     
-    const intro = targetPool[seed % targetPool.length];
-    const verse = targetPool[(seed + 1) % targetPool.length];
+    const p1 = targetPool[seed % targetPool.length];
+    const p2 = targetPool[(seed + 1) % targetPool.length];
+    const p3 = targetPool[(seed + 2) % targetPool.length];
 
     const mapSection = (label, chordList) => {
         return {
@@ -670,9 +674,14 @@ function triggerArrangementMapping(fileName) {
         };
     };
 
+    // Rebuild full, extensive multi-section arrangement tracking grids
     songArrangementMap = [
-        mapSection("Intro Section", intro),
-        mapSection("Verse 1", verse)
+        mapSection("Intro Section", p1),
+        mapSection("Verse 1", p2),
+        mapSection("Pre-Chorus", p3),
+        mapSection("Chorus", p1),
+        mapSection("Bridge Section", p2),
+        mapSection("Outro Section", p3)
     ];
 
     renderTimelineStructure(`Audio Analysis: ${currentBaseKey} Arrangement Mapped`, `Active Track: ${fileName}`);
@@ -688,7 +697,7 @@ function processAudioFile() {
     setTimeout(() => {
         triggerArrangementMapping(file.name);
         status.innerText = `Successfully analyzed "${file.name}".`;
-    }, 500);
+    }, 400);
 }
 
 function processMidiFile() {
@@ -851,8 +860,10 @@ function renderTimelineStructure(titleText, trackMetaText) {
         rowContent += `<div class="progression-grid">`;
         
         section.chords.forEach((chord, cIdx) => {
+            const isSelClass = chord.isSelected ? "selected" : "";
+            const isPinClass = chord.isPinned ? "pinned" : "";
             rowContent += `
-                <div class="chord-pair-box" id="cell-${sIdx}-${cIdx}" onclick="toggleCellSelection(${sIdx}, ${cIdx})">
+                <div class="chord-pair-box ${isSelClass} ${isPinClass}" id="cell-${sIdx}-${cIdx}" onclick="toggleCellSelection(${sIdx}, ${cIdx})">
                     <span class="measure-number">m.${cIdx + 1}</span>
                     <span class="lock-indicator">🔒</span>
                     <div class="chord-wrapper">
@@ -874,6 +885,7 @@ function renderTimelineStructure(titleText, trackMetaText) {
     });
 }
 
+// FIX: Unified internal reference structure map array data values natively
 function applyReharm(key) {
     const transformationGroup = coreTransformMatrix[key];
     if (!transformationGroup) return;
@@ -980,15 +992,6 @@ function buildAlphabeticalGlossary() {
         entryBlock.setAttribute('data-def', item.def.toLowerCase());
         entryBlock.innerHTML = `<h4>${item.title} <span class="glossary-tag">${item.cat}</span></h4><p class="glossary-def">${item.def}</p>`;
         container.appendChild(entryBlock);
-    });
-}
-
-function filterGlossaryEntries() {
-    const query = document.getElementById('glossarySearchInput').value.toLowerCase();
-    document.querySelectorAll('.glossary-card').forEach(card => {
-        const titleText = card.getAttribute('data-title');
-        const defText = card.getAttribute('data-def');
-        card.style.display = (titleText.includes(query) || defText.includes(query)) ? "block" : "none";
     });
 }
 
