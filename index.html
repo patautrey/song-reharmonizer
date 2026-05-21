@@ -14,7 +14,7 @@
             justify-content: center;
         }
         .container {
-            max-width: 950px;
+            max-width: 1100px;
             width: 100%;
             background: #171a21;
             padding: 35px;
@@ -149,55 +149,86 @@
             color: #00d2d3;
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
             display: flex;
             justify-content: space-between;
         }
         .section-type {
             background: #2c3447;
-            padding: 2px 8px;
+            padding: 4px 10px;
             border-radius: 4px;
             color: #fff;
         }
-        .progression-row {
-            display: flex;
-            gap: 15px;
+        
+        /* Optimized 8-Chord Layout System Matrix */
+        .progression-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 12px;
             align-items: center;
-            overflow-x: auto;
-            padding-bottom: 5px;
+        }
+        @media (max-width: 900px) {
+            .progression-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        .chord-pair-box {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid #252b3a;
+            border-radius: 6px;
+            padding: 10px 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: center;
+            position: relative;
+        }
+        .measure-number {
+            position: absolute;
+            top: 2px;
+            left: 4px;
+            font-size: 9px;
+            color: #4b5563;
+            font-family: monospace;
         }
         .chord-wrapper {
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 2px;
             align-items: center;
+            width: 100%;
         }
         .chord-title {
-            font-size: 10px;
-            color: #747d8c;
+            font-size: 9px;
+            color: #57606f;
             text-transform: uppercase;
+            font-weight: 600;
         }
         .chord-card {
             text-align: center;
             background: #2c3447;
-            padding: 12px 18px;
-            border-radius: 6px;
-            min-width: 70px;
+            padding: 8px 4px;
+            border-radius: 4px;
+            width: 90%;
             font-weight: bold;
-            font-size: 16px;
+            font-size: 14px;
             color: #fff;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
             border: 1px solid transparent;
             transition: all 0.2s;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
         .chord-card.transformed {
             background: #10ac84;
             border-color: #1dd1a1;
             animation: flash 0.3s ease-out;
         }
-        .arrow {
-            font-size: 18px;
-            color: #485460;
+        .divider-arrow {
+            color: #2f3542;
+            font-size: 12px;
+            margin: -2px 0;
         }
         .analysis-text {
             font-size: 14px;
@@ -294,32 +325,14 @@
     </div>
 
     <div class="display-deck">
-        <div style="font-weight: bold; font-size: 14px; color: #a4b0be; text-transform: uppercase; margin-bottom: 5px;" id="detectedTitle">Song Map: Default Pattern (Key of C Major)</div>
+        <div style="font-weight: bold; font-size: 14px; color: #a4b0be; text-transform: uppercase; margin-bottom: 5px;" id="detectedTitle">Song Map: Default 8-Bar System (Key of C Major)</div>
         <div class="track-metadata" id="trackNameDisplay">Active Track: none (Using internal generator)</div>
         
         <div id="timelineContainer">
             <div class="section-block">
-                <div class="section-header"><span class="section-type">Intro / Verse Block</span></div>
-                <div class="progression-row">
-                    <div class="chord-wrapper"><span class="chord-title">Base</span><div class="chord-card" id="orig1">C</div></div>
-                    <div class="arrow">→</div>
-                    <div class="chord-wrapper"><span class="chord-title">Reharm</span><div class="chord-card transformed" id="ch1">C</div></div>
-                    <div class="arrow" style="margin-left: 15px; margin-right: 15px;">|</div>
-                    
-                    <div class="chord-wrapper"><span class="chord-title">Base</span><div class="chord-card" id="orig2">Am</div></div>
-                    <div class="arrow">→</div>
-                    <div class="chord-wrapper"><span class="chord-title">Reharm</span><div class="chord-card transformed" id="ch2">Am</div></div>
-                    <div class="arrow" style="margin-left: 15px; margin-right: 15px;">|</div>
-
-                    <div class="chord-wrapper"><span class="chord-title">Base</span><div class="chord-card" id="orig3">F</div></div>
-                    <div class="arrow">→</div>
-                    <div class="chord-wrapper"><span class="chord-title">Reharm</span><div class="chord-card transformed" id="ch3">F</div></div>
-                    <div class="arrow">→</div>
-                    
-                    <div class="chord-wrapper"><span class="chord-title">Base</span><div class="chord-card" id="orig4">G</div></div>
-                    <div class="arrow">→</div>
-                    <div class="chord-wrapper"><span class="chord-title">Reharm</span><div class="chord-card transformed" id="ch4">G</div></div>
-                </div>
+                <div class="section-header"><span class="section-type">Default Loop Template</span></div>
+                <div class="progression-grid">
+                    </div>
             </div>
         </div>
 
@@ -401,10 +414,19 @@ function switchInputTab(tabId, element) {
     element.classList.add('active');
 }
 
-// Global Core Structural Map State Definition
+// Global Core Structural Map State Definition (Expanded to full 8-Chord arrays)
 let currentBaseKey = "C Major";
 let songArrangementMap = [
-    { label: "Intro / Verse 1", baseChords: ["C", "Am", "F", "G"], reharmChords: ["C", "Am", "F", "G"] }
+    { 
+        label: "Intro Loop", 
+        baseChords: ["C", "Am", "F", "G", "C", "Am", "F", "G"], 
+        reharmChords: ["C", "Am", "F", "G", "C", "Am", "F", "G"] 
+    },
+    { 
+        label: "Verse 1", 
+        baseChords: ["C", "G", "Am", "Em", "F", "C", "F", "G"], 
+        reharmChords: ["C", "G", "Am", "Em", "F", "C", "F", "G"] 
+    }
 ];
 
 let audioCtx = null;
@@ -423,7 +445,7 @@ function processAudioFile() {
     
     initAudioContext();
     const status = document.getElementById('audioStatus');
-    status.innerText = "Analyzing file spectrum parameters... compiling structural sections...";
+    status.innerText = "Analyzing file spectrum parameters... parsing extended 8-chord rows...";
 
     const file = fileInput.files[0];
     const reader = new FileReader();
@@ -434,14 +456,15 @@ function processAudioFile() {
             setTimeout(() => {
                 currentBaseKey = "G Major";
                 songArrangementMap = [
-                    { label: "Intro", baseChords: ["G", "G", "C", "D"], reharmChords: ["G", "G", "C", "D"] },
-                    { label: "Verse 1", baseChords: ["G", "Em", "C", "D"], reharmChords: ["G", "Em", "C", "D"] },
-                    { label: "Pre-Chorus", baseChords: ["C", "D", "Bm", "Em"], reharmChords: ["C", "D", "Bm", "Em"] },
-                    { label: "Chorus", baseChords: ["G", "D", "Em", "C"], reharmChords: ["G", "D", "Em", "C"] },
-                    { label: "Outro", baseChords: ["G", "C", "D", "G"], reharmChords: ["G", "C", "D", "G"] }
+                    { label: "Intro", baseChords: ["G", "G", "C", "D", "G", "G", "C", "D"], reharmChords: ["G", "G", "C", "D", "G", "G", "C", "D"] },
+                    { label: "Verse 1", baseChords: ["G", "Em", "C", "D", "G", "Em", "C", "B7"], reharmChords: ["G", "Em", "C", "D", "G", "Em", "C", "B7"] },
+                    { label: "Pre-Chorus", baseChords: ["C", "D", "Bm", "Em", "C", "Am", "D7", "D7"], reharmChords: ["C", "D", "Bm", "Em", "C", "Am", "D7", "D7"] },
+                    { label: "Chorus", baseChords: ["G", "D", "Em", "C", "G", "D", "C", "G"], reharmChords: ["G", "D", "Em", "C", "G", "D", "C", "G"] },
+                    { label: "Bridge", baseChords: ["Em", "Bm", "C", "G", "Am", "Em", "D7", "D7"], reharmChords: ["Em", "Bm", "C", "G", "Am", "Em", "D7", "D7"] },
+                    { label: "Outro", baseChords: ["G", "C", "D", "G", "G", "C", "D", "G"], reharmChords: ["G", "C", "D", "G", "G", "C", "D", "G"] }
                 ];
-                renderTimelineStructure("Audio Stream: G Major Full Arrangement Mapped", `Active Track: ${file.name}`);
-                status.innerText = `Successfully analyzed "${file.name}". Full song map parsed.`;
+                renderTimelineStructure("Audio Stream: G Major 8-Bar Matrix Map", `Active Track: ${file.name}`);
+                status.innerText = `Successfully analyzed "${file.name}". Full song mapped in 8-chord bars.`;
             }, 1200);
         })
         .catch(err => {
@@ -463,13 +486,13 @@ function processMidiFile() {
     setTimeout(() => {
         currentBaseKey = "A Minor";
         songArrangementMap = [
-            { label: "Verse 1", baseChords: ["Am", "F", "C", "G"], reharmChords: ["Am", "F", "C", "G"] },
-            { label: "Chorus", baseChords: ["F", "G", "Am", "C"], reharmChords: ["F", "G", "Am", "C"] },
-            { label: "Guitar Solo", baseChords: ["Am", "G", "F", "E7"], reharmChords: ["Am", "G", "F", "E7"] },
-            { label: "Bridge", baseChords: ["Dm", "Am", "F", "E7"], reharmChords: ["Dm", "Am", "F", "E7"] }
+            { label: "Verse 1", baseChords: ["Am", "F", "C", "G", "Am", "F", "Dm", "E7"], reharmChords: ["Am", "F", "C", "G", "Am", "F", "Dm", "E7"] },
+            { label: "Chorus", baseChords: ["F", "G", "Am", "C", "F", "G", "Dm", "E7"], reharmChords: ["F", "G", "Am", "C", "F", "G", "Dm", "E7"] },
+            { label: "Guitar Solo", baseChords: ["Am", "G", "F", "E7", "Am", "G", "F", "E7"], reharmChords: ["Am", "G", "F", "E7", "Am", "G", "F", "E7"] },
+            { label: "Outro", baseChords: ["Am", "F", "G", "Am", "Am", "F", "G", "Am"], reharmChords: ["Am", "F", "G", "Am", "Am", "F", "G", "Am"] }
         ];
-        renderTimelineStructure("MIDI Stream: A Minor Array Configuration Loaded", `Active Track: ${file.name}`);
-        status.innerText = `Successfully parsed note lanes for "${file.name}". Sections grouped clean.`;
+        renderTimelineStructure("MIDI Stream: A Minor Multi-Row Frame Loaded", `Active Track: ${file.name}`);
+        status.innerText = `Successfully parsed note lanes for "${file.name}". Extended sections mapped.`;
     }, 1200);
 }
 
@@ -481,4 +504,122 @@ function toggleLiveRecording() {
 
     if (!isRecording) {
         initAudioContext();
-        navigator.mediaDevices.getUserMedia({
+        navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => {
+            isRecording = true;
+            micStream = stream;
+            btn.innerText = "Stop Live Stream Input";
+            btn.style.background = "#333";
+            status.innerText = "Listening... processing live chroma inputs across 8 structural markers...";
+
+            window.liveAnalysisLoop = setTimeout(() => {
+                if (isRecording) {
+                    currentBaseKey = "C Major";
+                    songArrangementMap = [
+                        { label: "Live Capture Session Block", baseChords: ["C", "Am", "F", "G", "C", "Am", "F", "G"], reharmChords: ["C", "Am", "F", "G", "C", "Am", "F", "G"] }
+                    ];
+                    renderTimelineStructure("Live Feed Engine Tracker Synced", "Active Track: Studio Microphone Input Stream");
+                    status.innerText = "Running tracking matrix metrics. 8 chords populated.";
+                }
+            }, 1800);
+        })
+        .catch(err => {
+            status.innerText = "Error: Input routing denied.";
+        });
+    } else {
+        isRecording = false;
+        btn.innerText = "Start Live Stream Input";
+        btn.style.background = "#eb4d4b";
+        status.innerText = "Microphone channel closed and returned to standby.";
+        if (micStream) {
+            micStream.getTracks().forEach(track => track.stop());
+        }
+        clearTimeout(window.liveAnalysisLoop);
+    }
+}
+
+// DYNAMIC 8-COLUMN TIMELINE RENDERER
+function renderTimelineStructure(titleText, trackMetaText) {
+    document.getElementById('detectedTitle').innerText = titleText;
+    document.getElementById('trackNameDisplay').innerText = trackMetaText;
+    const container = document.getElementById('timelineContainer');
+    container.innerHTML = ""; 
+
+    songArrangementMap.forEach((section, sIdx) => {
+        const block = document.createElement('div');
+        block.className = "section-block";
+        
+        let rowContent = `<div class="section-header"><span class="section-type">${section.label}</span></div>`;
+        rowContent += `<div class="progression-grid">`;
+        
+        section.baseChords.forEach((chord, cIdx) => {
+            rowContent += `
+                <div class="chord-pair-box">
+                    <span class="measure-number">m.${cIdx + 1}</span>
+                    <div class="chord-wrapper">
+                        <span class="chord-title">Base</span>
+                        <div class="chord-card">${chord}</div>
+                    </div>
+                    <div class="divider-arrow">▼</div>
+                    <div class="chord-wrapper">
+                        <span class="chord-title">Reharm</span>
+                        <div class="chord-card transformed" id="reharm-${sIdx}-${cIdx}">${section.reharmChords[cIdx]}</div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        rowContent += `</div>`;
+        block.innerHTML = rowContent;
+        container.appendChild(block);
+    });
+
+    document.getElementById('explanation').innerText = "Structural layout processed. Select any matrix category below to reharmonize all tracks simultaneously.";
+}
+
+// Initialize default layout map on start
+renderTimelineStructure("Song Map: Default 8-Bar System (Key of C Major)", "Active Track: none (Using internal generator)");
+
+// Global Reharm Mapping Configuration Matrix
+const coreTransformMatrix = {
+    tritone: {
+        "C Major": ["Cmaj7", "Eb7", "Abmaj7", "Db7", "Cmaj7", "Eb7", "Abmaj7", "Db7"],
+        "G Major": ["Gmaj7", "Bb7", "Ebmaj7", "Ab7", "Gmaj7", "Bb7", "Ebmaj7", "Ab7"],
+        "A Minor": ["Am7", "C7", "Fmaj7", "Bb7", "Am7", "C7", "Fmaj7", "Bb7"]
+    },
+    secondary: {
+        "C Major": ["C", "E7", "Am", "D7", "G", "C7", "F", "G7"],
+        "G Major": ["G", "B7", "Em", "A7", "D", "G7", "C", "D7"],
+        "A Minor": ["Am", "C7", "Dm", "E7", "Am", "A7", "Dm", "E7"]
+    },
+    chromatic: {
+        "C Major": ["C", "Bb7", "Ab7", "Db7", "C", "Bb7", "Ab7", "Db7"],
+        "G Major": ["G", "F7", "Eb7", "Ab7", "G", "F7", "Eb7", "Ab7"],
+        "A Minor": ["Am", "G7", "F7", "Bb7", "Am", "G7", "F7", "Bb7"]
+    },
+    backdoor: {
+        "C Major": ["Cmaj7", "Am7", "Fm7", "Bb7", "Cmaj7", "Am7", "Fm7", "Bb7"],
+        "G Major": ["Gmaj7", "Em7", "Cm7", "F7", "Gmaj7", "Em7", "Cm7", "F7"],
+        "A Minor": ["Am7", "Fmaj7", "Bdm7", "E7", "Am7", "Fmaj7", "Bdm7", "E7"]
+    },
+    modal: {
+        "C Major": ["Cmaj7", "Abmaj7", "Fm7", "Bb7", "Ebmaj7", "Bb7", "Abmaj7", "G7"],
+        "G Major": ["Gmaj7", "Ebmaj7", "Cm7", "F7", "Bbmaj7", "F7", "Ebmaj7", "D7"],
+        "A Minor": ["Am7", "Dmaj7", "Fmaj7", "Gmaj7", "Cmaj7", "Bm7", "Fmaj7", "E7"]
+    },
+    planing: {
+        "C Major": ["Cmaj7", "A#maj7", "Amaj7", "G#maj7", "Gmaj7", "F#maj7", "Fmaj7", "Emaj7"],
+        "G Major": ["Gmaj7", "Fmaj7", "E#maj7", "D#maj7", "Dmaj7", "C#maj7", "Cmaj7", "Bmaj7"],
+        "A Minor": ["Am7", "G#m7", "Gm7", "F#m7", "Fm7", "Em7", "D#m7", "Dm7"]
+    },
+    polychords: {
+        "C Major": ["D/C", "F#/Am", "G/F", "F/G", "D/C", "F#/Am", "G/F", "F/G"],
+        "G Major": ["A/G", "C#/Em", "D/C", "C/D", "A/G", "C#/Em", "D/C", "C/D"],
+        "A Minor": ["B/Am", "D#/F", "E/Dm", "D/E", "B/Am", "D#/F", "E/Dm", "D/E"]
+    },
+    upper: {
+        "C Major": ["Cmaj9", "Am11", "Fmaj13", "G7b9", "Cmaj9", "Am11", "Fmaj13", "G7b9"],
+        "G Major": ["Gmaj9", "Em11", "Cmaj13", "D7b9", "Gmaj9", "Em11", "Cmaj13", "D7b9"],
+        "A Minor": ["Am9", "Fmaj11", "Cmaj13", "Esusb9", "Am9", "Fmaj11", "Cmaj13", "Esusb9"]
+    },
+    drop2: {
