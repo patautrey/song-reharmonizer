@@ -637,6 +637,7 @@ function triggerArrangementMapping(fileName) {
     const availableKeys = ["C Major", "G Major", "A Minor"];
     currentBaseKey = availableKeys[seed % availableKeys.length];
 
+    // FIXED: Mapped out 3 complete variation tracks for all keys so that targetPool calculation never hits an undefined index limit
     const progressions = {
         "C Major": [
             ["C", "Am", "F", "G", "C", "Am", "F", "G"],
@@ -673,7 +674,7 @@ function triggerArrangementMapping(fileName) {
         };
     };
 
-    // Rebuild full 6-section horizontal workspace timelines
+    // Rebuild 6 horizontal workspace timelines natively
     songArrangementMap = [
         mapSection("Intro Section", p1),
         mapSection("Verse 1", p2),
@@ -884,7 +885,6 @@ function renderTimelineStructure(titleText, trackMetaText) {
     });
 }
 
-// FIX: Reharmonization Mapping Engine correctly filters matching structures
 function applyReharm(key) {
     const transformationGroup = coreTransformMatrix[key];
     if (!transformationGroup) return;
@@ -909,7 +909,7 @@ function applyReharm(key) {
     });
 }
 
-// Global Reharm Mapping Configuration Matrix (FIXED AND STABILIZED ARRAYS)
+// Global Reharm Mapping Configuration Matrix (FIXED SYNTAX VALUES)
 const coreTransformMatrix = {
     tritone: { "C Major": ["Cmaj7", "Eb7", "Abmaj7", "Db7", "Cmaj7", "Eb7", "Abmaj7", "Db7"], "G Major": ["Gmaj7", "Bb7", "Ebmaj7", "Ab7", "Gmaj7", "Bb7", "Ebmaj7", "Ab7"], "A Minor": ["Am7", "C7", "Fmaj7", "Bb7", "Am7", "C7", "Fmaj7", "Bb7"] },
     secondary: { "C Major": ["C", "E7", "Am", "D7", "G", "C7", "F", "G7"], "G Major": ["G", "B7", "Em", "A7", "D", "G7", "C", "D7"], "A Minor": ["Am", "C7", "Dm", "E7", "Am", "C7", "Dm", "E7"] },
@@ -918,8 +918,8 @@ const coreTransformMatrix = {
     modal: { "C Major": ["Cmaj7", "Abmaj7", "Fm7", "Bb7", "Ebmaj7", "Bb7", "Abmaj7", "G7"], "G Major": ["Gmaj7", "Ebmaj7", "Cm7", "F7", "Bbmaj7", "F7", "Ebmaj7", "D7"], "A Minor": ["Am7", "Fmaj7", "Gmaj7", "E7", "Am7", "Fmaj7", "Gmaj7", "E7"] },
     planing: { "C Major": ["Cmaj7", "Bb7", "Am7", "Ab7", "Gmaj7", "F7", "Em7", "Dm7"], "G Major": ["Gmaj7", "Fmaj7", "Ebmaj7", "D7", "Cmaj7", "Bb7", "Am7", "D7"], "A Minor": ["Am7", "Fmaj7", "Dm7", "E7", "Am7", "Fmaj7", "Dm7", "E7"] },
     polychords: { "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"], "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"], "A Minor": ["Am", "F", "C", "G", "Am", "F", "C", "G"] },
-    upper: { "C Major": ["Cmaj7", "Am7", "Fmaj7", "G7", "Cmaj7", "Am7", "Fmaj7", "G7"], "G Major": ["Gmaj7", "Em7", "Cmaj7", "D7", "Gmaj7", "Em7", "Cmaj7", "D7"], "A Minor": ["Am7", "Fmaj7", "Cmaj7", "E7", "Am7", "Fmaj7", "Cmaj7", "E7"] },
-    drop2: { "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"], "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"], "A Minor": ["Am", "F", "C", "G", "Am", "F", "C", "G"] },
+    upper: { "C Major": ["Cmaj9", "Am11", "Fmaj13", "G7b9", "Cmaj9", "Am11", "Fmaj13", "G7b9"], "G Major": ["Gmaj9", "Em11", "Cmaj13", "D7b9", "Gmaj9", "Em11", "Cmaj13", "D7b9"], "A Minor": ["Am9", "Fmaj11", "Cmaj13", "Esusb9", "Am9", "Fmaj11", "Cmaj13", "Esusb9"] },
+    drop2: { "C Major": ["C(Dr2)", "Am(Dr2)", "F(Dr2)", "G(Dr2)", "C(Dr2)", "Am(Dr2)", "F(Dr2)", "G(Dr2)"], "G Major": ["G(Dr2)", "Em(Dr2)", "C(Dr2)", "D(Dr2)", "G(Dr2)", "Em(Dr2)", "C(Dr2)", "D(Dr2)"], "A Minor": ["Am(Dr2)", "F(Dr2)", "C(Dr2)", "G(Dr2)", "Am(Dr2 Mont)", "F(Dr2)", "C(Dr2)", "G(Dr2)"] },
     diminished: { "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"], "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"], "A Minor": ["Am", "F", "C", "G", "Am", "F", "C", "G"] },
     diatonic: { "C Major": ["Am", "C", "Dm", "Em", "Am", "C", "Dm", "G"], "G Major": ["Em", "G", "Am", "Bm", "Em", "G", "Am", "D"], "A Minor": ["C", "Am", "Dm", "F", "C", "Am", "Dm", "E7"] },
     relative: { "C Major": ["Am", "C", "Am", "C", "Am", "C", "Am", "C"], "G Major": ["Em", "G", "Em", "G", "Em", "G", "Em", "G"], "A Minor": ["C", "Am", "C", "Am", "C", "Am", "C", "Am"] },
@@ -945,6 +945,7 @@ const coreTransformMatrix = {
     fb52: { "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"], "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"], "A Minor": ["Am", "F", "C", "G", "Am", "F", "C", "G"] }
 };
 
+// COMPREHENSIVE MUSIC THEORY ACADEMY ACADEMIC GLOSSARY ENTRIES
 const glossaryData = [
     { title: "Andalusian Progression Framework", cat: "Turnarounds", def: "A natural minor modal framework built upon a step-wise descending bass pattern (i - bVII - bVI - V). Widely integrated across Flamenco, Neo-Soul, and heavy scoring structures to enforce perpetual dramatic forward momentum." },
     { title: "Backdoor Dominant (bVII7)", cat: "Dominant Alterations", def: "A sophisticated jazz modulation device where a dominant seventh chord built on the flat-seventh degree (bVII7, like Bb7 in C Major) replaces the default V7 chord. It connects elegantly into your primary major tonic via step-wise voice leading." },
