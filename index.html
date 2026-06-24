@@ -347,7 +347,7 @@
           </div>
 
           <div class="playback-row">
-            <span class="instrument-label">Grand Piano</span>
+            <span class="instrument-label">Grand Piano (synth)</span>
             <button class="btn success" id="playBaseBtn">PLAY BASE</button>
             <button class="btn primary" id="playReharmBtn">PLAY REHARM</button>
             <button class="btn danger" id="stopBtn">STOP</button>
@@ -583,6 +583,120 @@
     const activeTrackLabelEl = document.getElementById("activeTrackLabel");
     const theoryFooterNoteEl = document.getElementById("theoryFooterNote");
 
+    // --- SIMPLE NOTE/CHORD ENGINE (Web Audio) ------------------------------
+    let audioCtx = null;
+    let activeOscillators = [];
+    let playbackTimeouts = [];
+
+    const noteFreqs = {
+      C4: 261.63,
+      Cs4: 277.18,
+      D4: 293.66,
+      Ds4: 311.13,
+      E4: 329.63,
+      F4: 349.23,
+      Fs4: 369.99,
+      G4: 392.0,
+      Gs4: 415.3,
+      A4: 440.0,
+      As4: 466.16,
+      B4: 493.88,
+      C5: 523.25
+    };
+
+    function chordToPitches(chord) {
+      // Very simple mapping for demo: root + 3rd + 5th
+      // Only handles basic triads and 7 chords in G major context.
+      const rootMap = {
+        G: "G4",
+        Em: "E4",
+        C: "C4",
+        D: "D4",
+        B7: "B4"
+      };
+      const root = rootMap[chord] || "C4";
+      const rootFreq = noteFreqs[root] || noteFreqs["C4"];
+
+      // major/minor/7th approximations
+      if (chord === "Em") {
+        return [rootFreq, rootFreq * Math.pow(2, 3 / 12), rootFreq * Math.pow(2, 7 / 12)];
+      } else if (chord === "B7") {
+        return [
+          rootFreq,
+          rootFreq * Math.pow(2, 4 / 12),
+          rootFreq * Math.pow(2, 7 / 12),
+          rootFreq * Math.pow(2, 10 / 12)
+        ];
+      } else if (chord === "D") {
+        return [rootFreq, rootFreq * Math.pow(2, 4 / 12), rootFreq * Math.pow(2, 7 / 12)];
+      } else if (chord === "C") {
+        return [rootFreq, rootFreq * Math.pow(2, 4 / 12), rootFreq * Math.pow(2, 7 / 12)];
+      } else if (chord === "G") {
+        return [rootFreq, rootFreq * Math.pow(2, 4 / 12), rootFreq * Math.pow(2, 7 / 12)];
+      }
+      return [rootFreq];
+    }
+
+    function ensureAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+    }
+
+    function stopAllPlayback() {
+      playbackTimeouts.forEach((t) => clearTimeout(t));
+      playbackTimeouts = [];
+      activeOscillators.forEach((osc) => {
+        try {
+          osc.stop();
+        } catch (e) {}
+      });
+      activeOscillators = [];
+    }
+
+    function playChord(chord, startTime, duration = 0.7) {
+      ensureAudioContext();
+      const pitches = chordToPitches(chord);
+      const now = audioCtx.currentTime;
+      const t0 = now + startTime;
+
+      pitches.forEach((freq) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = "sine";
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.0, t0);
+        gain.gain.linearRampToValueAtTime(0.4, t0 + 0.02);
+        gain.gain.linearRampToValueAtTime(0.0, t0 + duration);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start(t0);
+        osc.stop(t0 + duration + 0.05);
+        activeOscillators.push(osc);
+      });
+    }
+
+    function playSection(mode) {
+      stopAllPlayback();
+      ensureAudioContext();
+      const measures = sections[currentSectionKey];
+      const chordPath =
+        mode === "base"
+          ? measures.map((m) => m.base)
+          : measures.map((m) => m.reharm);
+
+      const beatDur = 0.8; // seconds per chord
+      chordPath.forEach((chord, idx) => {
+        const t = idx * beatDur;
+        const timeoutId = setTimeout(() => {
+          playChord(chord, 0, 0.7);
+        }, t * 1000);
+        playbackTimeouts.push(timeoutId);
+      });
+    }
+
     // --- RENDERING ----------------------------------------------------------
     function renderChordGrid() {
       chordGridEl.innerHTML = "";
@@ -633,7 +747,6 @@
     // --- INTERACTION --------------------------------------------------------
     function handleMeasureClick(mNumber) {
       if (lastClickedMeasure === null || !selectedMeasures.has(lastClickedMeasure)) {
-        // toggle single selection
         if (selectedMeasures.has(mNumber)) {
           selectedMeasures.delete(mNumber);
         } else {
@@ -641,7 +754,6 @@
         }
         lastClickedMeasure = mNumber;
       } else {
-        // range selection between lastClickedMeasure and mNumber
         selectedMeasures.clear();
         const start = Math.min(lastClickedMeasure, mNumber);
         const end = Math.max(lastClickedMeasure, mNumber);
@@ -663,20 +775,15 @@
         alert("Select one or more measures to commit reharm changes.");
         return;
       }
-      const measures = sections[currentSectionKey];
       const selectedArray = Array.from(selectedMeasures).sort((a, b) => a - b);
-
-      // Simple reharm demo: apply activeTheoryTag as a note in console
       const tagText = activeTheoryTag
         ? ` with theory tag: ${activeTheoryTag}`
         : "";
-
       console.log(
         `Committing reharm changes for section "${currentSectionKey}" measures ${selectedArray.join(
           ", "
         )}${tagText}.`
       );
-
       alert(
         `Range committed for ${currentSectionKey.toUpperCase()} measures ${selectedArray.join(
           ", "
@@ -700,7 +807,7 @@
           : `Tip: Click a theory item, then click a chord block to tag that measure with the selected concept in the reharm path (for your own workflow notes).`;
     }
 
-    // --- AUDIO STUBS --------------------------------------------------------
+    // --- AUDIO FILE STATUS (no waveform analysis yet) -----------------------
     function updateAudioStatusLoaded(fileName) {
       audioStatusEl.innerHTML = `Audio loaded: <span>${fileName}</span>`;
       activeTrackLabelEl.textContent = `Active Track: ${fileName}`;
@@ -716,50 +823,197 @@
       updateAudioStatusLoaded(file.name);
     }
 
-    function stubPlayback(mode) {
-      const measures = sections[currentSectionKey];
-      const chordPath =
-        mode === "base"
-          ? measures.map((m) => m.base).join(" - ")
-          : measures.map((m) => m.reharm).join(" - ");
-      console.log(
-        `Playback (${mode.toUpperCase()}) for section "${currentSectionKey}": ${chordPath}`
-      );
+    // --- EXPORT: WAV (placeholder), MIDI, MUSICXML -------------------------
+    function stubExportWav() {
       alert(
-        `Playback (${mode.toUpperCase()})\nSection: ${currentSectionKey.toUpperCase()}\nPath: ${chordPath}`
+        "WAV export is currently a placeholder.\nYou can later hook this into a real render pipeline."
       );
     }
 
-    function stubStop() {
-      console.log("Playback stopped.");
-      alert("Playback stopped.");
+    // MIDI helpers: very small SMF type 0
+    function createMidiFileBytes() {
+      // We'll encode the entire song as quarter-note chords at 120 BPM.
+      const tempo = 500000; // microseconds per quarter note (120 BPM)
+      const ppq = 480;
+
+      const allSectionsOrder = ["intro", "verse1", "prechorus", "chorus", "bridge", "outro"];
+      const events = [];
+
+      let tick = 0;
+
+      function pushTempo() {
+        // meta tempo event
+        events.push(
+          0x00, // delta
+          0xff, 0x51, 0x03,
+          (tempo >> 16) & 0xff,
+          (tempo >> 8) & 0xff,
+          tempo & 0xff
+        );
+      }
+
+      function pushNoteOn(delta, note, velocity) {
+        events.push(delta, 0x90, note, velocity);
+      }
+
+      function pushNoteOff(delta, note) {
+        events.push(delta, 0x80, note, 0x40);
+      }
+
+      function chordNameToMidiNotes(chord) {
+        // Map to MIDI numbers around middle C (60)
+        const rootMap = {
+          G: 67,
+          Em: 64,
+          C: 60,
+          D: 62,
+          B7: 71
+        };
+        const root = rootMap[chord] || 60;
+        if (chord === "Em") {
+          return [root, root + 3, root + 7];
+        } else if (chord === "B7") {
+          return [root, root + 4, root + 7, root + 10];
+        } else {
+          return [root, root + 4, root + 7];
+        }
+      }
+
+      pushTempo();
+
+      const chordDurTicks = ppq; // quarter note
+
+      allSectionsOrder.forEach((secKey) => {
+        const measures = sections[secKey];
+        measures.forEach((m) => {
+          const notes = chordNameToMidiNotes(m.reharm);
+          // note on
+          notes.forEach((n, idx) => {
+            pushNoteOn(idx === 0 ? 0 : 0, n, 90);
+          });
+          // note off after duration
+          notes.forEach((n, idx) => {
+            pushNoteOff(idx === 0 ? chordDurTicks : 0, n);
+          });
+          tick += chordDurTicks;
+        });
+      });
+
+      // end of track
+      events.push(0x00, 0xff, 0x2f, 0x00);
+
+      // Build track chunk
+      const trackData = Uint8Array.from(events);
+      const trackLen = trackData.length;
+
+      function writeStr(view, offset, str) {
+        for (let i = 0; i < str.length; i++) {
+          view.setUint8(offset + i, str.charCodeAt(i));
+        }
+      }
+
+      const header = new ArrayBuffer(14);
+      const hv = new DataView(header);
+      writeStr(hv, 0, "MThd");
+      hv.setUint32(4, 6); // header length
+      hv.setUint16(8, 0); // format 0
+      hv.setUint16(10, 1); // one track
+      hv.setUint16(12, ppq);
+
+      const track = new ArrayBuffer(8 + trackLen);
+      const tv = new DataView(track);
+      writeStr(tv, 0, "MTrk");
+      tv.setUint32(4, trackLen);
+      for (let i = 0; i < trackLen; i++) {
+        tv.setUint8(8 + i, trackData[i]);
+      }
+
+      const total = new Uint8Array(header.byteLength + track.byteLength);
+      total.set(new Uint8Array(header), 0);
+      total.set(new Uint8Array(track), header.byteLength);
+      return total;
     }
 
-    function stubExport(type) {
-      console.log(`Export requested: ${type} for entire arrangement.`);
-      alert(`Export (${type}) requested.\n(This is a UI stub; hook into your audio engine later.)`);
+    function exportMidi() {
+      const bytes = createMidiFileBytes();
+      const blob = new Blob([bytes], { type: "audio/midi" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "reharmonization.mid";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function exportMusicXML() {
+      const allSectionsOrder = ["intro", "verse1", "prechorus", "chorus", "bridge", "outro"];
+      let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+      xml += `<score-partwise version="3.1">\n`;
+      xml += `  <part-list>\n`;
+      xml += `    <score-part id="P1">\n`;
+      xml += `      <part-name>Reharmonization</part-name>\n`;
+      xml += `    </score-part>\n`;
+      xml += `  </part-list>\n`;
+      xml += `  <part id="P1">\n`;
+
+      let measureNumber = 1;
+      allSectionsOrder.forEach((secKey) => {
+        const measures = sections[secKey];
+        measures.forEach((m) => {
+          xml += `    <measure number="${measureNumber}">\n`;
+          xml += `      <attributes>\n`;
+          xml += `        <divisions>1</divisions>\n`;
+          xml += `        <key><fifths>1</fifths></key>\n`;
+          xml += `        <time><beats>4</beats><beat-type>4</beat-type></time>\n`;
+          xml += `        <clef><sign>G</sign><line>2</line></clef>\n`;
+          xml += `      </attributes>\n`;
+          xml += `      <harmony>\n`;
+          xml += `        <root><root-step>${m.reharm[0]}</root-step></root>\n`;
+          xml += `        <kind>${m.reharm}</kind>\n`;
+          xml += `      </harmony>\n`;
+          xml += `      <note>\n`;
+          xml += `        <pitch><step>C</step><octave>4</octave></pitch>\n`;
+          xml += `        <duration>4</duration>\n`;
+          xml += `        <type>whole</type>\n`;
+          xml += `      </note>\n`;
+          xml += `    </measure>\n`;
+          measureNumber++;
+        });
+      });
+
+      xml += `  </part>\n`;
+      xml += `</score-partwise>\n`;
+
+      const blob = new Blob([xml], { type: "application/vnd.recordare.musicxml+xml" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "reharmonization.musicxml";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     }
 
     // --- WIRING -------------------------------------------------------------
     document.getElementById("audioLoadBtn").addEventListener("click", handleAudioLoad);
 
     document.getElementById("playBaseBtn").addEventListener("click", () =>
-      stubPlayback("base")
+      playSection("base")
     );
     document.getElementById("playReharmBtn").addEventListener("click", () =>
-      stubPlayback("reharm")
+      playSection("reharm")
     );
-    document.getElementById("stopBtn").addEventListener("click", stubStop);
+    document.getElementById("stopBtn").addEventListener("click", () => {
+      stopAllPlayback();
+      alert("Playback stopped.");
+    });
 
-    document.getElementById("exportWavBtn").addEventListener("click", () =>
-      stubExport("WAV")
-    );
-    document.getElementById("exportMidiBtn").addEventListener("click", () =>
-      stubExport("MIDI")
-    );
-    document.getElementById("exportMusicXmlBtn").addEventListener("click", () =>
-      stubExport("MUSICXML")
-    );
+    document.getElementById("exportWavBtn").addEventListener("click", stubExportWav);
+    document.getElementById("exportMidiBtn").addEventListener("click", exportMidi);
+    document.getElementById("exportMusicXmlBtn").addEventListener("click", exportMusicXML);
 
     document.getElementById("commitRangeBtn").addEventListener("click", commitRangeChanges);
     document
