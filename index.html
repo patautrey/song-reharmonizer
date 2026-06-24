@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -296,8 +296,6 @@
     .footer-note strong {
       color: var(--accent);
     }
-
-
     /* Chord palette */
     .chord-palette {
       margin-top: 6px;
@@ -361,7 +359,6 @@
       cursor: pointer;
     }
 
-
     @media (max-width: 900px) {
       .layout-grid {
         grid-template-columns: 1fr;
@@ -387,7 +384,6 @@
       </div>
     </header>
 
-
     <div class="layout-grid">
       <!-- LEFT: AUDIO + ARRANGEMENT -->
       <section class="panel">
@@ -406,7 +402,6 @@
           No audio data loaded. <span>System standby.</span>
         </div>
 
-
         <div style="margin-top: 12px;">
           <div class="analysis-header">
             <div>
@@ -417,7 +412,6 @@
             </div>
           </div>
 
-
           <div class="playback-row">
             <span class="instrument-label">Grand Piano (synth)</span>
             <button class="btn success" id="playBaseBtn">PLAY BASE</button>
@@ -427,7 +421,6 @@
             <button class="btn" id="exportMidiBtn">MIDI</button>
             <button class="btn" id="exportMusicXmlBtn">MUSICXML</button>
           </div>
-
 
           <h3>Sections</h3>
           <div class="section-tabs" id="sectionTabs">
@@ -443,9 +436,7 @@
             <button class="section-tab" data-section="outro">OUTRO</button>
           </div>
 
-
           <div id="chordGrid" class="chord-grid"></div>
-
 
           <!-- Chord palette (appears when measures selected) -->
           <div id="chordPalette" class="chord-palette">
@@ -469,7 +460,6 @@
                 </div>
               </div>
 
-
               <div class="chord-palette-group">
                 <div class="chord-palette-group-label">Extensions</div>
                 <div class="chord-palette-buttons">
@@ -483,8 +473,6 @@
                   <button class="chord-btn" data-chord="D7">D7</button>
                 </div>
               </div>
-
-
               <div class="chord-palette-group">
                 <div class="chord-palette-group-label">Colors</div>
                 <div class="chord-palette-buttons">
@@ -495,7 +483,6 @@
                   <button class="chord-btn" data-chord="G7#5">G7#5</button>
                 </div>
               </div>
-
 
               <div class="chord-palette-group">
                 <div class="chord-palette-group-label">Slash & Half‑Dim</div>
@@ -508,7 +495,6 @@
               </div>
             </div>
           </div>
-
 
           <div class="range-actions">
             <div class="hint">
@@ -527,11 +513,9 @@
         </div>
       </section>
 
-
       <!-- RIGHT: THEORY GLOSSARY -->
       <aside class="panel">
         <h2>Theory Glossary</h2>
-
 
         <h3>Dominant Alterations</h3>
         <div class="theory-grid">
@@ -638,7 +622,6 @@
           </div>
         </div>
 
-
         <div class="footer-note" id="theoryFooterNote">
           <strong>Tip:</strong> Click a theory item, then click a chord block to
           tag that measure with the selected concept in the reharm path (for
@@ -647,14 +630,11 @@
       </aside>
     </div>
   </div>
-
-
   <script>
     // AUDIO CONTEXT
     let audioCtx = null;
     let activeOscillators = [];
     let playbackTimeouts = [];
-
 
     function ensureAudioContext() {
       if (!audioCtx) {
@@ -665,10 +645,8 @@
       }
     }
 
-
     document.addEventListener("click", ensureAudioContext, { once: true });
     document.addEventListener("touchstart", ensureAudioContext, { once: true });
-
 
     // SIMPLE SYNTH
     const noteFreqs = {
@@ -685,7 +663,6 @@
       As4: 466.16,
       B4: 493.88
     };
-
 
     function chordToPitches(chord) {
       // Map only the chords we actually use in the palette
@@ -714,10 +691,8 @@
         "F#m7b5": "Fs4"
       };
 
-
       var base = rootMap[chord] || "C4";
       var f = noteFreqs[base];
-
 
       if (chord === "G" || chord === "C" || chord === "D") {
         return [f, f * 1.26, f * 1.498];
@@ -762,11 +737,9 @@
         return [f, f * 1.189, f * 1.414, f * 1.782];
       }
 
-
       // fallback triad
       return [f, f * 1.26, f * 1.498];
     }
-
 
     function stopAllPlayback() {
       for (var i = 0; i < playbackTimeouts.length; i++) {
@@ -781,13 +754,11 @@
       activeOscillators = [];
     }
 
-
     function playChord(chord, startTime, duration) {
       ensureAudioContext();
       var pitches = chordToPitches(chord);
       var t0 = audioCtx.currentTime + startTime;
       var dur = duration || 0.7;
-
 
       for (var i = 0; i < pitches.length; i++) {
         var freq = pitches[i];
@@ -796,25 +767,19 @@
         osc.type = "sine";
         osc.frequency.value = freq;
 
-
         gain.gain.setValueAtTime(0, t0);
         gain.gain.linearRampToValueAtTime(0.4, t0 + 0.02);
         gain.gain.linearRampToValueAtTime(0, t0 + dur);
 
-
         osc.connect(gain);
         gain.connect(audioCtx.destination);
-
 
         osc.start(t0);
         osc.stop(t0 + dur + 0.05);
 
-
         activeOscillators.push(osc);
       }
     }
-
-
     // DATA MODEL
     var sections = {
       intro: [
@@ -879,12 +844,10 @@
       ]
     };
 
-
     var currentSectionKey = "intro";
     var selectedMeasures = [];
     var lastClickedMeasure = null;
     var activeTheoryTag = null;
-
 
     var chordGridEl = document.getElementById("chordGrid");
     var sectionTabsEl = document.getElementById("sectionTabs");
@@ -894,7 +857,6 @@
     var chordPaletteEl = document.getElementById("chordPalette");
     var chordPaletteLabelEl = document.getElementById("chordPaletteLabel");
     var chordPaletteCloseEl = document.getElementById("chordPaletteClose");
-
 
     // RENDERING
     function renderSectionTabs() {
@@ -909,11 +871,9 @@
       }
     }
 
-
     function renderChordGrid() {
       chordGridEl.innerHTML = "";
       var measures = sections[currentSectionKey];
-
 
       for (var i = 0; i < measures.length; i++) {
         var measure = measures[i];
@@ -921,33 +881,27 @@
         block.className = "measure-block";
         block.setAttribute("data-measure", measure.m);
 
-
         if (selectedMeasures.indexOf(measure.m) !== -1) {
           block.classList.add("selected");
         }
 
-
         var label = document.createElement("div");
         label.className = "measure-label";
         label.textContent = "m." + measure.m;
-
 
         var baseRow = document.createElement("div");
         baseRow.className = "measure-row base";
         baseRow.innerHTML =
           "<span>" + measure.base + "</span><span class=\"tag\">BASE</span>";
 
-
         var reharmRow = document.createElement("div");
         reharmRow.className = "measure-row reharm";
         reharmRow.innerHTML =
           "<span>" + measure.reharm + "</span><span class=\"tag\">REHARM</span>";
 
-
         block.appendChild(label);
         block.appendChild(baseRow);
         block.appendChild(reharmRow);
-
 
         block.addEventListener("click", (function(mNumber) {
           return function() {
@@ -955,14 +909,11 @@
           };
         })(measure.m));
 
-
         chordGridEl.appendChild(block);
       }
 
-
       updateChordPaletteVisibility();
     }
-
 
     function updateChordPaletteVisibility() {
       if (selectedMeasures.length === 0) {
@@ -985,12 +936,9 @@
         rangeText;
       chordPaletteEl.style.display = "block";
     }
-
-
     // INTERACTION
     function handleMeasureClick(mNumber) {
       var idx = selectedMeasures.indexOf(mNumber);
-
 
       if (lastClickedMeasure === null || selectedMeasures.indexOf(lastClickedMeasure) === -1) {
         if (idx !== -1) {
@@ -1008,17 +956,14 @@
         }
       }
 
-
       renderChordGrid();
     }
-
 
     function clearHighlights() {
       selectedMeasures = [];
       lastClickedMeasure = null;
       renderChordGrid();
     }
-
 
     function commitRangeChanges() {
       if (selectedMeasures.length === 0) {
@@ -1036,7 +981,6 @@
       );
     }
 
-
     function setActiveSection(key) {
       currentSectionKey = key;
       selectedMeasures = [];
@@ -1044,7 +988,6 @@
       renderSectionTabs();
       renderChordGrid();
     }
-
 
     function setActiveTheoryTag(tag) {
       activeTheoryTag = tag;
@@ -1058,7 +1001,6 @@
           "Tip: Click a theory item, then click a chord block to tag that measure with the selected concept in the reharm path (for your own workflow notes).";
       }
     }
-
 
     function applyChordToSelection(chordName) {
       if (selectedMeasures.length === 0) {
@@ -1074,7 +1016,6 @@
       }
       renderChordGrid();
     }
-
 
     // PLAYBACK
     function playSection(mode) {
@@ -1096,17 +1037,14 @@
       }
     }
 
-
     // AUDIO FILE (stubbed decode)
     var loadedAudioBuffer = null;
     var currentAudioSource = null;
-
 
     function updateAudioStatusLoaded(fileName) {
       audioStatusEl.innerHTML = "Audio loaded: <span>" + fileName + "</span>";
       activeTrackLabelEl.textContent = "Active Track: " + fileName;
     }
-
 
     function handleAudioLoad() {
       var input = document.getElementById("audioFileInput");
@@ -1117,7 +1055,6 @@
       var file = input.files[0];
       updateAudioStatusLoaded(file.name);
       ensureAudioContext();
-
 
       var reader = new FileReader();
       reader.onload = function(e) {
@@ -1135,7 +1072,6 @@
       reader.readAsArrayBuffer(file);
     }
 
-
     function playImportedAudio() {
       if (!loadedAudioBuffer) {
         alert("No audio file loaded yet.");
@@ -1149,28 +1085,22 @@
       src.start();
       currentAudioSource = src;
     }
-
-
     // EXPORT STUBS
     function stubExportWav() {
       alert("WAV export is a placeholder in this version.");
     }
 
-
     function exportMidi() {
       alert("MIDI export is a placeholder in this version.");
     }
-
 
     function exportMusicXML() {
       alert("MusicXML export is a placeholder in this version.");
     }
 
-
     // WIRING
     document.getElementById("audioLoadBtn").addEventListener("click", handleAudioLoad);
     document.getElementById("playAudioFileBtn").addEventListener("click", playImportedAudio);
-
 
     document.getElementById("playBaseBtn").addEventListener("click", function() {
       playSection("base");
@@ -1180,15 +1110,12 @@
     });
     document.getElementById("stopBtn").addEventListener("click", stopAllPlayback);
 
-
     document.getElementById("exportWavBtn").addEventListener("click", stubExportWav);
     document.getElementById("exportMidiBtn").addEventListener("click", exportMidi);
     document.getElementById("exportMusicXmlBtn").addEventListener("click", exportMusicXML);
 
-
     document.getElementById("commitRangeBtn").addEventListener("click", commitRangeChanges);
     document.getElementById("clearHighlightsBtn").addEventListener("click", clearHighlights);
-
 
     var tabs = sectionTabsEl.querySelectorAll(".section-tab");
     for (var i = 0; i < tabs.length; i++) {
@@ -1198,7 +1125,6 @@
         });
       })(tabs[i]);
     }
-
 
     var theoryItems = document.querySelectorAll(".theory-card li");
     for (var j = 0; j < theoryItems.length; j++) {
@@ -1210,16 +1136,13 @@
       })(theoryItems[j]);
     }
 
-
     document.getElementById("labWorkspaceBtn").addEventListener("click", function() {
       // already here
     });
 
-
     document.getElementById("theoryGlossaryBtn").addEventListener("click", function() {
       window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
     });
-
 
     var chordButtons = document.querySelectorAll(".chord-btn");
     for (var k = 0; k < chordButtons.length; k++) {
@@ -1231,12 +1154,9 @@
       })(chordButtons[k]);
     }
 
-
     chordPaletteCloseEl.addEventListener("click", function() {
       chordPaletteEl.style.display = "none";
     });
-
-
     // INITIAL RENDER
     renderSectionTabs();
     renderChordGrid();
