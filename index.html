@@ -475,12 +475,522 @@
               <li data-theory="Perfect Authentic Cadence">
                 Perfect Authentic Cadence (PAC)
               </li>
-              <li data-theory="Plagal Cadence (Amen Close)">
-                Plagal Cadence (Amen Close)
-              </li>
-              <li data-theory="Half Cadence Break">Half Cadence Break</li>
+              <li data-theory="Plagal Cadence (Amen Close              </li>
             </ul>
           </div>
-          <div class="theory-card">
-            <h4>Figured Bass Inversions</h4>
-            <
+        </div>
+
+        <div class="footer-note" id="theoryFooterNote">
+          <strong>Tip:</strong> Click a theory item, then click a chord block to
+          tag that measure with the selected concept in the reharm path (for
+          your own workflow notes).
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    /* -----------------------------
+       GLOBAL AUDIO STATE
+    ------------------------------*/
+    let audioCtx = null;
+    let activeOscillators = [];
+    let playbackTimeouts = [];
+    let loadedAudioBuffer = null;
+    let currentAudioSource = null;
+
+    function ensureAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === "suspended") {
+        audioCtx.resume();
+      }
+    }
+
+    document.addEventListener("click", ensureAudioContext, { once: true });
+    document.addEventListener("touchstart", ensureAudioContext, { once: true });
+
+    /* -----------------------------
+       DATA MODEL
+    ------------------------------*/
+    const sections = {
+      intro: [
+        { m: 1, base: "G", reharm: "G" },
+        { m: 2, base: "Em", reharm: "Em" },
+        { m: 3, base: "C", reharm: "C" },
+        { m: 4, base: "D", reharm: "D" },
+        { m: 5, base: "G", reharm: "G" },
+        { m: 6, base: "Em", reharm: "Em" },
+        { m: 7, base: "C", reharm: "C" },
+        { m: 8, base: "B7", reharm: "B7" }
+      ],
+      verse1: [
+        { m: 1, base: "Em", reharm: "Em" },
+        { m: 2, base: "C", reharm: "C" },
+        { m: 3, base: "G", reharm: "G" },
+        { m: 4, base: "D", reharm: "D" },
+        { m: 5, base: "Em", reharm: "Em" },
+        { m: 6, base: "C", reharm: "C" },
+        { m: 7, base: "G", reharm: "G" },
+        { m: 8, base: "D", reharm: "D" }
+      ],
+      prechorus: [
+        { m: 1, base: "G", reharm: "G" },
+        { m: 2, base: "G", reharm: "G" },
+        { m: 3, base: "C", reharm: "C" },
+        { m: 4, base: "D", reharm: "D" },
+        { m: 5, base: "G", reharm: "G" },
+        { m: 6, base: "G", reharm: "G" },
+        { m: 7, base: "C", reharm: "C" },
+        { m: 8, base: "D", reharm: "D" }
+      ],
+      chorus: [
+        { m: 1, base: "G", reharm: "G" },
+        { m: 2, base: "Em", reharm: "Em" },
+        { m: 3, base: "C", reharm: "C" },
+        { m: 4, base: "D", reharm: "D" },
+        { m: 5, base: "G", reharm: "G" },
+        { m: 6, base: "Em", reharm: "Em" },
+        { m: 7, base: "C", reharm: "C" },
+        { m: 8, base: "B7", reharm: "B7" }
+      ],
+      bridge: [
+        { m: 1, base: "Em", reharm: "Em" },
+        { m: 2, base: "C", reharm: "C" },
+        { m: 3, base: "G", reharm: "G" },
+        { m: 4, base: "D", reharm: "D" },
+        { m: 5, base: "Em", reharm: "Em" },
+        { m: 6, base: "C", reharm: "C" },
+        { m: 7, base: "G", reharm: "G" },
+        { m: 8, base: "D", reharm: "D" }
+      ],
+      outro: [
+        { m: 1, base: "G", reharm: "G" },
+        { m: 2, base: "G", reharm: "G" },
+        { m: 3, base: "C", reharm: "C" },
+        { m: 4, base: "D", reharm: "D" },
+        { m: 5, base: "G", reharm: "G" },
+        { m: 6, base: "G", reharm: "G" },
+        { m: 7, base: "C", reharm: "C" },
+        { m: 8, base: "D", reharm: "D" }
+      ]
+    };
+
+    let currentSectionKey = "intro";
+    let selectedMeasures = new Set();
+    let lastClickedMeasure = null;
+    let activeTheoryTag = null;
+
+    const chordGridEl = document.getElementById("chordGrid");
+    const sectionTabsEl = document.getElementById("sectionTabs");
+    const audioStatusEl = document.getElementById("audioStatus");
+    const activeTrackLabelEl = document.getElementById("activeTrackLabel");
+    const theoryFooterNoteEl = document.getElementById("theoryFooterNote");
+
+    /* -----------------------------
+       NOTE / CHORD ENGINE
+    ------------------------------*/
+    const noteFreqs = {
+      C4: 261.63, Cs4: 277.18, D4: 293.66, Ds4: 311.13,
+      E4: 329.63, F4: 349.23, Fs4: 369.99, G4: 392.0,
+      Gs4: 415.3, A4: 440.0, As4: 466.16, B4: 493.88,
+      C5: 523.25
+    };
+
+    function chordToPitches(chord) {
+      const rootMap = { G: "G4", Em: "E4", C: "C4", D: "D4", B7: "B4" };
+      const root = rootMap[chord] || "C4";
+      const f = noteFreqs[root];
+
+      if (chord === "Em") return [f, f * 1.189, f * 1.498];
+      if (chord === "B7") return [f, f * 1.26, f * 1.498, f * 1.888];
+      return [f, f * 1.26, f * 1.498];
+    }
+
+    function stopAllPlayback() {
+      playbackTimeouts.forEach(t => clearTimeout(t));
+      playbackTimeouts = [];
+      activeOscillators.forEach(osc => { try { osc.stop(); } catch(e){} });
+      activeOscillators = [];
+      if (currentAudioSource) {
+        try { currentAudioSource.stop(); } catch(e){}
+        currentAudioSource = null;
+      }
+    }
+
+    function playChord(chord, startTime, duration = 0.7) {
+      ensureAudioContext();
+      const pitches = chordToPitches(chord);
+      const t0 = audioCtx.currentTime + startTime;
+
+      pitches.forEach(freq => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = "sine";
+        osc.frequency.value = freq;
+
+        gain.gain.setValueAtTime(0, t0);
+        gain.gain.linearRampToValueAtTime(0.4, t0 + 0.02);
+        gain.gain.linearRampToValueAtTime(0, t0 + duration);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start(t0);
+        osc.stop(t0 + duration + 0.05);
+
+        activeOscillators.push(osc);
+      });
+    }
+
+    function playSection(mode) {
+      stopAllPlayback();
+      ensureAudioContext();
+      const measures = sections[currentSectionKey];
+      const chordPath = mode === "base"
+        ? measures.map(m => m.base)
+        : measures.map(m => m.reharm);
+
+      const beatDur = 0.8;
+      chordPath.forEach((chord, idx) => {
+        const timeoutId = setTimeout(() => {
+          playChord(chord, 0, 0.7);
+        }, idx * beatDur * 1000);
+        playbackTimeouts.push(timeoutId);
+      });
+    }
+
+    /* -----------------------------
+       AUDIO FILE LOAD + PLAYBACK
+    ------------------------------*/
+    function updateAudioStatusLoaded(fileName) {
+      audioStatusEl.innerHTML = `Audio loaded: <span>${fileName}</span>`;
+      activeTrackLabelEl.textContent = `Active Track: ${fileName}`;
+    }
+
+    async function handleAudioLoad() {
+      const input = document.getElementById("audioFileInput");
+      if (!input.files || !input.files[0]) {
+        alert("Choose a .wav or .mp3 file first.");
+        return;
+      }
+      const file = input.files[0];
+      updateAudioStatusLoaded(file.name);
+      ensureAudioContext();
+
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        audioCtx.decodeAudioData(arrayBuffer, buffer => {
+          loadedAudioBuffer = buffer;
+        }, () => alert("Could not decode this audio file."));
+      } catch (err) {
+        alert("Error reading audio file.");
+      }
+    }
+
+    function playImportedAudio() {
+      if (!loadedAudioBuffer) {
+        alert("No audio file loaded yet.");
+        return;
+      }
+      stopAllPlayback();
+      ensureAudioContext();
+      const src = audioCtx.createBufferSource();
+      src.buffer = loadedAudioBuffer;
+      src.connect(audioCtx.destination);
+      src.start();
+      currentAudioSource = src;
+    }
+
+    /* -----------------------------
+       RENDERING
+    ------------------------------*/
+    function renderChordGrid() {
+      chordGridEl.innerHTML = "";
+      const measures = sections[currentSectionKey];
+
+      measures.forEach(measure => {
+        const block = document.createElement("div");
+        block.className = "measure-block";
+        block.dataset.measure = measure.m;
+
+        if (selectedMeasures.has(measure.m)) {
+          block.classList.add("selected");
+        }
+
+        const label = document.createElement("div");
+        label.className = "measure-label";
+        label.textContent = `m.${measure.m}`;
+
+        const baseRow = document.createElement("div");
+        baseRow.className = "measure-row base";
+        baseRow.innerHTML =
+          `<span>${measure.base}</span><span class="tag">BASE</span>`;
+
+        const reharmRow = document.createElement("div");
+        reharmRow.className = "measure-row reharm";
+        reharmRow.innerHTML =
+          `<span>${measure.reharm}</span><span class="tag">REHARM</span>`;
+
+        block.appendChild(label);
+        block.appendChild(baseRow);
+        block.appendChild(reharmRow);
+
+        block.addEventListener("click", () => handleMeasureClick(measure.m));
+
+        chordGridEl.appendChild(block);
+      });
+    }
+
+    function renderSectionTabs() {
+      const tabs = sectionTabsEl.querySelectorAll(".section-tab");
+      tabs.forEach(tab => {
+        const key = tab.dataset.section;
+        if (key === currentSectionKey) tab.classList.add("active");
+        else tab.classList.remove("active");
+      });
+    }
+
+    /* -----------------------------
+       INTERACTION
+    ------------------------------*/
+    function handleMeasureClick(mNumber) {
+      if (lastClickedMeasure === null ||
+          !selectedMeasures.has(lastClickedMeasure)) {
+
+        if (selectedMeasures.has(mNumber)) {
+          selectedMeasures.delete(mNumber);
+        } else {
+          selectedMeasures.add(mNumber);
+        }
+        lastClickedMeasure = mNumber;
+
+      } else {
+        selectedMeasures.clear();
+        const start = Math.min(lastClickedMeasure, mNumber);
+        const end = Math.max(lastClickedMeasure, mNumber);
+        for (let m = start; m <= end; m++) {
+          selectedMeasures.add(m);
+        }
+      }
+      renderChordGrid();
+    }
+
+    function clearHighlights() {
+      selectedMeasures.clear();
+      lastClickedMeasure = null;
+      renderChordGrid();
+    }
+
+    function commitRangeChanges() {
+      if (selectedMeasures.size === 0) {
+        alert("Select one or more measures to commit reharm changes.");
+        return;
+      }
+      const selectedArray = Array.from(selectedMeasures).sort((a, b) => a - b);
+      const tagText = activeTheoryTag
+        ? ` with theory tag: ${activeTheoryTag}`
+        : "";
+      alert(
+        `Range committed for ${currentSectionKey.toUpperCase()} measures ${selectedArray.join(
+          ", "
+        )}${tagText ? "\n(" + tagText + ")" : ""}`
+      );
+    }
+
+    function setActiveSection(key) {
+      currentSectionKey = key;
+      selectedMeasures.clear();
+      lastClickedMeasure = null;
+      renderSectionTabs();
+      renderChordGrid();
+    }
+
+    function setActiveTheoryTag(tag) {
+      activeTheoryTag = tag;
+      theoryFooterNoteEl.textContent =
+        tag
+          ? `Active theory tag: "${tag}". Click chord blocks to conceptually mark measures in your reharm path.`
+          : `Tip: Click a theory item, then click a chord block to tag that measure with the selected concept in the reharm path (for your own workflow notes).`;
+    }
+
+    /* -----------------------------
+       EXPORTS
+    ------------------------------*/
+    function stubExportWav() {
+      alert("WAV export is a placeholder.");
+    }
+
+    function createMidiFileBytes() {
+      const tempo = 500000;
+      const ppq = 480;
+      const events = [];
+      const allSectionsOrder = ["intro","verse1","prechorus","chorus","bridge","outro"];
+
+      function pushTempo() {
+        events.push(
+          0x00, 0xff, 0x51, 0x03,
+          (tempo >> 16) & 0xff,
+          (tempo >> 8) & 0xff,
+          tempo & 0xff
+        );
+      }
+
+      function pushNoteOn(delta, note, velocity) {
+        events.push(delta, 0x90, note, velocity);
+      }
+
+      function pushNoteOff(delta, note) {
+        events.push(delta, 0x80, note, 0x40);
+      }
+
+      function chordNameToMidiNotes(chord) {
+        const rootMap = { G:67, Em:64, C:60, D:62, B7:71 };
+        const root = rootMap[chord] || 60;
+        if (chord === "Em") return [root, root+3, root+7];
+        if (chord === "B7") return [root, root+4, root+7, root+10];
+        return [root, root+4, root+7];
+      }
+
+      pushTempo();
+      const chordDurTicks = ppq;
+
+      allSectionsOrder.forEach(secKey => {
+        sections[secKey].forEach(m => {
+          const notes = chordNameToMidiNotes(m.reharm);
+          notes.forEach((n, idx) => pushNoteOn(idx===0?0:0, n, 90));
+          notes.forEach((n, idx) => pushNoteOff(idx===0?chordDurTicks:0, n));
+        });
+      });
+
+      events.push(0x00, 0xff, 0x2f, 0x00);
+
+      const trackData = Uint8Array.from(events);
+      const trackLen = trackData.length;
+
+      function writeStr(view, offset, str) {
+        for (let i=0; i<str.length; i++) {
+          view.setUint8(offset+i, str.charCodeAt(i));
+        }
+      }
+
+      const header = new ArrayBuffer(14);
+      const hv = new DataView(header);
+      writeStr(hv,0,"MThd");
+      hv.setUint32(4,6);
+      hv.setUint16(8,0);
+      hv.setUint16(10,1);
+      hv.setUint16(12,ppq);
+
+      const track = new ArrayBuffer(8+trackLen);
+      const tv = new DataView(track);
+      writeStr(tv,0,"MTrk");
+      tv.setUint32(4,trackLen);
+      for (let i=0; i<trackLen; i++) tv.setUint8(8+i, trackData[i]);
+
+      const total = new Uint8Array(header.byteLength + track.byteLength);
+      total.set(new Uint8Array(header),0);
+      total.set(new Uint8Array(track), header.byteLength);
+      return total;
+    }
+
+    function exportMidi() {
+      const bytes = createMidiFileBytes();
+      const blob = new Blob([bytes], { type:"audio/midi" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "reharmonization.mid";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function exportMusicXML() {
+      const allSectionsOrder = ["intro","verse1","prechorus","chorus","bridge","outro"];
+      let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+      xml += `<score-partwise version="3.1">\n`;
+      xml += `  <part-list>\n`;
+      xml += `    <score-part id="P1">\n`;
+      xml += `      <part-name>Reharmonization</part-name>\n`;
+      xml += `    </score-part>\n`;
+      xml += `  </part-list>\n`;
+      xml += `  <part id="P1">\n`;
+
+          xml += `      <note>\n`;
+          xml += `        <pitch><step>C</step><octave>4</octave></pitch>\n`;
+          xml += `        <duration>4</duration>\n`;
+          xml += `        <type>whole</type>\n`;
+          xml += `      </note>\n`;
+          xml += `    </measure>\n`;
+          measureNumber++;
+        });
+      });
+
+      xml += `  </part>\n`;
+      xml += `</score-partwise>\n`;
+
+      const blob = new Blob([xml], {
+        type: "application/vnd.recordare.musicxml+xml"
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "reharmonization.musicxml";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    /* -----------------------------
+       EVENT WIRING
+    ------------------------------*/
+    document.getElementById("audioLoadBtn").addEventListener("click", handleAudioLoad);
+    document.getElementById("playAudioFileBtn").addEventListener("click", playImportedAudio);
+
+    document.getElementById("playBaseBtn").addEventListener("click", () =>
+      playSection("base")
+    );
+    document.getElementById("playReharmBtn").addEventListener("click", () =>
+      playSection("reharm")
+    );
+    document.getElementById("stopBtn").addEventListener("click", stopAllPlayback);
+
+    document.getElementById("exportWavBtn").addEventListener("click", stubExportWav);
+    document.getElementById("exportMidiBtn").addEventListener("click", exportMidi);
+    document.getElementById("exportMusicXmlBtn").addEventListener("click", exportMusicXML);
+
+    document.getElementById("commitRangeBtn").addEventListener("click", commitRangeChanges);
+    document.getElementById("clearHighlightsBtn").addEventListener("click", clearHighlights);
+
+    sectionTabsEl.querySelectorAll(".section-tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        setActiveSection(tab.dataset.section);
+      });
+    });
+
+    document.querySelectorAll(".theory-card li").forEach(li => {
+      li.addEventListener("click", () => {
+        setActiveTheoryTag(li.dataset.theory || li.textContent.trim());
+      });
+    });
+
+    document.getElementById("labWorkspaceBtn").addEventListener("click", () => {
+      // Already in workspace
+    });
+
+    document.getElementById("theoryGlossaryBtn").addEventListener("click", () => {
+      window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+    });
+
+    /* -----------------------------
+       INITIAL RENDER
+    ------------------------------*/
+    renderSectionTabs();
+    renderChordGrid();
+  </script>
+</body>
+</html>
