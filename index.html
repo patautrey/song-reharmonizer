@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -320,6 +320,7 @@
       </div>
     </header>
 
+
     <div class="layout-grid">
       <!-- LEFT: AUDIO + ARRANGEMENT -->
       <section class="panel">
@@ -338,6 +339,7 @@
           No audio data loaded. <span>System standby.</span>
         </div>
 
+
         <div style="margin-top: 12px;">
           <div class="analysis-header">
             <div>
@@ -348,6 +350,7 @@
             </div>
           </div>
 
+
           <div class="playback-row">
             <span class="instrument-label">Grand Piano (synth)</span>
             <button class="btn success" id="playBaseBtn">PLAY BASE</button>
@@ -357,6 +360,7 @@
             <button class="btn" id="exportMidiBtn">MIDI</button>
             <button class="btn" id="exportMusicXmlBtn">MUSICXML</button>
           </div>
+
 
           <h3>Sections</h3>
           <div class="section-tabs" id="sectionTabs">
@@ -372,7 +376,9 @@
             <button class="section-tab" data-section="outro">OUTRO</button>
           </div>
 
+
           <div id="chordGrid" class="chord-grid"></div>
+
 
           <div class="range-actions">
             <div class="hint">
@@ -391,9 +397,11 @@
         </div>
       </section>
 
+
       <!-- RIGHT: THEORY GLOSSARY -->
       <aside class="panel">
         <h2>Theory Glossary</h2>
+
 
         <h3>Dominant Alterations</h3>
         <div class="theory-grid">
@@ -500,6 +508,7 @@
           </div>
         </div>
 
+
         <div class="footer-note" id="theoryFooterNote">
           <strong>Tip:</strong> Click a theory item, then click a chord block to
           tag that measure with the selected concept in the reharm path (for
@@ -508,6 +517,7 @@
       </aside>
     </div>
   </div>
+
 
   <script>
     /* -----------------------------
@@ -519,6 +529,7 @@
     let loadedAudioBuffer = null;
     let currentAudioSource = null;
 
+
     function ensureAudioContext() {
       if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -528,8 +539,10 @@
       }
     }
 
+
     document.addEventListener("click", ensureAudioContext, { once: true });
     document.addEventListener("touchstart", ensureAudioContext, { once: true });
+
 
     /* -----------------------------
        DATA MODEL
@@ -597,16 +610,19 @@
       ]
     };
 
+
     let currentSectionKey = "intro";
     let selectedMeasures = new Set();
     let lastClickedMeasure = null;
     let activeTheoryTag = null;
+
 
     const chordGridEl = document.getElementById("chordGrid");
     const sectionTabsEl = document.getElementById("sectionTabs");
     const audioStatusEl = document.getElementById("audioStatus");
     const activeTrackLabelEl = document.getElementById("activeTrackLabel");
     const theoryFooterNoteEl = document.getElementById("theoryFooterNote");
+
 
     /* -----------------------------
        NOTE / CHORD ENGINE
@@ -618,15 +634,18 @@
       C5: 523.25
     };
 
+
     function chordToPitches(chord) {
       const rootMap = { G: "G4", Em: "E4", C: "C4", D: "D4", B7: "B4" };
       const root = rootMap[chord] || "C4";
       const f = noteFreqs[root];
 
+
       if (chord === "Em") return [f, f * 1.189, f * 1.498];
       if (chord === "B7") return [f, f * 1.26, f * 1.498, f * 1.888];
       return [f, f * 1.26, f * 1.498];
     }
+
 
     function stopAllPlayback() {
       playbackTimeouts.forEach(t => clearTimeout(t));
@@ -639,10 +658,12 @@
       }
     }
 
+
     function playChord(chord, startTime, duration = 0.7) {
       ensureAudioContext();
       const pitches = chordToPitches(chord);
       const t0 = audioCtx.currentTime + startTime;
+
 
       pitches.forEach(freq => {
         const osc = audioCtx.createOscillator();
@@ -650,19 +671,24 @@
         osc.type = "sine";
         osc.frequency.value = freq;
 
+
         gain.gain.setValueAtTime(0, t0);
         gain.gain.linearRampToValueAtTime(0.4, t0 + 0.02);
         gain.gain.linearRampToValueAtTime(0, t0 + duration);
 
+
         osc.connect(gain);
         gain.connect(audioCtx.destination);
+
 
         osc.start(t0);
         osc.stop(t0 + duration + 0.05);
 
+
         activeOscillators.push(osc);
       });
     }
+
 
     function playSection(mode) {
       stopAllPlayback();
@@ -671,6 +697,7 @@
       const chordPath = mode === "base"
         ? measures.map(m => m.base)
         : measures.map(m => m.reharm);
+
 
       const beatDur = 0.8;
       chordPath.forEach((chord, idx) => {
@@ -681,6 +708,7 @@
       });
     }
 
+
     /* -----------------------------
        AUDIO FILE LOAD + PLAYBACK
     ------------------------------*/
@@ -688,6 +716,7 @@
       audioStatusEl.innerHTML = `Audio loaded: <span>${fileName}</span>`;
       activeTrackLabelEl.textContent = `Active Track: ${fileName}`;
     }
+
 
     async function handleAudioLoad() {
       const input = document.getElementById("audioFileInput");
@@ -699,6 +728,7 @@
       updateAudioStatusLoaded(file.name);
       ensureAudioContext();
 
+
       try {
         const arrayBuffer = await file.arrayBuffer();
         audioCtx.decodeAudioData(arrayBuffer, buffer => {
@@ -708,6 +738,7 @@
         alert("Error reading audio file.");
       }
     }
+
 
     function playImportedAudio() {
       if (!loadedAudioBuffer) {
@@ -723,6 +754,7 @@
       currentAudioSource = src;
     }
 
+
     /* -----------------------------
        RENDERING
     ------------------------------*/
@@ -730,38 +762,47 @@
       chordGridEl.innerHTML = "";
       const measures = sections[currentSectionKey];
 
+
       measures.forEach(measure => {
         const block = document.createElement("div");
         block.className = "measure-block";
         block.dataset.measure = measure.m;
 
+
         if (selectedMeasures.has(measure.m)) {
           block.classList.add("selected");
         }
 
+
         const label = document.createElement("div");
         label.className = "measure-label";
         label.textContent = `m.${measure.m}`;
+
 
         const baseRow = document.createElement("div");
         baseRow.className = "measure-row base";
         baseRow.innerHTML =
           `<span>${measure.base}</span><span class="tag">BASE</span>`;
 
+
         const reharmRow = document.createElement("div");
         reharmRow.className = "measure-row reharm";
         reharmRow.innerHTML =
           `<span>${measure.reharm}</span><span class="tag">REHARM</span>`;
 
+
         block.appendChild(label);
         block.appendChild(baseRow);
         block.appendChild(reharmRow);
 
+
         block.addEventListener("click", () => handleMeasureClick(measure.m));
+
 
         chordGridEl.appendChild(block);
       });
     }
+
 
     function renderSectionTabs() {
       const tabs = sectionTabsEl.querySelectorAll(".section-tab");
@@ -772,6 +813,7 @@
       });
     }
 
+
     /* -----------------------------
        INTERACTION
     ------------------------------*/
@@ -779,12 +821,14 @@
       if (lastClickedMeasure === null ||
           !selectedMeasures.has(lastClickedMeasure)) {
 
+
         if (selectedMeasures.has(mNumber)) {
           selectedMeasures.delete(mNumber);
         } else {
           selectedMeasures.add(mNumber);
         }
         lastClickedMeasure = mNumber;
+
 
       } else {
         selectedMeasures.clear();
@@ -797,11 +841,13 @@
       renderChordGrid();
     }
 
+
     function clearHighlights() {
       selectedMeasures.clear();
       lastClickedMeasure = null;
       renderChordGrid();
     }
+
 
     function commitRangeChanges() {
       if (selectedMeasures.size === 0) {
@@ -819,6 +865,7 @@
       );
     }
 
+
     function setActiveSection(key) {
       currentSectionKey = key;
       selectedMeasures.clear();
@@ -826,6 +873,7 @@
       renderSectionTabs();
       renderChordGrid();
     }
+
 
     function setActiveTheoryTag(tag) {
       activeTheoryTag = tag;
@@ -835,6 +883,7 @@
           : `Tip: Click a theory item, then click a chord block to tag that measure with the selected concept in the reharm path (for your own workflow notes).`;
     }
 
+
     /* -----------------------------
        EXPORTS
     ------------------------------*/
@@ -842,11 +891,13 @@
       alert("WAV export is a placeholder.");
     }
 
+
     function createMidiFileBytes() {
       const tempo = 500000;
       const ppq = 480;
       const events = [];
       const allSectionsOrder = ["intro","verse1","prechorus","chorus","bridge","outro"];
+
 
       function pushTempo() {
         events.push(
@@ -857,13 +908,16 @@
         );
       }
 
+
       function pushNoteOn(delta, note, velocity) {
         events.push(delta, 0x90, note, velocity);
       }
 
+
       function pushNoteOff(delta, note) {
         events.push(delta, 0x80, note, 0x40);
       }
+
 
       function chordNameToMidiNotes(chord) {
         const rootMap = { G:67, Em:64, C:60, D:62, B7:71 };
@@ -873,8 +927,10 @@
         return [root, root+4, root+7];
       }
 
+
       pushTempo();
       const chordDurTicks = ppq;
+
 
       allSectionsOrder.forEach(secKey => {
         sections[secKey].forEach(m => {
@@ -884,16 +940,20 @@
         });
       });
 
+
       events.push(0x00, 0xff, 0x2f, 0x00);
+
 
       const trackData = Uint8Array.from(events);
       const trackLen = trackData.length;
+
 
       function writeStr(view, offset, str) {
         for (let i=0; i<str.length; i++) {
           view.setUint8(offset+i, str.charCodeAt(i));
         }
       }
+
 
       const header = new ArrayBuffer(14);
       const hv = new DataView(header);
@@ -903,17 +963,20 @@
       hv.setUint16(10,1);
       hv.setUint16(12,ppq);
 
+
       const track = new ArrayBuffer(8+trackLen);
       const tv = new DataView(track);
       writeStr(tv,0,"MTrk");
       tv.setUint32(4,trackLen);
       for (let i=0; i<trackLen; i++) tv.setUint8(8+i, trackData[i]);
 
+
       const total = new Uint8Array(header.byteLength + track.byteLength);
       total.set(new Uint8Array(header),0);
       total.set(new Uint8Array(track), header.byteLength);
       return total;
     }
+
 
     function exportMidi() {
       const bytes = createMidiFileBytes();
@@ -928,6 +991,7 @@
       URL.revokeObjectURL(url);
     }
 
+
     function exportMusicXML() {
       const allSectionsOrder = ["intro","verse1","prechorus","chorus","bridge","outro"];
       let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
@@ -938,6 +1002,7 @@
       xml += `    </score-part>\n`;
       xml += `  </part-list>\n`;
       xml += `  <part id="P1">\n`;
+
 
       let measureNumber = 1;
       allSectionsOrder.forEach(secKey => {
@@ -963,8 +1028,10 @@
         });
       });
 
+
       xml += `  </part>\n`;
       xml += `</score-partwise>\n`;
+
 
       const blob = new Blob([xml], {
         type: "application/vnd.recordare.musicxml+xml"
@@ -979,11 +1046,13 @@
       URL.revokeObjectURL(url);
     }
 
+
     /* -----------------------------
        EVENT WIRING
     ------------------------------*/
     document.getElementById("audioLoadBtn").addEventListener("click", handleAudioLoad);
     document.getElementById("playAudioFileBtn").addEventListener("click", playImportedAudio);
+
 
     document.getElementById("playBaseBtn").addEventListener("click", () =>
       playSection("base")
@@ -993,12 +1062,15 @@
     );
     document.getElementById("stopBtn").addEventListener("click", stopAllPlayback);
 
+
     document.getElementById("exportWavBtn").addEventListener("click", stubExportWav);
     document.getElementById("exportMidiBtn").addEventListener("click", exportMidi);
     document.getElementById("exportMusicXmlBtn").addEventListener("click", exportMusicXML);
 
+
     document.getElementById("commitRangeBtn").addEventListener("click", commitRangeChanges);
     document.getElementById("clearHighlightsBtn").addEventListener("click", clearHighlights);
+
 
     sectionTabsEl.querySelectorAll(".section-tab").forEach(tab => {
       tab.addEventListener("click", () => {
@@ -1006,19 +1078,23 @@
       });
     });
 
+
     document.querySelectorAll(".theory-card li").forEach(li => {
       li.addEventListener("click", () => {
         setActiveTheoryTag(li.dataset.theory || li.textContent.trim());
       });
     });
 
+
     document.getElementById("labWorkspaceBtn").addEventListener("click", () => {
       // Already in workspace
     });
 
+
     document.getElementById("theoryGlossaryBtn").addEventListener("click", () => {
       window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
     });
+
 
     /* -----------------------------
        INITIAL RENDER
