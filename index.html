@@ -122,6 +122,7 @@
     }
     .audio-import-row {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       gap: 10px;
       margin-top: 4px;
@@ -331,6 +332,8 @@
             class="file-input"
           />
           <button class="btn" id="audioLoadBtn">Choose Audio File</button>
+          <button class="btn" id="midiImportBtn">MIDI IMPORT</button>
+          <button class="btn" id="liveRecordBtn">LIVE RECORD</button>
         </div>
         <div class="audio-status" id="audioStatus">
           No audio data loaded. <span>System standby.</span>
@@ -351,6 +354,7 @@
             <button class="btn success" id="playBaseBtn">PLAY BASE</button>
             <button class="btn primary" id="playReharmBtn">PLAY REHARM</button>
             <button class="btn danger" id="stopBtn">STOP</button>
+            <button class="btn" id="playAudioFileBtn">PLAY AUDIO FILE</button>
             <button class="btn" id="exportWavBtn">WAV</button>
             <button class="btn" id="exportMidiBtn">MIDI</button>
             <button class="btn" id="exportMusicXmlBtn">MUSICXML</button>
@@ -508,6 +512,26 @@
   </div>
 
   <script>
+    // --- GLOBAL AUDIO STATE -------------------------------------------------
+    let audioCtx = null;
+    let activeOscillators = [];
+    let playbackTimeouts = [];
+    let loadedAudioBuffer = null;
+    let currentAudioSource = null;
+
+    // Unlock AudioContext on first user gesture (required by browsers)
+    function unlockAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === "suspended") {
+        audioCtx.resume();
+      }
+    }
+
+    document.addEventListener("click", unlockAudio, { once: true });
+    document.addEventListener("touchstart", unlockAudio, { once: true });
+
     // --- DATA MODEL ---------------------------------------------------------
     const sections = {
       intro: [
@@ -584,10 +608,6 @@
     const theoryFooterNoteEl = document.getElementById("theoryFooterNote");
 
     // --- SIMPLE NOTE/CHORD ENGINE (Web Audio) ------------------------------
-    let audioCtx = null;
-    let activeOscillators = [];
-    let playbackTimeouts = [];
-
     const noteFreqs = {
       C4: 261.63,
       Cs4: 277.18,
@@ -605,8 +625,6 @@
     };
 
     function chordToPitches(chord) {
-      // Very simple mapping for demo: root + 3rd + 5th
-      // Only handles basic triads and 7 chords in G major context.
       const rootMap = {
         G: "G4",
         Em: "E4",
@@ -617,7 +635,6 @@
       const root = rootMap[chord] || "C4";
       const rootFreq = noteFreqs[root] || noteFreqs["C4"];
 
-      // major/minor/7th approximations
       if (chord === "Em") {
         return [rootFreq, rootFreq * Math.pow(2, 3 / 12), rootFreq * Math.pow(2, 7 / 12)];
       } else if (chord === "B7") {
@@ -627,19 +644,8 @@
           rootFreq * Math.pow(2, 7 / 12),
           rootFreq * Math.pow(2, 10 / 12)
         ];
-      } else if (chord === "D") {
+      } else {
         return [rootFreq, rootFreq * Math.pow(2, 4 / 12), rootFreq * Math.pow(2, 7 / 12)];
-      } else if (chord === "C") {
-        return [rootFreq, rootFreq * Math.pow(2, 4 / 12), rootFreq * Math.pow(2, 7 / 12)];
-      } else if (chord === "G") {
-        return [rootFreq, rootFreq * Math.pow(2, 4 / 12), rootFreq * Math.pow(2, 7 / 12)];
-      }
-      return [rootFreq];
-    }
-
-    function ensureAudioContext() {
-      if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       }
     }
 
@@ -652,19 +658,26 @@
         } catch (e) {}
       });
       activeOscillators = [];
+      if (currentAudioSource) {
+        try {
+          currentAudioSource.stop();
+        } catch (e) {}
+        currentAudioSource = null;
+      }
     }
 
     function playChord(chord, startTime, duration = 0.7) {
-      ensureAudioContext();
+      unlockAudio();
       const pitches = chordToPitches(chord);
-      const now = audioCtx.currentTime;
-      const t0 = now + startTime;
+      const t0 = audioCtx.currentTime + startTime;
 
       pitches.forEach((freq) => {
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
+
         osc.type = "sine";
         osc.frequency.value = freq;
+
         gain.gain.setValueAtTime(0.0, t0);
         gain.gain.linearRampToValueAtTime(0.4, t0 + 0.02);
         gain.gain.linearRampToValueAtTime(0.0, t0 + duration);
@@ -674,20 +687,21 @@
 
         osc.start(t0);
         osc.stop(t0 + duration + 0.05);
+
         activeOscillators.push(osc);
       });
     }
 
     function playSection(mode) {
       stopAllPlayback();
-      ensureAudioContext();
+      unlockAudio();
       const measures = sections[currentSectionKey];
       const chordPath =
         mode === "base"
           ? measures.map((m) => m.base)
           : measures.map((m) => m.reharm);
 
-      const beatDur = 0.8; // seconds per chord
+      const beatDur = 0.8;
       chordPath.forEach((chord, idx) => {
         const t = idx * beatDur;
         const timeoutId = setTimeout(() => {
@@ -695,6 +709,20 @@
         }, t * 1000);
         playbackTimeouts.push(timeoutId);
       });
+    }
+
+    function playImportedAudio() {
+      if (!loadedAudioBuffer) {
+        alert("No audio file loaded yet.");
+        return;
+      }
+      stopAllPlayback();
+      unlockAudio();
+      const src = audioCtx.createBufferSource();
+      src.buffer = loadedAudioBuffer;
+      src.connect(audioCtx.destination);
+      src.start();
+      currentAudioSource = src;
     }
 
     // --- RENDERING ----------------------------------------------------------
@@ -779,11 +807,6 @@
       const tagText = activeTheoryTag
         ? ` with theory tag: ${activeTheoryTag}`
         : "";
-      console.log(
-        `Committing reharm changes for section "${currentSectionKey}" measures ${selectedArray.join(
-          ", "
-        )}${tagText}.`
-      );
       alert(
         `Range committed for ${currentSectionKey.toUpperCase()} measures ${selectedArray.join(
           ", "
@@ -807,20 +830,34 @@
           : `Tip: Click a theory item, then click a chord block to tag that measure with the selected concept in the reharm path (for your own workflow notes).`;
     }
 
-    // --- AUDIO FILE STATUS (no waveform analysis yet) -----------------------
+    // --- AUDIO FILE STATUS & LOADING ---------------------------------------
     function updateAudioStatusLoaded(fileName) {
       audioStatusEl.innerHTML = `Audio loaded: <span>${fileName}</span>`;
       activeTrackLabelEl.textContent = `Active Track: ${fileName}`;
     }
 
-    function handleAudioLoad() {
+    async function handleAudioLoad() {
       const input = document.getElementById("audioFileInput");
       if (!input.files || !input.files[0]) {
         alert("Choose a .wav or .mp3 file first.");
         return;
       }
+
       const file = input.files[0];
       updateAudioStatusLoaded(file.name);
+
+      unlockAudio();
+
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        audioCtx.decodeAudioData(arrayBuffer, (buffer) => {
+          loadedAudioBuffer = buffer;
+          console.log("Audio decoded:", buffer);
+        });
+      } catch (err) {
+        console.error("Error decoding audio:", err);
+        alert("Could not decode this audio file.");
+      }
     }
 
     // --- EXPORT: WAV (placeholder), MIDI, MUSICXML -------------------------
@@ -830,21 +867,16 @@
       );
     }
 
-    // MIDI helpers: very small SMF type 0
     function createMidiFileBytes() {
-      // We'll encode the entire song as quarter-note chords at 120 BPM.
-      const tempo = 500000; // microseconds per quarter note (120 BPM)
+      const tempo = 500000;
       const ppq = 480;
 
       const allSectionsOrder = ["intro", "verse1", "prechorus", "chorus", "bridge", "outro"];
       const events = [];
 
-      let tick = 0;
-
       function pushTempo() {
-        // meta tempo event
         events.push(
-          0x00, // delta
+          0x00,
           0xff, 0x51, 0x03,
           (tempo >> 16) & 0xff,
           (tempo >> 8) & 0xff,
@@ -861,7 +893,6 @@
       }
 
       function chordNameToMidiNotes(chord) {
-        // Map to MIDI numbers around middle C (60)
         const rootMap = {
           G: 67,
           Em: 64,
@@ -881,28 +912,23 @@
 
       pushTempo();
 
-      const chordDurTicks = ppq; // quarter note
+      const chordDurTicks = ppq;
 
       allSectionsOrder.forEach((secKey) => {
         const measures = sections[secKey];
         measures.forEach((m) => {
           const notes = chordNameToMidiNotes(m.reharm);
-          // note on
           notes.forEach((n, idx) => {
             pushNoteOn(idx === 0 ? 0 : 0, n, 90);
           });
-          // note off after duration
           notes.forEach((n, idx) => {
             pushNoteOff(idx === 0 ? chordDurTicks : 0, n);
           });
-          tick += chordDurTicks;
         });
       });
 
-      // end of track
       events.push(0x00, 0xff, 0x2f, 0x00);
 
-      // Build track chunk
       const trackData = Uint8Array.from(events);
       const trackLen = trackData.length;
 
@@ -915,9 +941,9 @@
       const header = new ArrayBuffer(14);
       const hv = new DataView(header);
       writeStr(hv, 0, "MThd");
-      hv.setUint32(4, 6); // header length
-      hv.setUint16(8, 0); // format 0
-      hv.setUint16(10, 1); // one track
+      hv.setUint32(4, 6);
+      hv.setUint16(8, 0);
+      hv.setUint16(10, 1);
       hv.setUint16(12, ppq);
 
       const track = new ArrayBuffer(8 + trackLen);
@@ -997,9 +1023,21 @@
       URL.revokeObjectURL(url);
     }
 
+    // --- MIDI IMPORT & LIVE RECORD (WIRED BUT STUBBED) ----------------------
+    function handleMidiImport() {
+      alert(
+        "MIDI Import is not implemented yet.\nThis button is wired and ready for a future MIDI parser."
+      );
+    }
+
+    function handleLiveRecord() {
+      alert(
+        "Live Record is not implemented yet.\nThis button is wired and ready for a future recording engine."
+      );
+    }
+
     // --- WIRING -------------------------------------------------------------
     document.getElementById("audioLoadBtn").addEventListener("click", handleAudioLoad);
-
     document.getElementById("playBaseBtn").addEventListener("click", () =>
       playSection("base")
     );
@@ -1010,6 +1048,7 @@
       stopAllPlayback();
       alert("Playback stopped.");
     });
+    document.getElementById("playAudioFileBtn").addEventListener("click", playImportedAudio);
 
     document.getElementById("exportWavBtn").addEventListener("click", stubExportWav);
     document.getElementById("exportMidiBtn").addEventListener("click", exportMidi);
@@ -1039,6 +1078,9 @@
     document.getElementById("theoryGlossaryBtn").addEventListener("click", () => {
       window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
     });
+
+    document.getElementById("midiImportBtn").addEventListener("click", handleMidiImport);
+    document.getElementById("liveRecordBtn").addEventListener("click", handleLiveRecord);
 
     // Initial render
     renderSectionTabs();
