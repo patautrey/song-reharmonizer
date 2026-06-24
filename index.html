@@ -249,10 +249,18 @@
       align-items: center;
       gap: 6px;
       margin-top: 4px;
+      flex-wrap: wrap;
     }
     .range-actions .hint {
       font-size: 0.75rem;
       color: var(--text-soft);
+      flex: 1 1 220px;
+    }
+    .range-actions-buttons {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
     }
     .theory-grid {
       display: grid;
@@ -296,6 +304,7 @@
     .footer-note strong {
       color: var(--accent);
     }
+
     /* Chord palette */
     .chord-palette {
       margin-top: 6px;
@@ -457,6 +466,8 @@
                   <button class="chord-btn" data-chord="C">C</button>
                   <button class="chord-btn" data-chord="D">D</button>
                   <button class="chord-btn" data-chord="B7">B7</button>
+                  <button class="chord-btn" data-chord="Am">Am</button>
+                  <button class="chord-btn" data-chord="Bm7b5">Bm7b5</button>
                 </div>
               </div>
 
@@ -464,23 +475,29 @@
                 <div class="chord-palette-group-label">Extensions</div>
                 <div class="chord-palette-buttons">
                   <button class="chord-btn" data-chord="Gmaj7">Gmaj7</button>
-                  <button class="chord-btn" data-chord="G7">G7</button>
                   <button class="chord-btn" data-chord="G6">G6</button>
                   <button class="chord-btn" data-chord="Gadd9">Gadd9</button>
+                  <button class="chord-btn" data-chord="Gmaj9">Gmaj9</button>
                   <button class="chord-btn" data-chord="Em7">Em7</button>
+                  <button class="chord-btn" data-chord="Em9">Em9</button>
                   <button class="chord-btn" data-chord="Cmaj7">Cmaj7</button>
                   <button class="chord-btn" data-chord="Cadd9">Cadd9</button>
                   <button class="chord-btn" data-chord="D7">D7</button>
+                  <button class="chord-btn" data-chord="D9">D9</button>
                 </div>
               </div>
+
               <div class="chord-palette-group">
-                <div class="chord-palette-group-label">Colors</div>
+                <div class="chord-palette-group-label">Colors & Altered</div>
                 <div class="chord-palette-buttons">
                   <button class="chord-btn" data-chord="Gsus2">Gsus2</button>
                   <button class="chord-btn" data-chord="Gsus4">Gsus4</button>
                   <button class="chord-btn" data-chord="G9">G9</button>
                   <button class="chord-btn" data-chord="G7b9">G7b9</button>
                   <button class="chord-btn" data-chord="G7#5">G7#5</button>
+                  <button class="chord-btn" data-chord="A7">A7</button>
+                  <button class="chord-btn" data-chord="A7b9">A7b9</button>
+                  <button class="chord-btn" data-chord="E7">E7</button>
                 </div>
               </div>
 
@@ -491,6 +508,26 @@
                   <button class="chord-btn" data-chord="C/E">C/E</button>
                   <button class="chord-btn" data-chord="G/B">G/B</button>
                   <button class="chord-btn" data-chord="F#m7b5">F#m7b5</button>
+                  <button class="chord-btn" data-chord="E°7">E°7</button>
+                </div>
+              </div>
+
+              <div class="chord-palette-group">
+                <div class="chord-palette-group-label">Secondary Dominants</div>
+                <div class="chord-palette-buttons">
+                  <button class="chord-btn" data-chord="D7">V/V (D7)</button>
+                  <button class="chord-btn" data-chord="A7">V/ii (A7)</button>
+                  <button class="chord-btn" data-chord="E7">V/vi (E7)</button>
+                  <button class="chord-btn" data-chord="B7">V/iii (B7)</button>
+                </div>
+              </div>
+
+              <div class="chord-palette-group">
+                <div class="chord-palette-group-label">Diminished Passing</div>
+                <div class="chord-palette-buttons">
+                  <button class="chord-btn" data-chord="F#m7b5">F#m7b5</button>
+                  <button class="chord-btn" data-chord="Bm7b5">Bm7b5</button>
+                  <button class="chord-btn" data-chord="E°7">E°7</button>
                 </div>
               </div>
             </div>
@@ -499,9 +536,13 @@
           <div class="range-actions">
             <div class="hint">
               Click chord blocks above to map adjustments. Select a range, then
-              choose a chord from the palette and commit changes.
+              choose a chord from the palette and commit changes. Or let the
+              system propose a reharm for the current section.
             </div>
-            <div style="display: flex; gap: 6px;">
+            <div class="range-actions-buttons">
+              <button class="btn" id="suggestReharmBtn">
+                SUGGEST REHARM FOR SECTION
+              </button>
               <button class="btn success" id="commitRangeBtn">
                 COMMIT RANGE CHANGES
               </button>
@@ -512,7 +553,6 @@
           </div>
         </div>
       </section>
-
       <!-- RIGHT: THEORY GLOSSARY -->
       <aside class="panel">
         <h2>Theory Glossary</h2>
@@ -528,96 +568,68 @@
               <li data-theory="Backdoor Dominant">Backdoor Dominant</li>
             </ul>
           </div>
+
           <div class="theory-card">
             <h4>Modal & Voicing Textures</h4>
             <ul>
-              <li data-theory="Modal Parallel Borrowing">
-                Modal Parallel Borrowing
-              </li>
+              <li data-theory="Modal Parallel Borrowing">Modal Parallel Borrowing</li>
               <li data-theory="Planing / Parallelism">Planing / Parallelism</li>
               <li data-theory="Poly Chords">Poly Chords</li>
               <li data-theory="Upper Structures">Upper Structures</li>
               <li data-theory="Drop 2 Voicing">Drop 2 Voicing</li>
             </ul>
           </div>
+
           <div class="theory-card">
             <h4>Passing & Functional Shifts</h4>
             <ul>
-              <li data-theory="Diminished Passing Chords">
-                Diminished Passing Chords
-              </li>
+              <li data-theory="Diminished Passing Chords">Diminished Passing Chords</li>
               <li data-theory="Diatonic Substitution">Diatonic Substitution</li>
-              <li data-theory="Relative Chord Intercept">
-                Relative Chord Intercept
-              </li>
-              <li data-theory="Harmonic Prolongation">
-                Harmonic Prolongation
-              </li>
+              <li data-theory="Relative Chord Intercept">Relative Chord Intercept</li>
+              <li data-theory="Harmonic Prolongation">Harmonic Prolongation</li>
             </ul>
           </div>
+
           <div class="theory-card">
             <h4>Voice Leading & Basslines</h4>
             <ul>
               <li data-theory="Pedal Tones">Pedal Tones</li>
               <li data-theory="Bass Walk-Ups">Bass Walk-Ups</li>
               <li data-theory="Bass Walk-Downs">Bass Walk-Downs</li>
-              <li data-theory="Inversions (Slash Chords)">
-                Inversions (Slash Chords)
-              </li>
-              <li data-theory="Non-Chord Tones (Sustained Lines)">
-                Non-Chord Tones (Sustained Lines)
-              </li>
+              <li data-theory="Inversions (Slash Chords)">Inversions (Slash Chords)</li>
+              <li data-theory="Non-Chord Tones (Sustained Lines)">Non-Chord Tones (Sustained Lines)</li>
             </ul>
           </div>
+
           <div class="theory-card">
             <h4>Turnarounds & Root Paths</h4>
             <ul>
               <li data-theory="Circle of 5ths Cycle">Circle of 5ths Cycle</li>
               <li data-theory="Standard Turnaround">Standard Turnaround</li>
-              <li data-theory="ii-V-I & iiº-V7-i Cadences">
-                ii-V-I & iiº-V7-i Cadences
-              </li>
-              <li data-theory="iii-vi-ii-V-I Extended Chain">
-                iii-vi-ii-V-I Extended Chain
-              </li>
-              <li data-theory="Andalusian Progression Framework">
-                Andalusian Progression Framework
-              </li>
+              <li data-theory="ii-V-I & iiº-V7-i Cadences">ii-V-I & iiº-V7-i Cadences</li>
+              <li data-theory="iii-vi-ii-V-I Extended Chain">iii-vi-ii-V-I Extended Chain</li>
+              <li data-theory="Andalusian Progression Framework">Andalusian Progression Framework</li>
             </ul>
           </div>
+
           <div class="theory-card">
             <h4>Color, Extensions & Cadences</h4>
             <ul>
-              <li data-theory="Extensions (9ths, 11ths, 13ths)">
-                Extensions (9ths, 11ths, 13ths)
-              </li>
-              <li data-theory="Suspended (sus4 / sus2)">
-                Suspended (sus4 / sus2)
-              </li>
-              <li data-theory="Perfect Authentic Cadence">
-                Perfect Authentic Cadence (PAC)
-              </li>
-              <li data-theory="Plagal Cadence (Amen Close)">
-                Plagal Cadence (Amen Close)
-              </li>
+              <li data-theory="Extensions (9ths, 11ths, 13ths)">Extensions (9ths, 11ths, 13ths)</li>
+              <li data-theory="Suspended (sus4 / sus2)">Suspended (sus4 / sus2)</li>
+              <li data-theory="Perfect Authentic Cadence">Perfect Authentic Cadence (PAC)</li>
+              <li data-theory="Plagal Cadence (Amen Close)">Plagal Cadence (Amen Close)</li>
               <li data-theory="Half Cadence Break">Half Cadence Break</li>
             </ul>
           </div>
+
           <div class="theory-card">
             <h4>Figured Bass Inversions</h4>
             <ul>
-              <li data-theory="Figured Bass: 6 (Root Triad Inv)">
-                Figured Bass: 6 (Root Triad Inv)
-              </li>
-              <li data-theory="Figured Bass: 6/4 (Second Inv)">
-                Figured Bass: 6/4 (Second Inv)
-              </li>
-              <li data-theory="Figured Bass: 4/3 (7th Chord 2nd Inv)">
-                Figured Bass: 4/3 (7th Chord 2nd Inv)
-              </li>
-              <li data-theory="Figured Bass: 5/2 (7th Chord 3rd Inv)">
-                Figured Bass: 5/2 (7th Chord 3rd Inv)
-              </li>
+              <li data-theory="Figured Bass: 6 (Root Triad Inv)">Figured Bass: 6 (Root Triad Inv)</li>
+              <li data-theory="Figured Bass: 6/4 (Second Inv)">Figured Bass: 6/4 (Second Inv)</li>
+              <li data-theory="Figured Bass: 4/3 (7th Chord 2nd Inv)">Figured Bass: 4/3 (7th Chord 2nd Inv)</li>
+              <li data-theory="Figured Bass: 5/2 (7th Chord 3rd Inv)">Figured Bass: 5/2 (7th Chord 3rd Inv)</li>
             </ul>
           </div>
         </div>
@@ -630,6 +642,7 @@
       </aside>
     </div>
   </div>
+
   <script>
     // AUDIO CONTEXT
     let audioCtx = null;
@@ -663,12 +676,12 @@
       As4: 466.16,
       B4: 493.88
     };
-
     function chordToPitches(chord) {
       // Map only the chords we actually use in the palette
       const rootMap = {
         "G": "G4",
         "Gmaj7": "G4",
+        "Gmaj9": "G4",
         "G7": "G4",
         "G6": "G4",
         "Gadd9": "G4",
@@ -677,64 +690,97 @@
         "G9": "G4",
         "G7b9": "G4",
         "G7#5": "G4",
+
         "Em": "E4",
         "Em7": "E4",
+        "Em9": "E4",
+
         "C": "C4",
         "Cmaj7": "C4",
         "Cadd9": "C4",
+
         "D": "D4",
         "D7": "D4",
+        "D9": "D4",
+
         "B7": "B4",
+        "Am": "A4",
+
+        "Bm7b5": "B4",
+        "F#m7b5": "Fs4",
+        "E°7": "E4",
+
+        "A7": "A4",
+        "A7b9": "A4",
+        "E7": "E4",
+
         "D/F#": "D4",
         "C/E": "C4",
-        "G/B": "G4",
-        "F#m7b5": "Fs4"
+        "G/B": "G4"
       };
 
       var base = rootMap[chord] || "C4";
       var f = noteFreqs[base];
 
-      if (chord === "G" || chord === "C" || chord === "D") {
+      // Triads
+      if (chord === "G" || chord === "C" || chord === "D" || chord === "Am") {
         return [f, f * 1.26, f * 1.498];
       }
       if (chord === "Em") {
         return [f, f * 1.189, f * 1.498];
       }
-      if (chord === "Gmaj7" || chord === "Cmaj7") {
+
+      // Maj7 / Maj9
+      if (chord === "Gmaj7" || chord === "Cmaj7" || chord === "Gmaj9") {
         return [f, f * 1.26, f * 1.498, f * 1.888];
       }
-      if (chord === "G7" || chord === "D7" || chord === "G7b9" || chord === "G7#5") {
+
+      // Dominants & altered
+      if (
+        chord === "G7" || chord === "D7" || chord === "D9" ||
+        chord === "G7b9" || chord === "G7#5" ||
+        chord === "A7" || chord === "A7b9" ||
+        chord === "E7" || chord === "B7"
+      ) {
         return [f, f * 1.26, f * 1.498, f * 1.782];
       }
+
+      // 6 chords
       if (chord === "G6") {
         return [f, f * 1.26, f * 1.498, f * 1.682];
       }
+
+      // add9 / 9 chords
       if (chord === "Gadd9" || chord === "Cadd9" || chord === "G9") {
         return [f, f * 1.26, f * 1.498, f * 2.245];
       }
+
+      // Suspended
       if (chord === "Gsus2") {
         return [f, f * 1.122, f * 1.498];
       }
       if (chord === "Gsus4") {
         return [f, f * 1.335, f * 1.498];
       }
-      if (chord === "Em7") {
+
+      // Minor 7 / Minor 9
+      if (chord === "Em7" || chord === "Em9") {
         return [f, f * 1.189, f * 1.498, f * 1.782];
       }
-      if (chord === "B7") {
-        return [f, f * 1.26, f * 1.498, f * 1.782];
-      }
-      if (chord === "D/F#") {
-        return [noteFreqs["Fs4"], f * 1.26, f * 1.498];
-      }
-      if (chord === "C/E") {
-        return [noteFreqs["E4"], f * 1.26, f * 1.498];
-      }
-      if (chord === "G/B") {
-        return [noteFreqs["B4"], f * 1.26, f * 1.498];
-      }
-      if (chord === "F#m7b5") {
+
+      // Half‑dim
+      if (chord === "Bm7b5" || chord === "F#m7b5") {
         return [f, f * 1.189, f * 1.414, f * 1.782];
+      }
+
+      // Fully diminished
+      if (chord === "E°7") {
+        return [f, f * 1.189, f * 1.414, f * 1.682];
+      }
+
+      // Slash chords
+      if (chord === "D/F#" || chord === "C/E" || chord === "G/B") {
+        return [f, f * 1.26, f * 1.498];
       }
 
       // fallback triad
@@ -780,6 +826,7 @@
         activeOscillators.push(osc);
       }
     }
+
     // DATA MODEL
     var sections = {
       intro: [
@@ -792,6 +839,7 @@
         { m: 7, base: "C", reharm: "C" },
         { m: 8, base: "B7", reharm: "B7" }
       ],
+
       verse1: [
         { m: 1, base: "Em", reharm: "Em" },
         { m: 2, base: "C", reharm: "C" },
@@ -802,6 +850,7 @@
         { m: 7, base: "G", reharm: "G" },
         { m: 8, base: "D", reharm: "D" }
       ],
+
       prechorus: [
         { m: 1, base: "G", reharm: "G" },
         { m: 2, base: "G", reharm: "G" },
@@ -812,6 +861,7 @@
         { m: 7, base: "C", reharm: "C" },
         { m: 8, base: "D", reharm: "D" }
       ],
+
       chorus: [
         { m: 1, base: "G", reharm: "G" },
         { m: 2, base: "Em", reharm: "Em" },
@@ -822,6 +872,7 @@
         { m: 7, base: "C", reharm: "C" },
         { m: 8, base: "B7", reharm: "B7" }
       ],
+
       bridge: [
         { m: 1, base: "Em", reharm: "Em" },
         { m: 2, base: "C", reharm: "C" },
@@ -832,6 +883,7 @@
         { m: 7, base: "G", reharm: "G" },
         { m: 8, base: "D", reharm: "D" }
       ],
+
       outro: [
         { m: 1, base: "G", reharm: "G" },
         { m: 2, base: "G", reharm: "G" },
@@ -843,7 +895,6 @@
         { m: 8, base: "D", reharm: "D" }
       ]
     };
-
     var currentSectionKey = "intro";
     var selectedMeasures = [];
     var lastClickedMeasure = null;
@@ -936,6 +987,7 @@
         rangeText;
       chordPaletteEl.style.display = "block";
     }
+
     // INTERACTION
     function handleMeasureClick(mNumber) {
       var idx = selectedMeasures.indexOf(mNumber);
@@ -1010,10 +1062,73 @@
       var measures = sections[currentSectionKey];
       for (var i = 0; i < measures.length; i++) {
         if (selectedMeasures.indexOf(measures[i].m) !== -1) {
-          // REHARM ONLY
           measures[i].reharm = chordName;
         }
       }
+      renderChordGrid();
+    }
+    // SIMPLE SMART REHARM ENGINE (G major–centric)
+    function suggestReharmForCurrentSection() {
+      var measures = sections[currentSectionKey];
+      if (!measures || measures.length === 0) return;
+
+      // Reset reharm to base each time for predictable suggestions
+      for (var i = 0; i < measures.length; i++) {
+        measures[i].reharm = measures[i].base;
+      }
+
+      // Pass 1: Secondary dominants into cadences
+      for (var j = 0; j < measures.length - 1; j++) {
+        var thisChord = measures[j].reharm;
+        var nextChord = measures[j + 1].reharm;
+
+        // Into G → D7
+        if (nextChord === "G" && thisChord !== "D7" && thisChord !== "D9") {
+          measures[j].reharm = "D7";
+        }
+
+        // Into C → G7
+        if (nextChord === "C" && thisChord !== "G7" && thisChord !== "G9") {
+          measures[j].reharm = "G7";
+        }
+
+        // Into D → A7
+        if (nextChord === "D" && thisChord !== "A7" && thisChord !== "A7b9") {
+          measures[j].reharm = "A7";
+        }
+
+        // Into Em → B7
+        if (nextChord === "Em" && thisChord !== "B7") {
+          measures[j].reharm = "B7";
+        }
+      }
+
+      // Pass 2: Add color to tonic / subdominant / vi
+      for (var k = 0; k < measures.length; k++) {
+        var ch = measures[k].reharm;
+        if (ch === "G") {
+          measures[k].reharm = "Gmaj7";
+        } else if (ch === "C") {
+          measures[k].reharm = "Cmaj7";
+        } else if (ch === "Em") {
+          measures[k].reharm = "Em7";
+        }
+      }
+
+      // Pass 3: Optional passing motion G → Em
+      for (var p = 0; p < measures.length - 1; p++) {
+        var c1 = measures[p].reharm;
+        var c2 = measures[p + 1].reharm;
+        if ((c1 === "G" || c1 === "Gmaj7") && (c2 === "Em" || c2 === "Em7")) {
+          measures[p].reharm = "G/B";
+        }
+      }
+
+      alert(
+        "Suggested reharm applied to " +
+          currentSectionKey.toUpperCase() +
+          ". You can tweak further with the chord palette."
+      );
       renderChordGrid();
     }
 
@@ -1085,6 +1200,7 @@
       src.start();
       currentAudioSource = src;
     }
+
     // EXPORT STUBS
     function stubExportWav() {
       alert("WAV export is a placeholder in this version.");
@@ -1097,7 +1213,6 @@
     function exportMusicXML() {
       alert("MusicXML export is a placeholder in this version.");
     }
-
     // WIRING
     document.getElementById("audioLoadBtn").addEventListener("click", handleAudioLoad);
     document.getElementById("playAudioFileBtn").addEventListener("click", playImportedAudio);
@@ -1105,9 +1220,11 @@
     document.getElementById("playBaseBtn").addEventListener("click", function() {
       playSection("base");
     });
+
     document.getElementById("playReharmBtn").addEventListener("click", function() {
       playSection("reharm");
     });
+
     document.getElementById("stopBtn").addEventListener("click", stopAllPlayback);
 
     document.getElementById("exportWavBtn").addEventListener("click", stubExportWav);
@@ -1116,7 +1233,9 @@
 
     document.getElementById("commitRangeBtn").addEventListener("click", commitRangeChanges);
     document.getElementById("clearHighlightsBtn").addEventListener("click", clearHighlights);
+    document.getElementById("suggestReharmBtn").addEventListener("click", suggestReharmForCurrentSection);
 
+    // Section tab switching
     var tabs = sectionTabsEl.querySelectorAll(".section-tab");
     for (var i = 0; i < tabs.length; i++) {
       (function(tab) {
@@ -1126,6 +1245,7 @@
       })(tabs[i]);
     }
 
+    // Theory tag selection
     var theoryItems = document.querySelectorAll(".theory-card li");
     for (var j = 0; j < theoryItems.length; j++) {
       (function(li) {
@@ -1136,14 +1256,16 @@
       })(theoryItems[j]);
     }
 
+    // Scroll to glossary
     document.getElementById("labWorkspaceBtn").addEventListener("click", function() {
-      // already here
+      // Already in workspace
     });
 
     document.getElementById("theoryGlossaryBtn").addEventListener("click", function() {
       window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
     });
 
+    // Chord palette buttons
     var chordButtons = document.querySelectorAll(".chord-btn");
     for (var k = 0; k < chordButtons.length; k++) {
       (function(btn) {
@@ -1154,9 +1276,11 @@
       })(chordButtons[k]);
     }
 
+    // Close palette
     chordPaletteCloseEl.addEventListener("click", function() {
       chordPaletteEl.style.display = "none";
     });
+
     // INITIAL RENDER
     renderSectionTabs();
     renderChordGrid();
