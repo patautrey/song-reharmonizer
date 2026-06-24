@@ -191,6 +191,7 @@
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 6px;
       margin-bottom: 8px;
+      position: relative;
     }
     .measure-block {
       border-radius: 6px;
@@ -295,6 +296,73 @@
     .footer-note strong {
       color: var(--accent);
     }
+
+
+    /* Chord palette */
+    .chord-palette {
+      position: relative;
+      margin-top: 6px;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: #101426;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.45);
+      display: none;
+    }
+    .chord-palette-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .chord-palette-header span {
+      font-size: 0.75rem;
+      color: var(--text-soft);
+    }
+    .chord-palette-groups {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .chord-palette-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .chord-palette-group-label {
+      font-size: 0.7rem;
+      color: var(--text-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .chord-palette-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .chord-btn {
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: #1b2135;
+      color: var(--text-soft);
+      font-size: 0.75rem;
+      padding: 3px 6px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s,
+        transform 0.05s;
+    }
+    .chord-btn:hover {
+      background: var(--accent);
+      border-color: var(--accent-soft);
+      color: #04101f;
+    }
+    .chord-palette-close {
+      font-size: 0.7rem;
+      color: var(--text-soft);
+      cursor: pointer;
+    }
+
+
     @media (max-width: 900px) {
       .layout-grid {
         grid-template-columns: 1fr;
@@ -380,10 +448,74 @@
           <div id="chordGrid" class="chord-grid"></div>
 
 
+          <!-- Floating chord palette (appears when measures selected) -->
+          <div id="chordPalette" class="chord-palette">
+            <div class="chord-palette-header">
+              <span id="chordPaletteLabel">
+                Chord Palette · Apply to selected measures
+              </span>
+              <span class="chord-palette-close" id="chordPaletteClose">
+                Hide
+              </span>
+            </div>
+            <div class="chord-palette-groups">
+              <div class="chord-palette-group">
+                <div class="chord-palette-group-label">Key Chords</div>
+                <div class="chord-palette-buttons">
+                  <button class="chord-btn" data-chord="G">G</button>
+                  <button class="chord-btn" data-chord="Em">Em</button>
+                  <button class="chord-btn" data-chord="C">C</button>
+                  <button class="chord-btn" data-chord="D">D</button>
+                  <button class="chord-btn" data-chord="B7">B7</button>
+                </div>
+              </div>
+
+
+              <div class="chord-palette-group">
+                <div class="chord-palette-group-label">Extensions</div>
+                <div class="chord-palette-buttons">
+                  <button class="chord-btn" data-chord="Gmaj7">Gmaj7</button>
+                  <button class="chord-btn" data-chord="G7">G7</button>
+                  <button class="chord-btn" data-chord="G6">G6</button>
+                  <button class="chord-btn" data-chord="Gadd9">Gadd9</button>
+                  <button class="chord-btn" data-chord="Em7">Em7</button>
+                  <button class="chord-btn" data-chord="Cmaj7">Cmaj7</button>
+                  <button class="chord-btn" data-chord="Cadd9">Cadd9</button>
+                  <button class="chord-btn" data-chord="D7">D7</button>
+                </div>
+              </div>
+
+
+              <div class="chord-palette-group">
+                <div class="chord-palette-group-label">Colors</div>
+                <div class="chord-palette-buttons">
+                  <button class="chord-btn" data-chord="Gsus2">Gsus2</button>
+                  <button class="chord-btn" data-chord="Gsus4">Gsus4</button>
+                  <button class="chord-btn" data-chord="G9">G9</button>
+                  <button class="chord-btn" data-chord="G#11">G#11</button>
+                  <button class="chord-btn" data-chord="G7b9">G7b9</button>
+                  <button class="chord-btn" data-chord="G7#5">G7#5</button>
+                </div>
+              </div>
+
+
+              <div class="chord-palette-group">
+                <div class="chord-palette-group-label">Slash & Half‑Dim</div>
+                <div class="chord-palette-buttons">
+                  <button class="chord-btn" data-chord="D/F#">D/F#</button>
+                  <button class="chord-btn" data-chord="C/E">C/E</button>
+                  <button class="chord-btn" data-chord="G/B">G/B</button>
+                  <button class="chord-btn" data-chord="F#m7b5">F#m7b5</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
           <div class="range-actions">
             <div class="hint">
               Click chord blocks above to map adjustments. Select a range, then
-              commit changes.
+              choose a chord from the palette and commit changes.
             </div>
             <div style="display: flex; gap: 6px;">
               <button class="btn success" id="commitRangeBtn">
@@ -624,6 +756,11 @@
     const theoryFooterNoteEl = document.getElementById("theoryFooterNote");
 
 
+    const chordPaletteEl = document.getElementById("chordPalette");
+    const chordPaletteLabelEl = document.getElementById("chordPaletteLabel");
+    const chordPaletteCloseEl = document.getElementById("chordPaletteClose");
+
+
     /* -----------------------------
        NOTE / CHORD ENGINE
     ------------------------------*/
@@ -636,14 +773,67 @@
 
 
     function chordToPitches(chord) {
-      const rootMap = { G: "G4", Em: "E4", C: "C4", D: "D4", B7: "B4" };
-      const root = rootMap[chord] || "C4";
-      const f = noteFreqs[root];
+      // Simple mapping for palette chords; fallback to root triad
+      const rootMap = {
+        G: "G4", Gmaj7: "G4", G7: "G4", G6: "G4", Gadd9: "G4",
+        Gsus2: "G4", Gsus4: "G4", G9: "G4", "G#11": "G4", G7b9: "G4", G7#5: "G4",
+        Em: "E4", Em7: "E4",
+        C: "C4", Cmaj7: "C4", Cadd9: "C4",
+        D: "D4", D7: "D4",
+        B7: "B4",
+        "D/F#": "D4",
+        "C/E": "C4",
+        "G/B": "G4",
+        "F#m7b5": "Fs4"
+      };
 
 
-      if (chord === "Em") return [f, f * 1.189, f * 1.498];
-      if (chord === "B7") return [f, f * 1.26, f * 1.498, f * 1.888];
-      return [f, f * 1.26, f * 1.498];
+      const base = rootMap[chord] || "C4";
+      const f = noteFreqs[base];
+
+
+      switch (chord) {
+        case "G":
+        case "C":
+        case "D":
+          return [f, f * 1.26, f * 1.498]; // major triad
+        case "Em":
+          return [f, f * 1.189, f * 1.498]; // minor triad
+        case "Gmaj7":
+        case "Cmaj7":
+          return [f, f * 1.26, f * 1.498, f * 1.888]; // maj7
+        case "G7":
+        case "D7":
+        case "G7b9":
+        case "G7#5":
+          return [f, f * 1.26, f * 1.498, f * 1.782]; // dom7-ish
+        case "G6":
+          return [f, f * 1.26, f * 1.498, f * 1.682];
+        case "Gadd9":
+        case "Cadd9":
+        case "G9":
+          return [f, f * 1.26, f * 1.498, f * 2.245];
+        case "Gsus2":
+          return [f, f * 1.122, f * 1.498];
+        case "Gsus4":
+          return [f, f * 1.335, f * 1.498];
+        case "Em7":
+          return [f, f * 1.189, f * 1.498, f * 1.782];
+        case "B7":
+          return [f, f * 1.26, f * 1.498, f * 1.888];
+        case "D/F#":
+          return [noteFreqs["Fs4"], f * 1.26, f * 1.498];
+        case "C/E":
+          return [noteFreqs["E4"], f * 1.26, f * 1.498];
+        case "G/B":
+          return [noteFreqs["B4"], f * 1.26, f * 1.498];
+        case "F#m7b5":
+          // half-diminished: 1, b3, b5, b7
+          return [f, f * 1.189, f * 1.414, f * 1.782];
+        default:
+          // fallback triad
+          return [f, f * 1.26, f * 1.498];
+      }
     }
 
 
@@ -801,6 +991,9 @@
 
         chordGridEl.appendChild(block);
       });
+
+
+      updateChordPaletteVisibility();
     }
 
 
@@ -811,6 +1004,43 @@
         if (key === currentSectionKey) tab.classList.add("active");
         else tab.classList.remove("active");
       });
+    }
+
+
+    /* -----------------------------
+       CHORD PALETTE
+    ------------------------------*/
+    function updateChordPaletteVisibility() {
+      if (selectedMeasures.size === 0) {
+        chordPaletteEl.style.display = "none";
+        chordPaletteLabelEl.textContent =
+          "Chord Palette · Select measures to apply chords";
+        return;
+      }
+      const selectedArray = Array.from(selectedMeasures).sort((a, b) => a - b);
+      const rangeText =
+        selectedArray.length === 1
+          ? `m.${selectedArray[0]}`
+          : `m.${selectedArray[0]}–m.${selectedArray[selectedArray.length - 1]}`;
+      chordPaletteLabelEl.textContent =
+        `Chord Palette · Applying to ${currentSectionKey.toUpperCase()} ${rangeText}`;
+      chordPaletteEl.style.display = "block";
+    }
+
+
+    function applyChordToSelection(chordName) {
+      if (selectedMeasures.size === 0) {
+        alert("Select one or more measures first.");
+        return;
+      }
+      const measures = sections[currentSectionKey];
+      measures.forEach(measure => {
+        if (selectedMeasures.has(measure.m)) {
+          // REHARM ONLY
+          measure.reharm = chordName;
+        }
+      });
+      renderChordGrid();
     }
 
 
@@ -920,11 +1150,62 @@
 
 
       function chordNameToMidiNotes(chord) {
-        const rootMap = { G:67, Em:64, C:60, D:62, B7:71 };
-        const root = rootMap[chord] || 60;
-        if (chord === "Em") return [root, root+3, root+7];
-        if (chord === "B7") return [root, root+4, root+7, root+10];
-        return [root, root+4, root+7];
+        // Map palette chords to MIDI roots
+        const rootMap = {
+          G:67, Gmaj7:67, G7:67, G6:67, Gadd9:67,
+          Gsus2:67, Gsus4:67, G9:67, "G#11":67, G7b9:67, G7#5:67,
+          Em:64, Em7:64,
+          C:60, Cmaj7:60, Cadd9:60,
+          D:62, D7:62,
+          B7:71,
+          "D/F#":62,
+          "C/E":60,
+          "G/B":67,
+          "F#m7b5":66
+        };
+        const root = rootMap[chord] ?? 60;
+
+
+        switch (chord) {
+          case "G":
+          case "C":
+          case "D":
+            return [root, root+4, root+7];
+          case "Em":
+            return [root, root+3, root+7];
+          case "Gmaj7":
+          case "Cmaj7":
+            return [root, root+4, root+7, root+11];
+          case "G7":
+          case "D7":
+          case "G7b9":
+          case "G7#5":
+            return [root, root+4, root+7, root+10];
+          case "G6":
+            return [root, root+4, root+7, root+9];
+          case "Gadd9":
+          case "Cadd9":
+          case "G9":
+            return [root, root+4, root+7, root+14];
+          case "Gsus2":
+            return [root, root+2, root+7];
+          case "Gsus4":
+            return [root, root+5, root+7];
+          case "Em7":
+            return [root, root+3, root+7, root+10];
+          case "B7":
+            return [root, root+4, root+7, root+10];
+          case "D/F#":
+            return [66, root+4, root+7];
+          case "C/E":
+            return [64, root+4, root+7];
+          case "G/B":
+            return [71, root+4, root+7];
+          case "F#m7b5":
+            return [root, root+3, root+6, root+10];
+          default:
+            return [root, root+4, root+7];
+        }
       }
 
 
@@ -1093,6 +1374,20 @@
 
     document.getElementById("theoryGlossaryBtn").addEventListener("click", () => {
       window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+    });
+
+
+    // Chord palette buttons
+    document.querySelectorAll(".chord-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const chord = btn.dataset.chord;
+        applyChordToSelection(chord);
+      });
+    });
+
+
+    chordPaletteCloseEl.addEventListener("click", () => {
+      chordPaletteEl.style.display = "none";
     });
 
 
