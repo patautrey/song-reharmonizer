@@ -475,7 +475,27 @@
               <li data-theory="Perfect Authentic Cadence">
                 Perfect Authentic Cadence (PAC)
               </li>
-              <li data-theory="Plagal Cadence (Amen Close              </li>
+              <li data-theory="Plagal Cadence (Amen Close)">
+                Plagal Cadence (Amen Close)
+              </li>
+              <li data-theory="Half Cadence Break">Half Cadence Break</li>
+            </ul>
+          </div>
+          <div class="theory-card">
+            <h4>Figured Bass Inversions</h4>
+            <ul>
+              <li data-theory="Figured Bass: 6 (Root Triad Inv)">
+                Figured Bass: 6 (Root Triad Inv)
+              </li>
+              <li data-theory="Figured Bass: 6/4 (Second Inv)">
+                Figured Bass: 6/4 (Second Inv)
+              </li>
+              <li data-theory="Figured Bass: 4/3 (7th Chord 2nd Inv)">
+                Figured Bass: 4/3 (7th Chord 2nd Inv)
+              </li>
+              <li data-theory="Figured Bass: 5/2 (7th Chord 3rd Inv)">
+                Figured Bass: 5/2 (7th Chord 3rd Inv)
+              </li>
             </ul>
           </div>
         </div>
@@ -919,6 +939,20 @@
       xml += `  </part-list>\n`;
       xml += `  <part id="P1">\n`;
 
+      let measureNumber = 1;
+      allSectionsOrder.forEach(secKey => {
+        sections[secKey].forEach(m => {
+          xml += `    <measure number="${measureNumber}">\n`;
+          xml += `      <attributes>\n`;
+          xml += `        <divisions>1</divisions>\n`;
+          xml += `        <time>\n`;
+          xml += `          <beats>4</beats>\n`;
+          xml += `          <beat-type>4</beat-type>\n`;
+          xml += `        </time>\n`;
+          xml += `        <key>\n`;
+          xml += `          <fifths>1</fifths>\n`;
+          xml += `        </key>\n`;
+          xml += `      </attributes>\n`;
           xml += `      <note>\n`;
           xml += `        <pitch><step>C</step><octave>4</octave></pitch>\n`;
           xml += `        <duration>4</duration>\n`;
