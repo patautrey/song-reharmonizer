@@ -304,8 +304,6 @@
     .footer-note strong {
       color: var(--accent);
     }
-
-    /* Chord palette */
     .chord-palette {
       margin-top: 6px;
       padding: 8px;
@@ -367,7 +365,20 @@
       color: var(--text-soft);
       cursor: pointer;
     }
-
+    .instrument-toggle-btn.active {
+      background: var(--success);
+      border-color: #2c9b61;
+      color: #04101f;
+      font-weight: 600;
+    }
+    .reharm-style-select {
+      font-size: 0.8rem;
+      padding: 4px 6px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: #1b2135;
+      color: var(--text-soft);
+    }
     @media (max-width: 900px) {
       .layout-grid {
         grid-template-columns: 1fr;
@@ -422,7 +433,21 @@
           </div>
 
           <div class="playback-row">
-            <span class="instrument-label">Grand Piano (synth)</span>
+            <span class="instrument-label">Instrument:</span>
+            <button class="btn instrument-toggle-btn active" id="instrumentPianoBtn">
+              Piano
+            </button>
+            <button class="btn instrument-toggle-btn" id="instrumentGuitarBtn">
+              Acoustic Guitar
+            </button>
+
+            <select id="reharmStyleSelect" class="reharm-style-select">
+              <option value="neutral">Neutral</option>
+              <option value="jazz">Jazz</option>
+              <option value="pop">Pop</option>
+              <option value="gospel">Gospel</option>
+            </select>
+
             <button class="btn success" id="playBaseBtn">PLAY BASE</button>
             <button class="btn primary" id="playReharmBtn">PLAY REHARM</button>
             <button class="btn danger" id="stopBtn">STOP</button>
@@ -457,6 +482,7 @@
                 Hide
               </span>
             </div>
+
             <div class="chord-palette-groups">
               <div class="chord-palette-group">
                 <div class="chord-palette-group-label">Key Chords</div>
@@ -660,8 +686,7 @@
 
     document.addEventListener("click", ensureAudioContext, { once: true });
     document.addEventListener("touchstart", ensureAudioContext, { once: true });
-
-    // SIMPLE SYNTH
+    // NOTE FREQUENCIES
     const noteFreqs = {
       C4: 261.63,
       Cs4: 277.18,
@@ -676,8 +701,9 @@
       As4: 466.16,
       B4: 493.88
     };
+
+    // CHORD → PITCHES
     function chordToPitches(chord) {
-      // Map only the chords we actually use in the palette
       const rootMap = {
         "G": "G4",
         "Gmaj7": "G4",
@@ -719,114 +745,156 @@
         "G/B": "G4"
       };
 
-      var base = rootMap[chord] || "C4";
-      var f = noteFreqs[base];
+      const base = rootMap[chord] || "C4";
+      const f = noteFreqs[base];
 
       // Triads
-      if (chord === "G" || chord === "C" || chord === "D" || chord === "Am") {
-        return [f, f * 1.26, f * 1.498];
-      }
-      if (chord === "Em") {
-        return [f, f * 1.189, f * 1.498];
-      }
+      if (["G","C","D","Am"].includes(chord))
+        return [f, f*1.26, f*1.498];
+
+      if (chord === "Em")
+        return [f, f*1.189, f*1.498];
 
       // Maj7 / Maj9
-      if (chord === "Gmaj7" || chord === "Cmaj7" || chord === "Gmaj9") {
-        return [f, f * 1.26, f * 1.498, f * 1.888];
-      }
+      if (["Gmaj7","Cmaj7","Gmaj9"].includes(chord))
+        return [f, f*1.26, f*1.498, f*1.888];
 
-      // Dominants & altered
-      if (
-        chord === "G7" || chord === "D7" || chord === "D9" ||
-        chord === "G7b9" || chord === "G7#5" ||
-        chord === "A7" || chord === "A7b9" ||
-        chord === "E7" || chord === "B7"
-      ) {
-        return [f, f * 1.26, f * 1.498, f * 1.782];
-      }
+      // Dominants
+      if (["G7","D7","D9","G7b9","G7#5","A7","A7b9","E7","B7"].includes(chord))
+        return [f, f*1.26, f*1.498, f*1.782];
 
       // 6 chords
-      if (chord === "G6") {
-        return [f, f * 1.26, f * 1.498, f * 1.682];
-      }
+      if (chord === "G6")
+        return [f, f*1.26, f*1.498, f*1.682];
 
-      // add9 / 9 chords
-      if (chord === "Gadd9" || chord === "Cadd9" || chord === "G9") {
-        return [f, f * 1.26, f * 1.498, f * 2.245];
-      }
+      // add9 / 9
+      if (["Gadd9","Cadd9","G9"].includes(chord))
+        return [f, f*1.26, f*1.498, f*2.245];
 
       // Suspended
-      if (chord === "Gsus2") {
-        return [f, f * 1.122, f * 1.498];
-      }
-      if (chord === "Gsus4") {
-        return [f, f * 1.335, f * 1.498];
-      }
+      if (chord === "Gsus2")
+        return [f, f*1.122, f*1.498];
+      if (chord === "Gsus4")
+        return [f, f*1.335, f*1.498];
 
-      // Minor 7 / Minor 9
-      if (chord === "Em7" || chord === "Em9") {
-        return [f, f * 1.189, f * 1.498, f * 1.782];
-      }
+      // Minor 7 / 9
+      if (["Em7","Em9"].includes(chord))
+        return [f, f*1.189, f*1.498, f*1.782];
 
       // Half‑dim
-      if (chord === "Bm7b5" || chord === "F#m7b5") {
-        return [f, f * 1.189, f * 1.414, f * 1.782];
-      }
+      if (["Bm7b5","F#m7b5"].includes(chord))
+        return [f, f*1.189, f*1.414, f*1.782];
 
       // Fully diminished
-      if (chord === "E°7") {
-        return [f, f * 1.189, f * 1.414, f * 1.682];
-      }
+      if (chord === "E°7")
+        return [f, f*1.189, f*1.414, f*1.682];
 
       // Slash chords
-      if (chord === "D/F#" || chord === "C/E" || chord === "G/B") {
-        return [f, f * 1.26, f * 1.498];
-      }
+      if (["D/F#","C/E","G/B"].includes(chord))
+        return [f, f*1.26, f*1.498];
 
-      // fallback triad
-      return [f, f * 1.26, f * 1.498];
+      return [f, f*1.26, f*1.498];
     }
 
     function stopAllPlayback() {
-      for (var i = 0; i < playbackTimeouts.length; i++) {
-        clearTimeout(playbackTimeouts[i]);
-      }
+      for (let t of playbackTimeouts) clearTimeout(t);
       playbackTimeouts = [];
-      for (var j = 0; j < activeOscillators.length; j++) {
-        try {
-          activeOscillators[j].stop();
-        } catch (e) {}
+
+      for (let osc of activeOscillators) {
+        try { osc.stop(); } catch(e){}
       }
       activeOscillators = [];
-    }
 
-    function playChord(chord, startTime, duration) {
-      ensureAudioContext();
-      var pitches = chordToPitches(chord);
-      var t0 = audioCtx.currentTime + startTime;
-      var dur = duration || 0.7;
-
-      for (var i = 0; i < pitches.length; i++) {
-        var freq = pitches[i];
-        var osc = audioCtx.createOscillator();
-        var gain = audioCtx.createGain();
-        osc.type = "sine";
-        osc.frequency.value = freq;
-
-        gain.gain.setValueAtTime(0, t0);
-        gain.gain.linearRampToValueAtTime(0.4, t0 + 0.02);
-        gain.gain.linearRampToValueAtTime(0, t0 + dur);
-
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-
-        osc.start(t0);
-        osc.stop(t0 + dur + 0.05);
-
-        activeOscillators.push(osc);
+      if (currentAudioSource) {
+        try { currentAudioSource.stop(); } catch(e){}
+        currentAudioSource = null;
       }
     }
 
+    // === NEW AUDIO ENGINE ===
+    // Two modes: "piano" (sample-based) and "guitar" (Karplus-Strong)
+    let instrumentMode = "piano";
+
+    // PIANO SAMPLE ENGINE
+    const pianoSamples = {};
+    const pianoNotes = ["C4","E4","G4","B4"];
+
+    async function loadPianoSamples() {
+      const base = "samples/piano/";
+      for (let n of pianoNotes) {
+        if (pianoSamples[n]) continue;
+        const resp = await fetch(base + n + ".wav");
+        const arr = await resp.arrayBuffer();
+        pianoSamples[n] = await audioCtx.decodeAudioData(arr);
+      }
+    }
+
+    function playPianoChord(pitches, startTime, duration) {
+      for (let p of pitches) {
+        let nearest = "C4";
+        let best = Infinity;
+        for (let s of pianoNotes) {
+          const diff = Math.abs(noteFreqs[s] - p);
+          if (diff < best) { best = diff; nearest = s; }
+        }
+
+        const src = audioCtx.createBufferSource();
+        src.buffer = pianoSamples[nearest];
+        src.playbackRate.value = p / noteFreqs[nearest];
+
+        const gain = audioCtx.createGain();
+        gain.gain.setValueAtTime(0.001, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.6, startTime + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+
+        src.connect(gain).connect(audioCtx.destination);
+        src.start(startTime);
+        src.stop(startTime + duration + 0.1);
+      }
+    }
+
+    // ACOUSTIC GUITAR ENGINE (Karplus-Strong)
+    function pluckString(freq, startTime, duration) {
+      const length = Math.floor(audioCtx.sampleRate / freq);
+      const noise = audioCtx.createBuffer(1, length, audioCtx.sampleRate);
+      const data = noise.getChannelData(0);
+
+      for (let i = 0; i < length; i++) data[i] = Math.random()*2 - 1;
+
+      const src = audioCtx.createBufferSource();
+      src.buffer = noise;
+
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = "lowpass";
+      filter.frequency.value = 2500;
+
+      const gain = audioCtx.createGain();
+      gain.gain.setValueAtTime(0.001, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.4, startTime + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+
+      src.connect(filter).connect(gain).connect(audioCtx.destination);
+      src.start(startTime);
+      src.stop(startTime + duration + 0.1);
+    }
+
+    function playGuitarChord(pitches, startTime, duration) {
+      for (let p of pitches) pluckString(p, startTime, duration);
+    }
+
+    async function playChord(chord, startTime, duration) {
+      ensureAudioContext();
+      const pitches = chordToPitches(chord);
+      const t0 = audioCtx.currentTime + startTime;
+      const dur = duration || 0.8;
+
+      if (instrumentMode === "piano") {
+        await loadPianoSamples();
+        playPianoChord(pitches, t0, dur);
+      } else {
+        playGuitarChord(pitches, t0, dur);
+      }
+    }
     // DATA MODEL
     var sections = {
       intro: [
@@ -895,6 +963,7 @@
         { m: 8, base: "D", reharm: "D" }
       ]
     };
+
     var currentSectionKey = "intro";
     var selectedMeasures = [];
     var lastClickedMeasure = null;
@@ -974,17 +1043,17 @@
         return;
       }
       var sorted = selectedMeasures.slice().sort(function(a, b) { return a - b; });
-      var rangeText;
-      if (sorted.length === 1) {
-        rangeText = "m." + sorted[0];
-      } else {
-        rangeText = "m." + sorted[0] + "–m." + sorted[sorted.length - 1];
-      }
+      var rangeText =
+        sorted.length === 1
+          ? "m." + sorted[0]
+          : "m." + sorted[0] + "–m." + sorted[sorted.length - 1];
+
       chordPaletteLabelEl.textContent =
         "Chord Palette · Applying to " +
         currentSectionKey.toUpperCase() +
         " " +
         rangeText;
+
       chordPaletteEl.style.display = "block";
     }
 
@@ -1016,139 +1085,152 @@
       lastClickedMeasure = null;
       renderChordGrid();
     }
+    // REHARM STYLE
+    let reharmStyle = "neutral";
+    const reharmStyleSelect = document.getElementById("reharmStyleSelect");
+    reharmStyleSelect.addEventListener("change", () => {
+      reharmStyle = reharmStyleSelect.value;
+    });
 
-    function commitRangeChanges() {
-      if (selectedMeasures.length === 0) {
-        alert("Select one or more measures to commit reharm changes.");
-        return;
-      }
-      var sorted = selectedMeasures.slice().sort(function(a, b) { return a - b; });
-      var tagText = activeTheoryTag ? " with theory tag: " + activeTheoryTag : "";
-      alert(
-        "Range committed for " +
-          currentSectionKey.toUpperCase() +
-          " measures " +
-          sorted.join(", ") +
-          (tagText ? "\n(" + tagText + ")" : "")
-      );
-    }
-
-    function setActiveSection(key) {
-      currentSectionKey = key;
-      selectedMeasures = [];
-      lastClickedMeasure = null;
-      renderSectionTabs();
-      renderChordGrid();
-    }
-
-    function setActiveTheoryTag(tag) {
-      activeTheoryTag = tag;
-      if (tag) {
-        theoryFooterNoteEl.textContent =
-          'Active theory tag: "' +
-          tag +
-          '". Click chord blocks to conceptually mark measures in your reharm path.';
-      } else {
-        theoryFooterNoteEl.textContent =
-          "Tip: Click a theory item, then click a chord block to tag that measure with the selected concept in the reharm path (for your own workflow notes).";
-      }
-    }
-
-    function applyChordToSelection(chordName) {
-      if (selectedMeasures.length === 0) {
-        alert("Select one or more measures first.");
-        return;
-      }
-      var measures = sections[currentSectionKey];
-      for (var i = 0; i < measures.length; i++) {
-        if (selectedMeasures.indexOf(measures[i].m) !== -1) {
-          measures[i].reharm = chordName;
-        }
-      }
-      renderChordGrid();
-    }
-    // SIMPLE SMART REHARM ENGINE (G major–centric)
+    // === STYLE-AWARE REHARM ENGINE ===
     function suggestReharmForCurrentSection() {
-      var measures = sections[currentSectionKey];
+      const measures = sections[currentSectionKey];
       if (!measures || measures.length === 0) return;
 
-      // Reset reharm to base each time for predictable suggestions
-      for (var i = 0; i < measures.length; i++) {
-        measures[i].reharm = measures[i].base;
+      // Reset reharm to base for predictable output
+      for (let m of measures) m.reharm = m.base;
+
+      // --- UNIVERSAL SECONDARY DOMINANTS ---
+      for (let i = 0; i < measures.length - 1; i++) {
+        const curr = measures[i];
+        const next = measures[i + 1];
+
+        if (next.base === "G") curr.reharm = "D7";
+        if (next.base === "C") curr.reharm = "G7";
+        if (next.base === "D") curr.reharm = "A7";
+        if (next.base === "Em") curr.reharm = "B7";
       }
 
-      // Pass 1: Secondary dominants into cadences
-      for (var j = 0; j < measures.length - 1; j++) {
-        var thisChord = measures[j].reharm;
-        var nextChord = measures[j + 1].reharm;
+      // --- STYLE-SPECIFIC LOGIC ---
+      if (reharmStyle === "jazz") applyJazzReharm(measures);
+      if (reharmStyle === "pop") applyPopReharm(measures);
+      if (reharmStyle === "gospel") applyGospelReharm(measures);
 
-        // Into G → D7
-        if (nextChord === "G" && thisChord !== "D7" && thisChord !== "D9") {
-          measures[j].reharm = "D7";
-        }
-
-        // Into C → G7
-        if (nextChord === "C" && thisChord !== "G7" && thisChord !== "G9") {
-          measures[j].reharm = "G7";
-        }
-
-        // Into D → A7
-        if (nextChord === "D" && thisChord !== "A7" && thisChord !== "A7b9") {
-          measures[j].reharm = "A7";
-        }
-
-        // Into Em → B7
-        if (nextChord === "Em" && thisChord !== "B7") {
-          measures[j].reharm = "B7";
-        }
-      }
-
-      // Pass 2: Add color to tonic / subdominant / vi
-      for (var k = 0; k < measures.length; k++) {
-        var ch = measures[k].reharm;
-        if (ch === "G") {
-          measures[k].reharm = "Gmaj7";
-        } else if (ch === "C") {
-          measures[k].reharm = "Cmaj7";
-        } else if (ch === "Em") {
-          measures[k].reharm = "Em7";
-        }
-      }
-
-      // Pass 3: Optional passing motion G → Em
-      for (var p = 0; p < measures.length - 1; p++) {
-        var c1 = measures[p].reharm;
-        var c2 = measures[p + 1].reharm;
-        if ((c1 === "G" || c1 === "Gmaj7") && (c2 === "Em" || c2 === "Em7")) {
-          measures[p].reharm = "G/B";
-        }
-      }
+      // --- MODAL INTERCHANGE (applies to all styles) ---
+      applyModalInterchange(measures);
 
       alert(
-        "Suggested reharm applied to " +
-          currentSectionKey.toUpperCase() +
-          ". You can tweak further with the chord palette."
+        "Reharm (" +
+          reharmStyle.toUpperCase() +
+          ") applied to " +
+          currentSectionKey.toUpperCase()
       );
+
       renderChordGrid();
     }
 
+    // === JAZZ REHARM ===
+    function applyJazzReharm(measures) {
+      for (let i = 0; i < measures.length; i++) {
+        const m = measures[i];
+
+        // Color the tonics
+        if (m.reharm === "G") m.reharm = "Gmaj7";
+        if (m.reharm === "C") m.reharm = "Cmaj7";
+        if (m.reharm === "Em") m.reharm = "Em7";
+
+        // ii–V–I injections
+        if (i < measures.length - 1) {
+          const next = measures[i + 1].reharm;
+          if (next === "Gmaj7") m.reharm = "Am7"; // ii of G
+          if (next === "Cmaj7") m.reharm = "Dm7"; // ii of C
+        }
+
+        // Tritone subs for dominants
+        if (m.reharm === "D7") m.reharm = "Ab7";
+        if (m.reharm === "A7") m.reharm = "Eb7";
+        if (m.reharm === "G7") m.reharm = "Db7";
+      }
+    }
+
+    // === POP REHARM ===
+    function applyPopReharm(measures) {
+      for (let i = 0; i < measures.length; i++) {
+        const m = measures[i];
+
+        // Add 6, add9, maj9 colors
+        if (m.reharm === "G") m.reharm = "G6";
+        if (m.reharm === "C") m.reharm = "Cadd9";
+        if (m.reharm === "Em") m.reharm = "Em7";
+
+        // Pop walkdowns
+        if (i < measures.length - 1) {
+          const next = measures[i + 1].reharm;
+          if (m.reharm === "G6" && next === "Em7") m.reharm = "G/B";
+        }
+      }
+    }
+
+    // === GOSPEL REHARM ===
+    function applyGospelReharm(measures) {
+      for (let i = 0; i < measures.length; i++) {
+        const m = measures[i];
+
+        // Gospel colors
+        if (m.reharm === "G") m.reharm = "Gmaj9";
+        if (m.reharm === "C") m.reharm = "Cmaj9";
+        if (m.reharm === "Em") m.reharm = "Em9";
+
+        // Gospel dominant pushes
+        if (m.reharm === "D") m.reharm = "D9";
+        if (m.reharm === "A7") m.reharm = "A7b9";
+
+        // Passing diminished
+        if (i < measures.length - 1) {
+          const next = measures[i + 1].reharm;
+          if (next === "Gmaj9") m.reharm = "F#m7b5";
+        }
+      }
+    }
+
+    // === MODAL INTERCHANGE (Parallel Minor Borrowing) ===
+    function applyModalInterchange(measures) {
+      for (let i = 0; i < measures.length; i++) {
+        const m = measures[i];
+
+        // Borrowed from G minor:
+        // bVII = F
+        // bVI = Eb
+        // iv = Cm
+        // ii° = A° (or Aø)
+        // v = Dm (soft dominant)
+
+        // Only apply if chord is diatonic and not already altered
+        if (m.base === "C" && Math.random() < 0.15) m.reharm = "Eb";
+        if (m.base === "D" && Math.random() < 0.15) m.reharm = "Dm";
+        if (m.base === "G" && Math.random() < 0.12) m.reharm = "F";
+        if (m.base === "Am" && Math.random() < 0.12) m.reharm = "Cm";
+      }
+    }
     // PLAYBACK
     function playSection(mode) {
       stopAllPlayback();
       ensureAudioContext();
-      var measures = sections[currentSectionKey];
-      var chordPath = [];
-      for (var i = 0; i < measures.length; i++) {
-        chordPath.push(mode === "base" ? measures[i].base : measures[i].reharm);
-      }
-      var beatDur = 0.8;
-      for (var j = 0; j < chordPath.length; j++) {
-        (function(chord, idx) {
-          var timeoutId = setTimeout(function() {
-            playChord(chord, 0, 0.7);
-          }, idx * beatDur * 1000);
-          playbackTimeouts.push(timeoutId);
-        })(chordPath[j], j);
+
+      const measures = sections[currentSectionKey];
+      const chordPath = measures.map(m =>
+        mode === "base" ? m.base : m.reharm
+      );
+
+      const beatDur = 0.8;
+
+      for (let i = 0; i < chordPath.length; i++) {
+        const chord = chordPath[i];
+        const timeoutId = setTimeout(() => {
+          playChord(chord, 0, 0.7);
+        }, i * beatDur * 1000);
+
+        playbackTimeouts.push(timeoutId);
       }
     }
 
@@ -1162,26 +1244,25 @@
     }
 
     function handleAudioLoad() {
-      var input = document.getElementById("audioFileInput");
+      const input = document.getElementById("audioFileInput");
       if (!input.files || !input.files[0]) {
         alert("Choose a .wav or .mp3 file first.");
         return;
       }
-      var file = input.files[0];
+
+      const file = input.files[0];
       updateAudioStatusLoaded(file.name);
       ensureAudioContext();
 
-      var reader = new FileReader();
-      reader.onload = function(e) {
-        var arrayBuffer = e.target.result;
+      const reader = new FileReader();
+      reader.onload = e => {
+        const arrayBuffer = e.target.result;
         audioCtx.decodeAudioData(
           arrayBuffer,
-          function(buffer) {
+          buffer => {
             loadedAudioBuffer = buffer;
           },
-          function() {
-            alert("Could not decode this audio file.");
-          }
+          () => alert("Could not decode this audio file.")
         );
       };
       reader.readAsArrayBuffer(file);
@@ -1192,12 +1273,15 @@
         alert("No audio file loaded yet.");
         return;
       }
+
       stopAllPlayback();
       ensureAudioContext();
-      var src = audioCtx.createBufferSource();
+
+      const src = audioCtx.createBufferSource();
       src.buffer = loadedAudioBuffer;
       src.connect(audioCtx.destination);
       src.start();
+
       currentAudioSource = src;
     }
 
@@ -1213,18 +1297,13 @@
     function exportMusicXML() {
       alert("MusicXML export is a placeholder in this version.");
     }
+
     // WIRING
     document.getElementById("audioLoadBtn").addEventListener("click", handleAudioLoad);
     document.getElementById("playAudioFileBtn").addEventListener("click", playImportedAudio);
 
-    document.getElementById("playBaseBtn").addEventListener("click", function() {
-      playSection("base");
-    });
-
-    document.getElementById("playReharmBtn").addEventListener("click", function() {
-      playSection("reharm");
-    });
-
+    document.getElementById("playBaseBtn").addEventListener("click", () => playSection("base"));
+    document.getElementById("playReharmBtn").addEventListener("click", () => playSection("reharm"));
     document.getElementById("stopBtn").addEventListener("click", stopAllPlayback);
 
     document.getElementById("exportWavBtn").addEventListener("click", stubExportWav);
@@ -1236,54 +1315,69 @@
     document.getElementById("suggestReharmBtn").addEventListener("click", suggestReharmForCurrentSection);
 
     // Section tab switching
-    var tabs = sectionTabsEl.querySelectorAll(".section-tab");
-    for (var i = 0; i < tabs.length; i++) {
-      (function(tab) {
-        tab.addEventListener("click", function() {
-          setActiveSection(tab.getAttribute("data-section"));
-        });
-      })(tabs[i]);
+    const tabs = sectionTabsEl.querySelectorAll(".section-tab");
+    for (let tab of tabs) {
+      tab.addEventListener("click", () => {
+        setActiveSection(tab.getAttribute("data-section"));
+      });
     }
 
     // Theory tag selection
-    var theoryItems = document.querySelectorAll(".theory-card li");
-    for (var j = 0; j < theoryItems.length; j++) {
-      (function(li) {
-        li.addEventListener("click", function() {
-          var tag = li.getAttribute("data-theory") || li.textContent;
-          setActiveTheoryTag(tag);
-        });
-      })(theoryItems[j]);
+    const theoryItems = document.querySelectorAll(".theory-card li");
+    for (let li of theoryItems) {
+      li.addEventListener("click", () => {
+        const tag = li.getAttribute("data-theory") || li.textContent;
+        setActiveTheoryTag(tag);
+      });
     }
 
     // Scroll to glossary
-    document.getElementById("labWorkspaceBtn").addEventListener("click", function() {
-      // Already in workspace
-    });
-
-    document.getElementById("theoryGlossaryBtn").addEventListener("click", function() {
+    document.getElementById("labWorkspaceBtn").addEventListener("click", () => {});
+    document.getElementById("theoryGlossaryBtn").addEventListener("click", () => {
       window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
     });
 
     // Chord palette buttons
-    var chordButtons = document.querySelectorAll(".chord-btn");
-    for (var k = 0; k < chordButtons.length; k++) {
-      (function(btn) {
-        btn.addEventListener("click", function() {
-          var chord = btn.getAttribute("data-chord");
-          applyChordToSelection(chord);
-        });
-      })(chordButtons[k]);
+    const chordButtons = document.querySelectorAll(".chord-btn");
+    for (let btn of chordButtons) {
+      btn.addEventListener("click", () => {
+        const chord = btn.getAttribute("data-chord");
+        applyChordToSelection(chord);
+      });
     }
 
     // Close palette
-    chordPaletteCloseEl.addEventListener("click", function() {
+    chordPaletteCloseEl.addEventListener("click", () => {
       chordPaletteEl.style.display = "none";
     });
 
+    // Instrument toggle buttons
+    const pianoBtn = document.getElementById("instrumentPianoBtn");
+    const guitarBtn = document.getElementById("instrumentGuitarBtn");
+
+    function updateInstrumentButtons() {
+      if (instrumentMode === "piano") {
+        pianoBtn.classList.add("active");
+        guitarBtn.classList.remove("active");
+      } else {
+        guitarBtn.classList.add("active");
+        pianoBtn.classList.remove("active");
+      }
+    }
+
+    pianoBtn.addEventListener("click", () => {
+      instrumentMode = "piano";
+      updateInstrumentButtons();
+    });
+
+    guitarBtn.addEventListener("click", () => {
+      instrumentMode = "guitar";
+      updateInstrumentButtons();
+    });
     // INITIAL RENDER
     renderSectionTabs();
     renderChordGrid();
+    updateInstrumentButtons();
   </script>
 </body>
 </html>
