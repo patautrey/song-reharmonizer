@@ -300,7 +300,6 @@
 
     /* Chord palette */
     .chord-palette {
-      position: relative;
       margin-top: 6px;
       padding: 8px;
       border-radius: 6px;
@@ -448,7 +447,7 @@
           <div id="chordGrid" class="chord-grid"></div>
 
 
-          <!-- Floating chord palette (appears when measures selected) -->
+          <!-- Chord palette (appears when measures selected) -->
           <div id="chordPalette" class="chord-palette">
             <div class="chord-palette-header">
               <span id="chordPaletteLabel">
@@ -492,7 +491,6 @@
                   <button class="chord-btn" data-chord="Gsus2">Gsus2</button>
                   <button class="chord-btn" data-chord="Gsus4">Gsus4</button>
                   <button class="chord-btn" data-chord="G9">G9</button>
-                  <button class="chord-btn" data-chord="G#11">G#11</button>
                   <button class="chord-btn" data-chord="G7b9">G7b9</button>
                   <button class="chord-btn" data-chord="G7#5">G7#5</button>
                 </div>
@@ -652,14 +650,10 @@
 
 
   <script>
-    /* -----------------------------
-       GLOBAL AUDIO STATE
-    ------------------------------*/
+    // AUDIO CONTEXT
     let audioCtx = null;
     let activeOscillators = [];
     let playbackTimeouts = [];
-    let loadedAudioBuffer = null;
-    let currentAudioSource = null;
 
 
     function ensureAudioContext() {
@@ -676,10 +670,153 @@
     document.addEventListener("touchstart", ensureAudioContext, { once: true });
 
 
-    /* -----------------------------
-       DATA MODEL
-    ------------------------------*/
-    const sections = {
+    // SIMPLE SYNTH
+    const noteFreqs = {
+      C4: 261.63,
+      Cs4: 277.18,
+      D4: 293.66,
+      Ds4: 311.13,
+      E4: 329.63,
+      F4: 349.23,
+      Fs4: 369.99,
+      G4: 392.0,
+      Gs4: 415.3,
+      A4: 440.0,
+      As4: 466.16,
+      B4: 493.88
+    };
+
+
+    function chordToPitches(chord) {
+      // Map only the chords we actually use in the palette
+      const rootMap = {
+        "G": "G4",
+        "Gmaj7": "G4",
+        "G7": "G4",
+        "G6": "G4",
+        "Gadd9": "G4",
+        "Gsus2": "G4",
+        "Gsus4": "G4",
+        "G9": "G4",
+        "G7b9": "G4",
+        "G7#5": "G4",
+        "Em": "E4",
+        "Em7": "E4",
+        "C": "C4",
+        "Cmaj7": "C4",
+        "Cadd9": "C4",
+        "D": "D4",
+        "D7": "D4",
+        "B7": "B4",
+        "D/F#": "D4",
+        "C/E": "C4",
+        "G/B": "G4",
+        "F#m7b5": "Fs4"
+      };
+
+
+      var base = rootMap[chord] || "C4";
+      var f = noteFreqs[base];
+
+
+      if (chord === "G" || chord === "C" || chord === "D") {
+        return [f, f * 1.26, f * 1.498];
+      }
+      if (chord === "Em") {
+        return [f, f * 1.189, f * 1.498];
+      }
+      if (chord === "Gmaj7" || chord === "Cmaj7") {
+        return [f, f * 1.26, f * 1.498, f * 1.888];
+      }
+      if (chord === "G7" || chord === "D7" || chord === "G7b9" || chord === "G7#5") {
+        return [f, f * 1.26, f * 1.498, f * 1.782];
+      }
+      if (chord === "G6") {
+        return [f, f * 1.26, f * 1.498, f * 1.682];
+      }
+      if (chord === "Gadd9" || chord === "Cadd9" || chord === "G9") {
+        return [f, f * 1.26, f * 1.498, f * 2.245];
+      }
+      if (chord === "Gsus2") {
+        return [f, f * 1.122, f * 1.498];
+      }
+      if (chord === "Gsus4") {
+        return [f, f * 1.335, f * 1.498];
+      }
+      if (chord === "Em7") {
+        return [f, f * 1.189, f * 1.498, f * 1.782];
+      }
+      if (chord === "B7") {
+        return [f, f * 1.26, f * 1.498, f * 1.782];
+      }
+      if (chord === "D/F#") {
+        return [noteFreqs["Fs4"], f * 1.26, f * 1.498];
+      }
+      if (chord === "C/E") {
+        return [noteFreqs["E4"], f * 1.26, f * 1.498];
+      }
+      if (chord === "G/B") {
+        return [noteFreqs["B4"], f * 1.26, f * 1.498];
+      }
+      if (chord === "F#m7b5") {
+        return [f, f * 1.189, f * 1.414, f * 1.782];
+      }
+
+
+      // fallback triad
+      return [f, f * 1.26, f * 1.498];
+    }
+
+
+    function stopAllPlayback() {
+      for (var i = 0; i < playbackTimeouts.length; i++) {
+        clearTimeout(playbackTimeouts[i]);
+      }
+      playbackTimeouts = [];
+      for (var j = 0; j < activeOscillators.length; j++) {
+        try {
+          activeOscillators[j].stop();
+        } catch (e) {}
+      }
+      activeOscillators = [];
+    }
+
+
+    function playChord(chord, startTime, duration) {
+      ensureAudioContext();
+      var pitches = chordToPitches(chord);
+      var t0 = audioCtx.currentTime + startTime;
+      var dur = duration || 0.7;
+
+
+      for (var i = 0; i < pitches.length; i++) {
+        var freq = pitches[i];
+        var osc = audioCtx.createOscillator();
+        var gain = audioCtx.createGain();
+        osc.type = "sine";
+        osc.frequency.value = freq;
+
+
+        gain.gain.setValueAtTime(0, t0);
+        gain.gain.linearRampToValueAtTime(0.4, t0 + 0.02);
+        gain.gain.linearRampToValueAtTime(0, t0 + dur);
+
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+
+        osc.start(t0);
+        osc.stop(t0 + dur + 0.05);
+
+
+        activeOscillators.push(osc);
+      }
+    }
+
+
+    // DATA MODEL
+    var sections = {
       intro: [
         { m: 1, base: "G", reharm: "G" },
         { m: 2, base: "Em", reharm: "Em" },
@@ -743,190 +880,259 @@
     };
 
 
-    let currentSectionKey = "intro";
-    let selectedMeasures = new Set();
-    let lastClickedMeasure = null;
-    let activeTheoryTag = null;
+    var currentSectionKey = "intro";
+    var selectedMeasures = [];
+    var lastClickedMeasure = null;
+    var activeTheoryTag = null;
 
 
-    const chordGridEl = document.getElementById("chordGrid");
-    const sectionTabsEl = document.getElementById("sectionTabs");
-    const audioStatusEl = document.getElementById("audioStatus");
-    const activeTrackLabelEl = document.getElementById("activeTrackLabel");
-    const theoryFooterNoteEl = document.getElementById("theoryFooterNote");
+    var chordGridEl = document.getElementById("chordGrid");
+    var sectionTabsEl = document.getElementById("sectionTabs");
+    var audioStatusEl = document.getElementById("audioStatus");
+    var activeTrackLabelEl = document.getElementById("activeTrackLabel");
+    var theoryFooterNoteEl = document.getElementById("theoryFooterNote");
+    var chordPaletteEl = document.getElementById("chordPalette");
+    var chordPaletteLabelEl = document.getElementById("chordPaletteLabel");
+    var chordPaletteCloseEl = document.getElementById("chordPaletteClose");
 
 
-    const chordPaletteEl = document.getElementById("chordPalette");
-    const chordPaletteLabelEl = document.getElementById("chordPaletteLabel");
-    const chordPaletteCloseEl = document.getElementById("chordPaletteClose");
-
-
-    /* -----------------------------
-       NOTE / CHORD ENGINE
-    ------------------------------*/
-    const noteFreqs = {
-      C4: 261.63, Cs4: 277.18, D4: 293.66, Ds4: 311.13,
-      E4: 329.63, F4: 349.23, Fs4: 369.99, G4: 392.0,
-      Gs4: 415.3, A4: 440.0, As4: 466.16, B4: 493.88,
-      C5: 523.25
-    };
-
-
-    function chordToPitches(chord) {
-      // Simple mapping for palette chords; fallback to root triad
-      const rootMap = {
-        G: "G4", Gmaj7: "G4", G7: "G4", G6: "G4", Gadd9: "G4",
-        Gsus2: "G4", Gsus4: "G4", G9: "G4", "G#11": "G4", G7b9: "G4", G7#5: "G4",
-        Em: "E4", Em7: "E4",
-        C: "C4", Cmaj7: "C4", Cadd9: "C4",
-        D: "D4", D7: "D4",
-        B7: "B4",
-        "D/F#": "D4",
-        "C/E": "C4",
-        "G/B": "G4",
-        "F#m7b5": "Fs4"
-      };
-
-
-      const base = rootMap[chord] || "C4";
-      const f = noteFreqs[base];
-
-
-      switch (chord) {
-        case "G":
-        case "C":
-        case "D":
-          return [f, f * 1.26, f * 1.498]; // major triad
-        case "Em":
-          return [f, f * 1.189, f * 1.498]; // minor triad
-        case "Gmaj7":
-        case "Cmaj7":
-          return [f, f * 1.26, f * 1.498, f * 1.888]; // maj7
-        case "G7":
-        case "D7":
-        case "G7b9":
-        case "G7#5":
-          return [f, f * 1.26, f * 1.498, f * 1.782]; // dom7-ish
-        case "G6":
-          return [f, f * 1.26, f * 1.498, f * 1.682];
-        case "Gadd9":
-        case "Cadd9":
-        case "G9":
-          return [f, f * 1.26, f * 1.498, f * 2.245];
-        case "Gsus2":
-          return [f, f * 1.122, f * 1.498];
-        case "Gsus4":
-          return [f, f * 1.335, f * 1.498];
-        case "Em7":
-          return [f, f * 1.189, f * 1.498, f * 1.782];
-        case "B7":
-          return [f, f * 1.26, f * 1.498, f * 1.888];
-        case "D/F#":
-          return [noteFreqs["Fs4"], f * 1.26, f * 1.498];
-        case "C/E":
-          return [noteFreqs["E4"], f * 1.26, f * 1.498];
-        case "G/B":
-          return [noteFreqs["B4"], f * 1.26, f * 1.498];
-        case "F#m7b5":
-          // half-diminished: 1, b3, b5, b7
-          return [f, f * 1.189, f * 1.414, f * 1.782];
-        default:
-          // fallback triad
-          return [f, f * 1.26, f * 1.498];
+    // RENDERING
+    function renderSectionTabs() {
+      var tabs = sectionTabsEl.querySelectorAll(".section-tab");
+      for (var i = 0; i < tabs.length; i++) {
+        var tab = tabs[i];
+        if (tab.getAttribute("data-section") === currentSectionKey) {
+          tab.classList.add("active");
+        } else {
+          tab.classList.remove("active");
+        }
       }
     }
 
 
-    function stopAllPlayback() {
-      playbackTimeouts.forEach(t => clearTimeout(t));
-      playbackTimeouts = [];
-      activeOscillators.forEach(osc => { try { osc.stop(); } catch(e){} });
-      activeOscillators = [];
-      if (currentAudioSource) {
-        try { currentAudioSource.stop(); } catch(e){}
-        currentAudioSource = null;
+    function renderChordGrid() {
+      chordGridEl.innerHTML = "";
+      var measures = sections[currentSectionKey];
+
+
+      for (var i = 0; i < measures.length; i++) {
+        var measure = measures[i];
+        var block = document.createElement("div");
+        block.className = "measure-block";
+        block.setAttribute("data-measure", measure.m);
+
+
+        if (selectedMeasures.indexOf(measure.m) !== -1) {
+          block.classList.add("selected");
+        }
+
+
+        var label = document.createElement("div");
+        label.className = "measure-label";
+        label.textContent = "m." + measure.m;
+
+
+        var baseRow = document.createElement("div");
+        baseRow.className = "measure-row base";
+        baseRow.innerHTML =
+          "<span>" + measure.base + "</span><span class=\"tag\">BASE</span>";
+
+
+        var reharmRow = document.createElement("div");
+        reharmRow.className = "measure-row reharm";
+        reharmRow.innerHTML =
+          "<span>" + measure.reharm + "</span><span class=\"tag\">REHARM</span>";
+
+
+        block.appendChild(label);
+        block.appendChild(baseRow);
+        block.appendChild(reharmRow);
+
+
+        block.addEventListener("click", (function(mNumber) {
+          return function() {
+            handleMeasureClick(mNumber);
+          };
+        })(measure.m));
+
+
+        chordGridEl.appendChild(block);
+      }
+
+
+      updateChordPaletteVisibility();
+    }
+
+
+    function updateChordPaletteVisibility() {
+      if (selectedMeasures.length === 0) {
+        chordPaletteEl.style.display = "none";
+        chordPaletteLabelEl.textContent =
+          "Chord Palette · Select measures to apply chords";
+        return;
+      }
+      var sorted = selectedMeasures.slice().sort(function(a, b) { return a - b; });
+      var rangeText;
+      if (sorted.length === 1) {
+        rangeText = "m." + sorted[0];
+      } else {
+        rangeText = "m." + sorted[0] + "–m." + sorted[sorted.length - 1];
+      }
+      chordPaletteLabelEl.textContent =
+        "Chord Palette · Applying to " +
+        currentSectionKey.toUpperCase() +
+        " " +
+        rangeText;
+      chordPaletteEl.style.display = "block";
+    }
+
+
+    // INTERACTION
+    function handleMeasureClick(mNumber) {
+      var idx = selectedMeasures.indexOf(mNumber);
+
+
+      if (lastClickedMeasure === null || selectedMeasures.indexOf(lastClickedMeasure) === -1) {
+        if (idx !== -1) {
+          selectedMeasures.splice(idx, 1);
+        } else {
+          selectedMeasures.push(mNumber);
+        }
+        lastClickedMeasure = mNumber;
+      } else {
+        selectedMeasures = [];
+        var start = Math.min(lastClickedMeasure, mNumber);
+        var end = Math.max(lastClickedMeasure, mNumber);
+        for (var m = start; m <= end; m++) {
+          selectedMeasures.push(m);
+        }
+      }
+
+
+      renderChordGrid();
+    }
+
+
+    function clearHighlights() {
+      selectedMeasures = [];
+      lastClickedMeasure = null;
+      renderChordGrid();
+    }
+
+
+    function commitRangeChanges() {
+      if (selectedMeasures.length === 0) {
+        alert("Select one or more measures to commit reharm changes.");
+        return;
+      }
+      var sorted = selectedMeasures.slice().sort(function(a, b) { return a - b; });
+      var tagText = activeTheoryTag ? " with theory tag: " + activeTheoryTag : "";
+      alert(
+        "Range committed for " +
+          currentSectionKey.toUpperCase() +
+          " measures " +
+          sorted.join(", ") +
+          (tagText ? "\n(" + tagText + ")" : "")
+      );
+    }
+
+
+    function setActiveSection(key) {
+      currentSectionKey = key;
+      selectedMeasures = [];
+      lastClickedMeasure = null;
+      renderSectionTabs();
+      renderChordGrid();
+    }
+
+
+    function setActiveTheoryTag(tag) {
+      activeTheoryTag = tag;
+      if (tag) {
+        theoryFooterNoteEl.textContent =
+          'Active theory tag: "' +
+          tag +
+          '". Click chord blocks to conceptually mark measures in your reharm path.';
+      } else {
+        theoryFooterNoteEl.textContent =
+          "Tip: Click a theory item, then click a chord block to tag that measure with the selected concept in the reharm path (for your own workflow notes).";
       }
     }
 
 
-    function playChord(chord, startTime, duration = 0.7) {
-      ensureAudioContext();
-      const pitches = chordToPitches(chord);
-      const t0 = audioCtx.currentTime + startTime;
-
-
-      pitches.forEach(freq => {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = "sine";
-        osc.frequency.value = freq;
-
-
-        gain.gain.setValueAtTime(0, t0);
-        gain.gain.linearRampToValueAtTime(0.4, t0 + 0.02);
-        gain.gain.linearRampToValueAtTime(0, t0 + duration);
-
-
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-
-
-        osc.start(t0);
-        osc.stop(t0 + duration + 0.05);
-
-
-        activeOscillators.push(osc);
-      });
+    function applyChordToSelection(chordName) {
+      if (selectedMeasures.length === 0) {
+        alert("Select one or more measures first.");
+        return;
+      }
+      var measures = sections[currentSectionKey];
+      for (var i = 0; i < measures.length; i++) {
+        if (selectedMeasures.indexOf(measures[i].m) !== -1) {
+          // REHARM ONLY
+          measures[i].reharm = chordName;
+        }
+      }
+      renderChordGrid();
     }
 
 
+    // PLAYBACK
     function playSection(mode) {
       stopAllPlayback();
       ensureAudioContext();
-      const measures = sections[currentSectionKey];
-      const chordPath = mode === "base"
-        ? measures.map(m => m.base)
-        : measures.map(m => m.reharm);
-
-
-      const beatDur = 0.8;
-      chordPath.forEach((chord, idx) => {
-        const timeoutId = setTimeout(() => {
-          playChord(chord, 0, 0.7);
-        }, idx * beatDur * 1000);
-        playbackTimeouts.push(timeoutId);
-      });
+      var measures = sections[currentSectionKey];
+      var chordPath = [];
+      for (var i = 0; i < measures.length; i++) {
+        chordPath.push(mode === "base" ? measures[i].base : measures[i].reharm);
+      }
+      var beatDur = 0.8;
+      for (var j = 0; j < chordPath.length; j++) {
+        (function(chord, idx) {
+          var timeoutId = setTimeout(function() {
+            playChord(chord, 0, 0.7);
+          }, idx * beatDur * 1000);
+          playbackTimeouts.push(timeoutId);
+        })(chordPath[j], j);
+      }
     }
 
 
-    /* -----------------------------
-       AUDIO FILE LOAD + PLAYBACK
-    ------------------------------*/
+    // AUDIO FILE (stubbed decode)
+    var loadedAudioBuffer = null;
+    var currentAudioSource = null;
+
+
     function updateAudioStatusLoaded(fileName) {
-      audioStatusEl.innerHTML = `Audio loaded: <span>${fileName}</span>`;
-      activeTrackLabelEl.textContent = `Active Track: ${fileName}`;
+      audioStatusEl.innerHTML = "Audio loaded: <span>" + fileName + "</span>";
+      activeTrackLabelEl.textContent = "Active Track: " + fileName;
     }
 
 
-    async function handleAudioLoad() {
-      const input = document.getElementById("audioFileInput");
+    function handleAudioLoad() {
+      var input = document.getElementById("audioFileInput");
       if (!input.files || !input.files[0]) {
         alert("Choose a .wav or .mp3 file first.");
         return;
       }
-      const file = input.files[0];
+      var file = input.files[0];
       updateAudioStatusLoaded(file.name);
       ensureAudioContext();
 
 
-      try {
-        const arrayBuffer = await file.arrayBuffer();
-        audioCtx.decodeAudioData(arrayBuffer, buffer => {
-          loadedAudioBuffer = buffer;
-        }, () => alert("Could not decode this audio file."));
-      } catch (err) {
-        alert("Error reading audio file.");
-      }
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        var arrayBuffer = e.target.result;
+        audioCtx.decodeAudioData(
+          arrayBuffer,
+          function(buffer) {
+            loadedAudioBuffer = buffer;
+          },
+          function() {
+            alert("Could not decode this audio file.");
+          }
+        );
+      };
+      reader.readAsArrayBuffer(file);
     }
 
 
@@ -937,7 +1143,7 @@
       }
       stopAllPlayback();
       ensureAudioContext();
-      const src = audioCtx.createBufferSource();
+      var src = audioCtx.createBufferSource();
       src.buffer = loadedAudioBuffer;
       src.connect(audioCtx.destination);
       src.start();
@@ -945,402 +1151,33 @@
     }
 
 
-    /* -----------------------------
-       RENDERING
-    ------------------------------*/
-    function renderChordGrid() {
-      chordGridEl.innerHTML = "";
-      const measures = sections[currentSectionKey];
-
-
-      measures.forEach(measure => {
-        const block = document.createElement("div");
-        block.className = "measure-block";
-        block.dataset.measure = measure.m;
-
-
-        if (selectedMeasures.has(measure.m)) {
-          block.classList.add("selected");
-        }
-
-
-        const label = document.createElement("div");
-        label.className = "measure-label";
-        label.textContent = `m.${measure.m}`;
-
-
-        const baseRow = document.createElement("div");
-        baseRow.className = "measure-row base";
-        baseRow.innerHTML =
-          `<span>${measure.base}</span><span class="tag">BASE</span>`;
-
-
-        const reharmRow = document.createElement("div");
-        reharmRow.className = "measure-row reharm";
-        reharmRow.innerHTML =
-          `<span>${measure.reharm}</span><span class="tag">REHARM</span>`;
-
-
-        block.appendChild(label);
-        block.appendChild(baseRow);
-        block.appendChild(reharmRow);
-
-
-        block.addEventListener("click", () => handleMeasureClick(measure.m));
-
-
-        chordGridEl.appendChild(block);
-      });
-
-
-      updateChordPaletteVisibility();
-    }
-
-
-    function renderSectionTabs() {
-      const tabs = sectionTabsEl.querySelectorAll(".section-tab");
-      tabs.forEach(tab => {
-        const key = tab.dataset.section;
-        if (key === currentSectionKey) tab.classList.add("active");
-        else tab.classList.remove("active");
-      });
-    }
-
-
-    /* -----------------------------
-       CHORD PALETTE
-    ------------------------------*/
-    function updateChordPaletteVisibility() {
-      if (selectedMeasures.size === 0) {
-        chordPaletteEl.style.display = "none";
-        chordPaletteLabelEl.textContent =
-          "Chord Palette · Select measures to apply chords";
-        return;
-      }
-      const selectedArray = Array.from(selectedMeasures).sort((a, b) => a - b);
-      const rangeText =
-        selectedArray.length === 1
-          ? `m.${selectedArray[0]}`
-          : `m.${selectedArray[0]}–m.${selectedArray[selectedArray.length - 1]}`;
-      chordPaletteLabelEl.textContent =
-        `Chord Palette · Applying to ${currentSectionKey.toUpperCase()} ${rangeText}`;
-      chordPaletteEl.style.display = "block";
-    }
-
-
-    function applyChordToSelection(chordName) {
-      if (selectedMeasures.size === 0) {
-        alert("Select one or more measures first.");
-        return;
-      }
-      const measures = sections[currentSectionKey];
-      measures.forEach(measure => {
-        if (selectedMeasures.has(measure.m)) {
-          // REHARM ONLY
-          measure.reharm = chordName;
-        }
-      });
-      renderChordGrid();
-    }
-
-
-    /* -----------------------------
-       INTERACTION
-    ------------------------------*/
-    function handleMeasureClick(mNumber) {
-      if (lastClickedMeasure === null ||
-          !selectedMeasures.has(lastClickedMeasure)) {
-
-
-        if (selectedMeasures.has(mNumber)) {
-          selectedMeasures.delete(mNumber);
-        } else {
-          selectedMeasures.add(mNumber);
-        }
-        lastClickedMeasure = mNumber;
-
-
-      } else {
-        selectedMeasures.clear();
-        const start = Math.min(lastClickedMeasure, mNumber);
-        const end = Math.max(lastClickedMeasure, mNumber);
-        for (let m = start; m <= end; m++) {
-          selectedMeasures.add(m);
-        }
-      }
-      renderChordGrid();
-    }
-
-
-    function clearHighlights() {
-      selectedMeasures.clear();
-      lastClickedMeasure = null;
-      renderChordGrid();
-    }
-
-
-    function commitRangeChanges() {
-      if (selectedMeasures.size === 0) {
-        alert("Select one or more measures to commit reharm changes.");
-        return;
-      }
-      const selectedArray = Array.from(selectedMeasures).sort((a, b) => a - b);
-      const tagText = activeTheoryTag
-        ? ` with theory tag: ${activeTheoryTag}`
-        : "";
-      alert(
-        `Range committed for ${currentSectionKey.toUpperCase()} measures ${selectedArray.join(
-          ", "
-        )}${tagText ? "\n(" + tagText + ")" : ""}`
-      );
-    }
-
-
-    function setActiveSection(key) {
-      currentSectionKey = key;
-      selectedMeasures.clear();
-      lastClickedMeasure = null;
-      renderSectionTabs();
-      renderChordGrid();
-    }
-
-
-    function setActiveTheoryTag(tag) {
-      activeTheoryTag = tag;
-      theoryFooterNoteEl.textContent =
-        tag
-          ? `Active theory tag: "${tag}". Click chord blocks to conceptually mark measures in your reharm path.`
-          : `Tip: Click a theory item, then click a chord block to tag that measure with the selected concept in the reharm path (for your own workflow notes).`;
-    }
-
-
-    /* -----------------------------
-       EXPORTS
-    ------------------------------*/
+    // EXPORT STUBS
     function stubExportWav() {
-      alert("WAV export is a placeholder.");
-    }
-
-
-    function createMidiFileBytes() {
-      const tempo = 500000;
-      const ppq = 480;
-      const events = [];
-      const allSectionsOrder = ["intro","verse1","prechorus","chorus","bridge","outro"];
-
-
-      function pushTempo() {
-        events.push(
-          0x00, 0xff, 0x51, 0x03,
-          (tempo >> 16) & 0xff,
-          (tempo >> 8) & 0xff,
-          tempo & 0xff
-        );
-      }
-
-
-      function pushNoteOn(delta, note, velocity) {
-        events.push(delta, 0x90, note, velocity);
-      }
-
-
-      function pushNoteOff(delta, note) {
-        events.push(delta, 0x80, note, 0x40);
-      }
-
-
-      function chordNameToMidiNotes(chord) {
-        // Map palette chords to MIDI roots
-        const rootMap = {
-          G:67, Gmaj7:67, G7:67, G6:67, Gadd9:67,
-          Gsus2:67, Gsus4:67, G9:67, "G#11":67, G7b9:67, G7#5:67,
-          Em:64, Em7:64,
-          C:60, Cmaj7:60, Cadd9:60,
-          D:62, D7:62,
-          B7:71,
-          "D/F#":62,
-          "C/E":60,
-          "G/B":67,
-          "F#m7b5":66
-        };
-        const root = rootMap[chord] ?? 60;
-
-
-        switch (chord) {
-          case "G":
-          case "C":
-          case "D":
-            return [root, root+4, root+7];
-          case "Em":
-            return [root, root+3, root+7];
-          case "Gmaj7":
-          case "Cmaj7":
-            return [root, root+4, root+7, root+11];
-          case "G7":
-          case "D7":
-          case "G7b9":
-          case "G7#5":
-            return [root, root+4, root+7, root+10];
-          case "G6":
-            return [root, root+4, root+7, root+9];
-          case "Gadd9":
-          case "Cadd9":
-          case "G9":
-            return [root, root+4, root+7, root+14];
-          case "Gsus2":
-            return [root, root+2, root+7];
-          case "Gsus4":
-            return [root, root+5, root+7];
-          case "Em7":
-            return [root, root+3, root+7, root+10];
-          case "B7":
-            return [root, root+4, root+7, root+10];
-          case "D/F#":
-            return [66, root+4, root+7];
-          case "C/E":
-            return [64, root+4, root+7];
-          case "G/B":
-            return [71, root+4, root+7];
-          case "F#m7b5":
-            return [root, root+3, root+6, root+10];
-          default:
-            return [root, root+4, root+7];
-        }
-      }
-
-
-      pushTempo();
-      const chordDurTicks = ppq;
-
-
-      allSectionsOrder.forEach(secKey => {
-        sections[secKey].forEach(m => {
-          const notes = chordNameToMidiNotes(m.reharm);
-          notes.forEach((n, idx) => pushNoteOn(idx===0?0:0, n, 90));
-          notes.forEach((n, idx) => pushNoteOff(idx===0?chordDurTicks:0, n));
-        });
-      });
-
-
-      events.push(0x00, 0xff, 0x2f, 0x00);
-
-
-      const trackData = Uint8Array.from(events);
-      const trackLen = trackData.length;
-
-
-      function writeStr(view, offset, str) {
-        for (let i=0; i<str.length; i++) {
-          view.setUint8(offset+i, str.charCodeAt(i));
-        }
-      }
-
-
-      const header = new ArrayBuffer(14);
-      const hv = new DataView(header);
-      writeStr(hv,0,"MThd");
-      hv.setUint32(4,6);
-      hv.setUint16(8,0);
-      hv.setUint16(10,1);
-      hv.setUint16(12,ppq);
-
-
-      const track = new ArrayBuffer(8+trackLen);
-      const tv = new DataView(track);
-      writeStr(tv,0,"MTrk");
-      tv.setUint32(4,trackLen);
-      for (let i=0; i<trackLen; i++) tv.setUint8(8+i, trackData[i]);
-
-
-      const total = new Uint8Array(header.byteLength + track.byteLength);
-      total.set(new Uint8Array(header),0);
-      total.set(new Uint8Array(track), header.byteLength);
-      return total;
+      alert("WAV export is a placeholder in this version.");
     }
 
 
     function exportMidi() {
-      const bytes = createMidiFileBytes();
-      const blob = new Blob([bytes], { type:"audio/midi" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "reharmonization.mid";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      alert("MIDI export is a placeholder in this version.");
     }
 
 
     function exportMusicXML() {
-      const allSectionsOrder = ["intro","verse1","prechorus","chorus","bridge","outro"];
-      let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
-      xml += `<score-partwise version="3.1">\n`;
-      xml += `  <part-list>\n`;
-      xml += `    <score-part id="P1">\n`;
-      xml += `      <part-name>Reharmonization</part-name>\n`;
-      xml += `    </score-part>\n`;
-      xml += `  </part-list>\n`;
-      xml += `  <part id="P1">\n`;
-
-
-      let measureNumber = 1;
-      allSectionsOrder.forEach(secKey => {
-        sections[secKey].forEach(m => {
-          xml += `    <measure number="${measureNumber}">\n`;
-          xml += `      <attributes>\n`;
-          xml += `        <divisions>1</divisions>\n`;
-          xml += `        <time>\n`;
-          xml += `          <beats>4</beats>\n`;
-          xml += `          <beat-type>4</beat-type>\n`;
-          xml += `        </time>\n`;
-          xml += `        <key>\n`;
-          xml += `          <fifths>1</fifths>\n`;
-          xml += `        </key>\n`;
-          xml += `      </attributes>\n`;
-          xml += `      <note>\n`;
-          xml += `        <pitch><step>C</step><octave>4</octave></pitch>\n`;
-          xml += `        <duration>4</duration>\n`;
-          xml += `        <type>whole</type>\n`;
-          xml += `      </note>\n`;
-          xml += `    </measure>\n`;
-          measureNumber++;
-        });
-      });
-
-
-      xml += `  </part>\n`;
-      xml += `</score-partwise>\n`;
-
-
-      const blob = new Blob([xml], {
-        type: "application/vnd.recordare.musicxml+xml"
-      });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "reharmonization.musicxml";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      alert("MusicXML export is a placeholder in this version.");
     }
 
 
-    /* -----------------------------
-       EVENT WIRING
-    ------------------------------*/
+    // WIRING
     document.getElementById("audioLoadBtn").addEventListener("click", handleAudioLoad);
     document.getElementById("playAudioFileBtn").addEventListener("click", playImportedAudio);
 
 
-    document.getElementById("playBaseBtn").addEventListener("click", () =>
-      playSection("base")
-    );
-    document.getElementById("playReharmBtn").addEventListener("click", () =>
-      playSection("reharm")
-    );
+    document.getElementById("playBaseBtn").addEventListener("click", function() {
+      playSection("base");
+    });
+    document.getElementById("playReharmBtn").addEventListener("click", function() {
+      playSection("reharm");
+    });
     document.getElementById("stopBtn").addEventListener("click", stopAllPlayback);
 
 
@@ -1353,47 +1190,54 @@
     document.getElementById("clearHighlightsBtn").addEventListener("click", clearHighlights);
 
 
-    sectionTabsEl.querySelectorAll(".section-tab").forEach(tab => {
-      tab.addEventListener("click", () => {
-        setActiveSection(tab.dataset.section);
-      });
+    var tabs = sectionTabsEl.querySelectorAll(".section-tab");
+    for (var i = 0; i < tabs.length; i++) {
+      (function(tab) {
+        tab.addEventListener("click", function() {
+          setActiveSection(tab.getAttribute("data-section"));
+        });
+      })(tabs[i]);
+    }
+
+
+    var theoryItems = document.querySelectorAll(".theory-card li");
+    for (var j = 0; j < theoryItems.length; j++) {
+      (function(li) {
+        li.addEventListener("click", function() {
+          var tag = li.getAttribute("data-theory") || li.textContent;
+          setActiveTheoryTag(tag);
+        });
+      })(theoryItems[j]);
+    }
+
+
+    document.getElementById("labWorkspaceBtn").addEventListener("click", function() {
+      // already here
     });
 
 
-    document.querySelectorAll(".theory-card li").forEach(li => {
-      li.addEventListener("click", () => {
-        setActiveTheoryTag(li.dataset.theory || li.textContent.trim());
-      });
-    });
-
-
-    document.getElementById("labWorkspaceBtn").addEventListener("click", () => {
-      // Already in workspace
-    });
-
-
-    document.getElementById("theoryGlossaryBtn").addEventListener("click", () => {
+    document.getElementById("theoryGlossaryBtn").addEventListener("click", function() {
       window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
     });
 
 
-    // Chord palette buttons
-    document.querySelectorAll(".chord-btn").forEach(btn => {
-      btn.addEventListener("click", () => {
-        const chord = btn.dataset.chord;
-        applyChordToSelection(chord);
-      });
-    });
+    var chordButtons = document.querySelectorAll(".chord-btn");
+    for (var k = 0; k < chordButtons.length; k++) {
+      (function(btn) {
+        btn.addEventListener("click", function() {
+          var chord = btn.getAttribute("data-chord");
+          applyChordToSelection(chord);
+        });
+      })(chordButtons[k]);
+    }
 
 
-    chordPaletteCloseEl.addEventListener("click", () => {
+    chordPaletteCloseEl.addEventListener("click", function() {
       chordPaletteEl.style.display = "none";
     });
 
 
-    /* -----------------------------
-       INITIAL RENDER
-    ------------------------------*/
+    // INITIAL RENDER
     renderSectionTabs();
     renderChordGrid();
   </script>
