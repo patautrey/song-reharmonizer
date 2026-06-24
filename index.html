@@ -1352,32 +1352,39 @@
     });
 
     // Instrument toggle buttons
-    const pianoBtn = document.getElementById("instrumentPianoBtn");
-    const guitarBtn = document.getElementById("instrumentGuitarBtn");
+const pianoBtn = document.getElementById("instrumentPianoBtn");
+const guitarBtn = document.getElementById("instrumentGuitarBtn");
 
-    function updateInstrumentButtons() {
-      if (instrumentMode === "piano") {
+function updateInstrumentButtons() {
+    if (instrumentMode === "piano") {
         pianoBtn.classList.add("active");
         guitarBtn.classList.remove("active");
-      } else {
+    } else {
         guitarBtn.classList.add("active");
         pianoBtn.classList.remove("active");
-      }
     }
+}
 
-    pianoBtn.addEventListener("click", () => {
-      instrumentMode = "piano";
-      updateInstrumentButtons();
-    });
-
-    guitarBtn.addEventListener("click", () => {
-      instrumentMode = "guitar";
-      updateInstrumentButtons();
-    });
-    // INITIAL RENDER
-    renderSectionTabs();
-    renderChordGrid();
+pianoBtn.addEventListener("click", () => {
+    instrumentMode = "piano";
     updateInstrumentButtons();
-  </script>
+});
+
+guitarBtn.addEventListener("click", () => {
+    instrumentMode = "guitar";
+    updateInstrumentButtons();
+});
+
+// Reharm style selector (must be placed AFTER element exists)
+const reharmStyleSelect = document.getElementById("reharmStyleSelect");
+reharmStyleSelect.addEventListener("change", () => {
+    reharmStyle = reharmStyleSelect.value;
+});
+
+// INITIAL RENDER
+renderSectionTabs();
+renderChordGrid();   // <-- corrected spelling
+updateInstrumentButtons();
+</script>
 </body>
 </html>
