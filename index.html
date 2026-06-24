@@ -332,8 +332,7 @@
             class="file-input"
           />
           <button class="btn" id="audioLoadBtn">Choose Audio File</button>
-          <button class="btn" id="midiImportBtn">MIDI IMPORT</button>
-          <button class="btn" id="liveRecordBtn">LIVE RECORD</button>
+          <button class="btn" id="playAudioFileBtn">PLAY AUDIO FILE</button>
         </div>
         <div class="audio-status" id="audioStatus">
           No audio data loaded. <span>System standby.</span>
@@ -354,7 +353,6 @@
             <button class="btn success" id="playBaseBtn">PLAY BASE</button>
             <button class="btn primary" id="playReharmBtn">PLAY REHARM</button>
             <button class="btn danger" id="stopBtn">STOP</button>
-            <button class="btn" id="playAudioFileBtn">PLAY AUDIO FILE</button>
             <button class="btn" id="exportWavBtn">WAV</button>
             <button class="btn" id="exportMidiBtn">MIDI</button>
             <button class="btn" id="exportMusicXmlBtn">MUSICXML</button>
@@ -519,8 +517,7 @@
     let loadedAudioBuffer = null;
     let currentAudioSource = null;
 
-    // Unlock AudioContext on first user gesture (required by browsers)
-    function unlockAudio() {
+    function ensureAudioContext() {
       if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       }
@@ -529,8 +526,8 @@
       }
     }
 
-    document.addEventListener("click", unlockAudio, { once: true });
-    document.addEventListener("touchstart", unlockAudio, { once: true });
+    document.addEventListener("click", ensureAudioContext, { once: true });
+    document.addEventListener("touchstart", ensureAudioContext, { once: true });
 
     // --- DATA MODEL ---------------------------------------------------------
     const sections = {
@@ -667,17 +664,15 @@
     }
 
     function playChord(chord, startTime, duration = 0.7) {
-      unlockAudio();
+      ensureAudioContext();
       const pitches = chordToPitches(chord);
       const t0 = audioCtx.currentTime + startTime;
 
       pitches.forEach((freq) => {
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
-
         osc.type = "sine";
         osc.frequency.value = freq;
-
         gain.gain.setValueAtTime(0.0, t0);
         gain.gain.linearRampToValueAtTime(0.4, t0 + 0.02);
         gain.gain.linearRampToValueAtTime(0.0, t0 + duration);
@@ -687,21 +682,20 @@
 
         osc.start(t0);
         osc.stop(t0 + duration + 0.05);
-
         activeOscillators.push(osc);
       });
     }
 
     function playSection(mode) {
       stopAllPlayback();
-      unlockAudio();
+      ensureAudioContext();
       const measures = sections[currentSectionKey];
       const chordPath =
         mode === "base"
           ? measures.map((m) => m.base)
           : measures.map((m) => m.reharm);
 
-      const beatDur = 0.8;
+      const beatDur = 0.8; // seconds per chord
       chordPath.forEach((chord, idx) => {
         const t = idx * beatDur;
         const timeoutId = setTimeout(() => {
@@ -711,13 +705,40 @@
       });
     }
 
+    // --- AUDIO FILE LOAD + PLAYBACK ----------------------------------------
+    function updateAudioStatusLoaded(fileName) {
+      audioStatusEl.innerHTML = `Audio loaded: <span>${fileName}</span>`;
+      activeTrackLabelEl.textContent = `Active Track: ${fileName}`;
+    }
+
+    async function handleAudioLoad() {
+      const input = document.getElementById("audioFileInput");
+      if (!input.files || !input.files[0]) {
+        alert("Choose a .wav or .mp3 file first.");
+        return;
+      }
+      const file = input.files[0];
+      updateAudioStatusLoaded(file.name);
+      ensureAudioContext();
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        audioCtx.decodeAudioData(arrayBuffer, (buffer) => {
+          loadedAudioBuffer = buffer;
+        }, () => {
+          alert("Could not decode this audio file.");
+        });
+      } catch (err) {
+        alert("Error reading audio file.");
+      }
+    }
+
     function playImportedAudio() {
       if (!loadedAudioBuffer) {
         alert("No audio file loaded yet.");
         return;
       }
       stopAllPlayback();
-      unlockAudio();
+      ensureAudioContext();
       const src = audioCtx.createBufferSource();
       src.buffer = loadedAudioBuffer;
       src.connect(audioCtx.destination);
@@ -830,36 +851,6 @@
           : `Tip: Click a theory item, then click a chord block to tag that measure with the selected concept in the reharm path (for your own workflow notes).`;
     }
 
-    // --- AUDIO FILE STATUS & LOADING ---------------------------------------
-    function updateAudioStatusLoaded(fileName) {
-      audioStatusEl.innerHTML = `Audio loaded: <span>${fileName}</span>`;
-      activeTrackLabelEl.textContent = `Active Track: ${fileName}`;
-    }
-
-    async function handleAudioLoad() {
-      const input = document.getElementById("audioFileInput");
-      if (!input.files || !input.files[0]) {
-        alert("Choose a .wav or .mp3 file first.");
-        return;
-      }
-
-      const file = input.files[0];
-      updateAudioStatusLoaded(file.name);
-
-      unlockAudio();
-
-      try {
-        const arrayBuffer = await file.arrayBuffer();
-        audioCtx.decodeAudioData(arrayBuffer, (buffer) => {
-          loadedAudioBuffer = buffer;
-          console.log("Audio decoded:", buffer);
-        });
-      } catch (err) {
-        console.error("Error decoding audio:", err);
-        alert("Could not decode this audio file.");
-      }
-    }
-
     // --- EXPORT: WAV (placeholder), MIDI, MUSICXML -------------------------
     function stubExportWav() {
       alert(
@@ -870,7 +861,6 @@
     function createMidiFileBytes() {
       const tempo = 500000;
       const ppq = 480;
-
       const allSectionsOrder = ["intro", "verse1", "prechorus", "chorus", "bridge", "outro"];
       const events = [];
 
@@ -911,7 +901,6 @@
       }
 
       pushTempo();
-
       const chordDurTicks = ppq;
 
       allSectionsOrder.forEach((secKey) => {
@@ -1023,21 +1012,10 @@
       URL.revokeObjectURL(url);
     }
 
-    // --- MIDI IMPORT & LIVE RECORD (WIRED BUT STUBBED) ----------------------
-    function handleMidiImport() {
-      alert(
-        "MIDI Import is not implemented yet.\nThis button is wired and ready for a future MIDI parser."
-      );
-    }
-
-    function handleLiveRecord() {
-      alert(
-        "Live Record is not implemented yet.\nThis button is wired and ready for a future recording engine."
-      );
-    }
-
     // --- WIRING -------------------------------------------------------------
     document.getElementById("audioLoadBtn").addEventListener("click", handleAudioLoad);
+    document.getElementById("playAudioFileBtn").addEventListener("click", playImportedAudio);
+
     document.getElementById("playBaseBtn").addEventListener("click", () =>
       playSection("base")
     );
@@ -1046,9 +1024,7 @@
     );
     document.getElementById("stopBtn").addEventListener("click", () => {
       stopAllPlayback();
-      alert("Playback stopped.");
     });
-    document.getElementById("playAudioFileBtn").addEventListener("click", playImportedAudio);
 
     document.getElementById("exportWavBtn").addEventListener("click", stubExportWav);
     document.getElementById("exportMidiBtn").addEventListener("click", exportMidi);
@@ -1072,15 +1048,12 @@
     });
 
     document.getElementById("labWorkspaceBtn").addEventListener("click", () => {
-      alert("Lab Workspace is the current view.");
+      // Already in lab workspace; no-op for now
     });
 
     document.getElementById("theoryGlossaryBtn").addEventListener("click", () => {
       window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
     });
-
-    document.getElementById("midiImportBtn").addEventListener("click", handleMidiImport);
-    document.getElementById("liveRecordBtn").addEventListener("click", handleLiveRecord);
 
     // Initial render
     renderSectionTabs();
