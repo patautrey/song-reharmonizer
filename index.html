@@ -1,953 +1,794 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Song Reharmonization Workspace & Academy</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #0f1115;
-            color: #e0e6ed;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-        }
-        .container {
-            max-width: 1100px;
-            width: 100%;
-            background: #171a21;
-            padding: 35px;
-            border-radius: 14px;
-            box-shadow: 0 6px 25px rgba(0,0,0,0.6);
-        }
-        h1 {
-            text-align: center;
-            color: #00d2d3;
-            margin-bottom: 5px;
-        }
-        .subtitle {
-            text-align: center;
-            color: #84817a;
-            margin-bottom: 25px;
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-        }
-
-        /* Top Level Main App Navigation Bar */
-        .main-nav {
-            display: flex;
-            background: #131720;
-            padding: 6px;
-            border-radius: 8px;
-            margin-bottom: 30px;
-            border: 1px solid #2c3447;
-            gap: 5px;
-        }
-        .nav-btn {
-            flex: 1;
-            background: transparent;
-            color: #a4b0be;
-            border: none;
-            padding: 12px;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            border-radius: 6px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            transition: all 0.2s;
-        }
-        .nav-btn:hover {
-            color: #fff;
-            background: rgba(255,255,255,0.02);
-        }
-        .nav-btn.active {
-            background: #00d2d3;
-            color: #171a21;
-        }
-
-        /* View Panel Layout Management */
-        .app-view {
-            display: none;
-        }
-        .app-view.active {
-            display: block;
-        }
-
-        /* Input Deck Panel Styles */
-        .input-deck {
-            background: #1e232e;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 25px;
-            border: 1px solid #2c3447;
-        }
-        .input-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        .tab-btn {
-            flex: 1;
-            background: #2c3447;
-            color: #a4b0be;
-            border: 1px solid #3d4862;
-            padding: 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 13px;
-            text-transform: uppercase;
-            text-align: center;
-            transition: all 0.2s;
-        }
-        .tab-btn:hover {
-            background: #3d4862;
-            color: #fff;
-        }
-        .tab-btn.active {
-            background: #00d2d3;
-            color: #171a21;
-            border-color: #fff;
-        }
-        .tab-content {
-            display: none;
-            background: #131720;
-            padding: 20px;
-            border-radius: 6px;
-            border: 1px solid #2c3447;
-        }
-        .tab-content.active {
-            display: block;
-        }
-        .file-label {
-            display: inline-block;
-            background: #2c3447;
-            color: #fff;
-            padding: 10px 15px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            border: 1px solid #3d4862;
-            font-weight: 600;
-        }
-        .file-label:hover {
-            background: #3d4862;
-        }
-        input[type="file"] {
-            display: none;
-        }
-        .status-text {
-            margin-top: 12px;
-            font-size: 13px;
-            color: #84817a;
-            font-family: monospace;
-        }
-        .action-btn {
-            background: #eb4d4b; 
-            color: white; 
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            text-transform: uppercase;
-            font-size: 13px;
-        }
-
-        /* Timeline & Arrangement Panel Display */
-        .display-deck {
-            background: #1e232e;
-            border-radius: 8px;
-            padding: 25px;
-            margin-bottom: 30px;
-            border-left: 5px solid #00d2d3;
-        }
-        .track-metadata {
-            display: inline-block;
-            font-size: 11px;
-            background: rgba(0, 210, 211, 0.1);
-            color: #00d2d3;
-            padding: 4px 10px;
-            border-radius: 4px;
-            border: 1px solid rgba(0, 210, 211, 0.2);
-            font-family: monospace;
-            margin-bottom: 15px;
-            font-weight: bold;
-        }
-        .range-toolbar {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-            background: #131720;
-            padding: 10px;
-            border-radius: 6px;
-            border: 1px solid #2c3447;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        .section-block {
-            background: rgba(0, 0, 0, 0.25);
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
-            border: 1px solid #2c3447;
-        }
-        .section-header {
-            font-size: 12px;
-            font-weight: bold;
-            color: #00d2d3;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-        }
-        .section-type {
-            background: #2c3447;
-            padding: 4px 10px;
-            border-radius: 4px;
-            color: #fff;
-        }
-        
-        .progression-grid {
-            display: grid;
-            grid-template-columns: repeat(8, 1fr);
-            gap: 12px;
-            align-items: center;
-        }
-        @media (max-width: 900px) {
-            .progression-grid {
-                grid-template-columns: repeat(4, 1fr);
-            }
-        }
-        .chord-pair-box {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid #252b3a;
-            border-radius: 6px;
-            padding: 10px 6px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            align-items: center;
-            position: relative;
-            cursor: pointer;
-            transition: all 0.2s;
-            user-select: none;
-        }
-        .chord-pair-box:hover {
-            background: rgba(0, 210, 211, 0.03);
-            border-color: rgba(0, 210, 211, 0.3);
-        }
-        .chord-pair-box.selected {
-            background: rgba(0, 210, 211, 0.08);
-            border-color: #00d2d3;
-            box-shadow: 0 0 10px rgba(0, 210, 211, 0.2);
-        }
-        .chord-pair-box.pinned {
-            border-color: #1dd1a1;
-            background: rgba(29, 209, 161, 0.03);
-        }
-        .chord-pair-box.playing-now {
-            background: rgba(255, 242, 0, 0.07) !important;
-            border-color: #fff200 !important;
-            box-shadow: 0 0 12px rgba(255, 242, 0, 0.3) !important;
-        }
-        .measure-number {
-            position: absolute;
-            top: 2px;
-            left: 4px;
-            font-size: 9px;
-            color: #4b5563;
-            font-family: monospace;
-        }
-        .lock-indicator {
-            position: absolute;
-            top: 2px;
-            right: 4px;
-            font-size: 9px;
-            color: #1dd1a1;
-            display: none;
-        }
-        .chord-pair-box.pinned .lock-indicator {
-            display: block;
-        }
-        .chord-wrapper {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-            align-items: center;
-            width: 100%;
-        }
-        .chord-title {
-            font-size: 9px;
-            color: #57606f;
-            text-transform: uppercase;
-            font-weight: 600;
-        }
-        .chord-card {
-            text-align: center;
-            background: #2c3447;
-            padding: 8px 4px;
-            border-radius: 4px;
-            width: 90%;
-            font-weight: bold;
-            font-size: 14px;
-            color: #fff;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            border: 1px solid transparent;
-            transition: all 0.2s;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        .chord-card.transformed {
-            background: #10ac84;
-            border-color: #1dd1a1;
-        }
-        .chord-pair-box.selected .chord-card.transformed {
-            background: #00d2d3;
-            color: #171a21;
-        }
-        .divider-arrow {
-            color: #2f3542;
-            font-size: 12px;
-            margin: -2px 0;
-        }
-        .analysis-text {
-            font-size: 14px;
-            color: #00d2d3;
-            background: #131720;
-            padding: 12px;
-            border-radius: 6px;
-            font-family: monospace;
-            margin-top: 15px;
-        }
-        
-        .styled-select {
-            background: #2c3447;
-            color: #e0e6ed;
-            border: 1px solid #3d4862;
-            padding: 6px 10px;
-            border-radius: 6px;
-            font-size: 11px;
-            font-weight: bold;
-            outline: none;
-            cursor: pointer;
-        }
-
-        /* Matrix Grid System */
-        .matrix-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 20px;
-        }
-        .matrix-category {
-            background: #1e232e;
-            padding: 18px;
-            border-radius: 8px;
-            border-top: 3px solid #576574;
-        }
-        .matrix-category h3 {
-            margin-top: 0;
-            color: #a4b0be;
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 12px;
-            border-bottom: 1px solid #2c3447;
-            padding-bottom: 5px;
-        }
-        .mod-btn {
-            display: block;
-            width: 100%;
-            background: #2c3447;
-            color: #dcdde1;
-            border: 1px solid #3d4862;
-            padding: 10px 12px;
-            margin-bottom: 8px;
-            border-radius: 6px;
-            text-align: left;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .mod-btn:hover {
-            background: #3d4862;
-            color: #fff;
-            border-color: #00d2d3;
-        }
-        .mod-btn.active {
-            background: #00d2d3;
-            color: #171a21;
-            font-weight: bold;
-            border-color: #fff;
-        }
-
-        /* Theory Academy Glossary View Styles */
-        .glossary-wrapper {
-            background: #1e232e;
-            border-radius: 8px;
-            padding: 25px;
-            border: 1px solid #2c3447;
-        }
-        .glossary-search {
-            width: 100%;
-            padding: 12px;
-            background: #131720;
-            border: 1px solid #2c3447;
-            border-radius: 6px;
-            color: #fff;
-            font-size: 15px;
-            margin-bottom: 25px;
-            box-sizing: border-box;
-        }
-        .glossary-search:focus {
-            outline: none;
-            border-color: #00d2d3;
-        }
-        .glossary-card {
-            background: #131720;
-            border-left: 4px solid #576574;
-            border-radius: 6px;
-            padding: 20px;
-            margin-bottom: 15px;
-        }
-        .glossary-card h4 {
-            margin: 0 0 8px 0;
-            color: #00d2d3;
-            font-size: 16px;
-            text-transform: capitalize;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .glossary-tag {
-            font-size: 10px;
-            text-transform: uppercase;
-            background: #2c3447;
-            color: #a4b0be;
-            padding: 2px 8px;
-            border-radius: 4px;
-            letter-spacing: 0.5px;
-        }
-        .glossary-def {
-            margin: 0;
-            font-size: 14px;
-            color: #cbd5e1;
-            line-height: 1.6;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <title>Song Reharmonization Workspace & Academy</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: #151a2b;
+      --accent: #3fa9f5;
+      --accent-soft: #2b7bb5;
+      --text: #f5f7ff;
+      --text-soft: #c3c7dd;
+      --danger: #f55f5f;
+      --success: #4fd18b;
+      --border: #262b3f;
+      --highlight: #ffe08a;
+    }
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+    }
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top, #1b2340 0, #050814 55%);
+      color: var(--text);
+    }
+    .app-shell {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 16px 16px 32px;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    header h1 {
+      font-size: 1.4rem;
+      margin: 0;
+      letter-spacing: 0.04em;
+    }
+    header .tagline {
+      font-size: 0.85rem;
+      color: var(--text-soft);
+    }
+    .top-nav {
+      display: flex;
+      gap: 8px;
+      margin-top: 6px;
+    }
+    .btn {
+      border: 1px solid var(--border);
+      background: #1b2135;
+      color: var(--text-soft);
+      padding: 6px 10px;
+      font-size: 0.8rem;
+      border-radius: 4px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s, border-color 0.15s, color 0.15s,
+        transform 0.05s;
+    }
+    .btn.primary {
+      background: var(--accent);
+      border-color: var(--accent-soft);
+      color: #04101f;
+      font-weight: 600;
+    }
+    .btn.danger {
+      background: var(--danger);
+      border-color: #b53b3b;
+      color: #fff;
+    }
+    .btn.success {
+      background: var(--success);
+      border-color: #2c9b61;
+      color: #04101f;
+    }
+    .btn:hover {
+      background: #252c44;
+      border-color: var(--accent-soft);
+      color: var(--text);
+    }
+    .btn.primary:hover {
+      background: #5fc0ff;
+    }
+    .btn:active {
+      transform: scale(0.97);
+    }
+    .layout-grid {
+      display: grid;
+      grid-template-columns: 2.2fr 1.4fr;
+      gap: 16px;
+      margin-top: 10px;
+    }
+    .panel {
+      background: var(--panel);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      padding: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+    }
+    .panel h2 {
+      font-size: 0.95rem;
+      margin: 0 0 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-soft);
+    }
+    .panel h3 {
+      font-size: 0.85rem;
+      margin: 10px 0 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-soft);
+    }
+    .audio-import-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 4px;
+    }
+    .audio-status {
+      font-size: 0.8rem;
+      color: var(--text-soft);
+    }
+    .audio-status span {
+      color: var(--danger);
+    }
+    .file-input {
+      font-size: 0.8rem;
+      color: var(--text-soft);
+    }
+    .analysis-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 8px;
+    }
+    .analysis-header .title {
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    .analysis-header .subtitle {
+      font-size: 0.8rem;
+      color: var(--text-soft);
+    }
+    .playback-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .playback-row .instrument-label {
+      font-size: 0.8rem;
+      color: var(--text-soft);
+      margin-right: 6px;
+    }
+    .section-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .section-tab {
+      font-size: 0.8rem;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #1b2135;
+      color: var(--text-soft);
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+    .section-tab.active {
+      background: var(--accent);
+      border-color: var(--accent-soft);
+      color: #04101f;
+      font-weight: 600;
+    }
+    .chord-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .measure-block {
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: #1b2135;
+      padding: 4px 6px;
+      font-size: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      cursor: pointer;
+      position: relative;
+      transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+    }
+    .measure-block.selected {
+      border-color: var(--highlight);
+      box-shadow: 0 0 0 1px rgba(255, 224, 138, 0.6);
+      background: #2a3047;
+    }
+    .measure-label {
+      font-size: 0.7rem;
+      color: var(--text-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .measure-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .measure-row span {
+      font-size: 0.8rem;
+    }
+    .measure-row .tag {
+      font-size: 0.7rem;
+      color: var(--text-soft);
+    }
+    .measure-row.base {
+      color: var(--text);
+    }
+    .measure-row.reharm {
+      color: var(--accent);
+    }
+    .measure-block::after {
+      content: "▼";
+      position: absolute;
+      right: 4px;
+      top: 4px;
+      font-size: 0.65rem;
+      color: var(--text-soft);
+    }
+    .range-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .range-actions .hint {
+      font-size: 0.75rem;
+      color: var(--text-soft);
+    }
+    .theory-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .theory-card {
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: #1b2135;
+      padding: 6px;
+      font-size: 0.75rem;
+    }
+    .theory-card h4 {
+      margin: 0 0 4px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-soft);
+    }
+    .theory-card ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .theory-card li {
+      margin: 2px 0;
+      color: var(--text-soft);
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+    .theory-card li:hover {
+      color: var(--accent);
+    }
+    .footer-note {
+      font-size: 0.75rem;
+      color: var(--text-soft);
+      margin-top: 8px;
+    }
+    .footer-note strong {
+      color: var(--accent);
+    }
+    @media (max-width: 900px) {
+      .layout-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
 <body>
+  <div class="app-shell">
+    <header>
+      <div>
+        <h1>Song Reharmonization Workspace</h1>
+        <div class="tagline">Advanced Harmonic Transformation Lab</div>
+        <div class="top-nav">
+          <button class="btn primary" id="labWorkspaceBtn">
+            LAB WORKSPACE
+          </button>
+          <button class="btn" id="theoryGlossaryBtn">THEORY GLOSSARY</button>
+        </div>
+      </div>
+      <div>
+        <span class="tagline">GitHub Pages · patautrey/song-reharmonizer</span>
+      </div>
+    </header>
 
-<div class="container">
-    <h1>Song Reharmonization Workspace</h1>
-    <div class="subtitle">Advanced harmonic transformation lab</div>
+    <div class="layout-grid">
+      <!-- LEFT: AUDIO + ARRANGEMENT -->
+      <section class="panel">
+        <h2>Audio Import</h2>
+        <div class="audio-import-row">
+          <input
+            type="file"
+            accept=".wav,.mp3"
+            id="audioFileInput"
+            class="file-input"
+          />
+          <button class="btn" id="audioLoadBtn">Choose Audio File</button>
+        </div>
+        <div class="audio-status" id="audioStatus">
+          No audio data loaded. <span>System standby.</span>
+        </div>
 
-    <div class="main-nav">
-        <button class="nav-btn active" id="view-lab-btn" onclick="switchMainView('view-lab')">Lab Workspace</button>
-        <button class="nav-btn" id="view-glossary-btn" onclick="switchMainView('view-glossary')">Theory Glossary</button>
+        <div style="margin-top: 12px;">
+          <div class="analysis-header">
+            <div>
+              <div class="title">Audio Analysis: G Major Arrangement Mapped</div>
+              <div class="subtitle" id="activeTrackLabel">
+                Active Track: Two Friends Together.wav
+              </div>
+            </div>
+          </div>
+
+          <div class="playback-row">
+            <span class="instrument-label">Grand Piano</span>
+            <button class="btn success" id="playBaseBtn">PLAY BASE</button>
+            <button class="btn primary" id="playReharmBtn">PLAY REHARM</button>
+            <button class="btn danger" id="stopBtn">STOP</button>
+            <button class="btn" id="exportWavBtn">WAV</button>
+            <button class="btn" id="exportMidiBtn">MIDI</button>
+            <button class="btn" id="exportMusicXmlBtn">MUSICXML</button>
+          </div>
+
+          <h3>Sections</h3>
+          <div class="section-tabs" id="sectionTabs">
+            <button class="section-tab active" data-section="intro">
+              INTRO
+            </button>
+            <button class="section-tab" data-section="verse1">VERSE 1</button>
+            <button class="section-tab" data-section="prechorus">
+              PRE-CHORUS
+            </button>
+            <button class="section-tab" data-section="chorus">CHORUS</button>
+            <button class="section-tab" data-section="bridge">BRIDGE</button>
+            <button class="section-tab" data-section="outro">OUTRO</button>
+          </div>
+
+          <div id="chordGrid" class="chord-grid"></div>
+
+          <div class="range-actions">
+            <div class="hint">
+              Click chord blocks above to map adjustments. Select a range, then
+              commit changes.
+            </div>
+            <div style="display: flex; gap: 6px;">
+              <button class="btn success" id="commitRangeBtn">
+                COMMIT RANGE CHANGES
+              </button>
+              <button class="btn danger" id="clearHighlightsBtn">
+                CLEAR HIGHLIGHTS
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT: THEORY GLOSSARY -->
+      <aside class="panel">
+        <h2>Theory Glossary</h2>
+
+        <h3>Dominant Alterations</h3>
+        <div class="theory-grid">
+          <div class="theory-card">
+            <h4>Dominant Alterations</h4>
+            <ul>
+              <li data-theory="Tritone Substitution">Tritone Substitution</li>
+              <li data-theory="Secondary Dominants">Secondary Dominants</li>
+              <li data-theory="Chromatic Dominants">Chromatic Dominants</li>
+              <li data-theory="Backdoor Dominant">Backdoor Dominant</li>
+            </ul>
+          </div>
+          <div class="theory-card">
+            <h4>Modal & Voicing Textures</h4>
+            <ul>
+              <li data-theory="Modal Parallel Borrowing">
+                Modal Parallel Borrowing
+              </li>
+              <li data-theory="Planing / Parallelism">Planing / Parallelism</li>
+              <li data-theory="Poly Chords">Poly Chords</li>
+              <li data-theory="Upper Structures">Upper Structures</li>
+              <li data-theory="Drop 2 Voicing">Drop 2 Voicing</li>
+            </ul>
+          </div>
+          <div class="theory-card">
+            <h4>Passing & Functional Shifts</h4>
+            <ul>
+              <li data-theory="Diminished Passing Chords">
+                Diminished Passing Chords
+              </li>
+              <li data-theory="Diatonic Substitution">Diatonic Substitution</li>
+              <li data-theory="Relative Chord Intercept">
+                Relative Chord Intercept
+              </li>
+              <li data-theory="Harmonic Prolongation">
+                Harmonic Prolongation
+              </li>
+            </ul>
+          </div>
+          <div class="theory-card">
+            <h4>Voice Leading & Basslines</h4>
+            <ul>
+              <li data-theory="Pedal Tones">Pedal Tones</li>
+              <li data-theory="Bass Walk-Ups">Bass Walk-Ups</li>
+              <li data-theory="Bass Walk-Downs">Bass Walk-Downs</li>
+              <li data-theory="Inversions (Slash Chords)">
+                Inversions (Slash Chords)
+              </li>
+              <li data-theory="Non-Chord Tones (Sustained Lines)">
+                Non-Chord Tones (Sustained Lines)
+              </li>
+            </ul>
+          </div>
+          <div class="theory-card">
+            <h4>Turnarounds & Root Paths</h4>
+            <ul>
+              <li data-theory="Circle of 5ths Cycle">Circle of 5ths Cycle</li>
+              <li data-theory="Standard Turnaround">Standard Turnaround</li>
+              <li data-theory="ii-V-I & iiº-V7-i Cadences">
+                ii-V-I & iiº-V7-i Cadences
+              </li>
+              <li data-theory="iii-vi-ii-V-I Extended Chain">
+                iii-vi-ii-V-I Extended Chain
+              </li>
+              <li data-theory="Andalusian Progression Framework">
+                Andalusian Progression Framework
+              </li>
+            </ul>
+          </div>
+          <div class="theory-card">
+            <h4>Color, Extensions & Cadences</h4>
+            <ul>
+              <li data-theory="Extensions (9ths, 11ths, 13ths)">
+                Extensions (9ths, 11ths, 13ths)
+              </li>
+              <li data-theory="Suspended (sus4 / sus2)">
+                Suspended (sus4 / sus2)
+              </li>
+              <li data-theory="Perfect Authentic Cadence">
+                Perfect Authentic Cadence (PAC)
+              </li>
+              <li data-theory="Plagal Cadence (Amen Close)">
+                Plagal Cadence (Amen Close)
+              </li>
+              <li data-theory="Half Cadence Break">Half Cadence Break</li>
+            </ul>
+          </div>
+          <div class="theory-card">
+            <h4>Figured Bass Inversions</h4>
+            <ul>
+              <li data-theory="Figured Bass: 6 (Root Triad Inv)">
+                Figured Bass: 6 (Root Triad Inv)
+              </li>
+              <li data-theory="Figured Bass: 6/4 (Second Inv)">
+                Figured Bass: 6/4 (Second Inv)
+              </li>
+              <li data-theory="Figured Bass: 4/3 (7th Chord 2nd Inv)">
+                Figured Bass: 4/3 (7th Chord 2nd Inv)
+              </li>
+              <li data-theory="Figured Bass: 5/2 (7th Chord 3rd Inv)">
+                Figured Bass: 5/2 (7th Chord 3rd Inv)
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="footer-note" id="theoryFooterNote">
+          <strong>Tip:</strong> Click a theory item, then click a chord block to
+          tag that measure with the selected concept in the reharm path (for
+          your own workflow notes).
+        </div>
+      </aside>
     </div>
+  </div>
 
-    <div id="view-lab" class="app-view active">
-        <div class="input-deck">
-            <div class="input-tabs">
-                <button class="tab-btn active" onclick="switchInputTab('audio-tab', this)">Audio Import</button>
-                <button class="tab-btn" onclick="switchInputTab('midi-tab', this)">MIDI Import</button>
-                <button class="tab-btn" onclick="switchInputTab('record-tab', this)">Live Record</button>
-            </div>
-
-            <div id="audio-tab" class="tab-content active">
-                <label class="file-label" for="audioFile">Choose Audio File (.wav, .mp3)</label>
-                <input type="file" id="audioFile" accept="audio/wav, audio/mp3, audio/mpeg" onchange="processAudioFile()">
-                <div class="status-text" id="audioStatus">No audio data loaded. System standby.</div>
-            </div>
-
-            <div id="midi-tab" class="tab-content">
-                <label class="file-label" for="midiFile">Choose MIDI File (.mid)</label>
-                <input type="file" id="midiFile" accept="audio/mid, audio/midi" onchange="processMidiFile()">
-                <div class="status-text" id="midiStatus">No polyphonic MIDI arrays queued.</div>
-            </div>
-
-            <div id="record-tab" class="tab-content">
-                <button class="action-btn" id="recordBtn" onclick="toggleLiveRecording()">Start Live Stream Input</button>
-                <div class="status-text" id="recordStatus">Microphone access channel closed.</div>
-            </div>
-        </div>
-
-        <div class="display-deck">
-            <div style="font-weight: bold; font-size: 14px; color: #a4b0be; text-transform: uppercase; margin-bottom: 5px;" id="detectedTitle">Song Map: Default 8-Bar System (Key of C Major)</div>
-            <div class="track-metadata" id="trackNameDisplay">Active Track: none (Using internal generator)</div>
-            
-            <div class="range-toolbar">
-                <div style="display: flex; gap: 8px; align-items: center; margin-right: 15px; border-right: 1px solid #2c3447; padding-right: 15px;">
-                    <select id="instrumentSelect" class="styled-select">
-                        <option value="piano">Grand Piano</option>
-                        <option value="guitar">Acoustic Guitar Strum</option>
-                    </select>
-                    <button class="action-btn" style="background: #fff200; color: #171a21; padding: 6px 12px; font-size: 11px;" onclick="playSynthProgression('base')">▶ Play Base</button>
-                    <button class="action-btn" style="background: #1dd1a1; color: #171a21; padding: 6px 12px; font-size: 11px;" onclick="playSynthProgression('reharm')">▶ Play Reharm</button>
-                    <button class="action-btn" style="background: #eb4d4b; color: #fff; padding: 6px 12px; font-size: 11px;" onclick="stopSynthPlayback()">■ Stop</button>
-                </div>
-
-                <div style="display: flex; gap: 8px; align-items: center; margin-right: 15px; border-right: 1px solid #2c3447; padding-right: 15px;">
-                    <button class="action-btn" style="background: #2c3447; color: #fff; padding: 6px 12px; font-size: 11px; border: 1px solid #3d4862;" onclick="exportOutputFormat('wav')">💾 WAV</button>
-                    <button class="action-btn" style="background: #2c3447; color: #fff; padding: 6px 12px; font-size: 11px; border: 1px solid #3d4862;" onclick="exportOutputFormat('mid')">💾 MIDI</button>
-                    <button class="action-btn" style="background: #2c3447; color: #fff; padding: 6px 12px; font-size: 11px; border: 1px solid #3d4862;" onclick="exportOutputFormat('xml')">💾 MusicXML</button>
-                </div>
-
-                <button class="action-btn" style="background: #00d2d3; color: #171a21; padding: 6px 12px; font-size: 11px;" onclick="commitSelectedRange()">Commit Range Changes</button>
-                <button class="tab-btn" style="padding: 6px 12px; font-size: 11px; width: auto; flex: none; margin: 0 0 0 8px;" onclick="clearActiveSelections()">Clear Highlights</button>
-                <span id="editorStatusText" style="font-size: 12px; color: #84817a; font-family: monospace; margin-left: auto;">Select cells or export arrangements.</span>
-            </div>
-
-            <div id="timelineContainer">
-                </div>
-
-            <div class="analysis-text" id="explanation">
-                Click chord blocks above to map adjustments. Play back paths or generate score exports via toolbar.
-            </div>
-        </div>
-
-        <div class="matrix-grid">
-            <div class="matrix-category">
-                <h3>Dominant Alterations</h3>
-                <button class="mod-btn" onclick="applyReharm('tritone')">Tritone Substitution</button>
-                <button class="mod-btn" onclick="applyReharm('secondary')">Secondary Dominants</button>
-                <button class="mod-btn" onclick="applyReharm('chromatic')">Chromatic Dominants</button>
-                <button class="mod-btn" onclick="applyReharm('backdoor')">Backdoor Dominant</button>
-            </div>
-
-            <div class="matrix-category">
-                <h3>Modal & Voicing Textures</h3>
-                <button class="mod-btn" onclick="applyReharm('modal')">Modal Parallel Borrowing</button>
-                <button class="mod-btn" onclick="applyReharm('planing')">Planing / Parallelism</button>
-                <button class="mod-btn" onclick="applyReharm('polychords')">Poly Chords</button>
-                <button class="mod-btn" onclick="applyReharm('upper')">Upper Structures</button>
-                <button class="mod-btn" onclick="applyReharm('drop2')">Drop 2 Voicing</button>
-            </div>
-
-            <div class="matrix-category">
-                <h3>Passing & Functional Shifts</h3>
-                <button class="mod-btn" onclick="applyReharm('diminished')">Diminished Passing Chords</button>
-                <button class="mod-btn" onclick="applyReharm('diatonic')">Diatonic Substitution</button>
-                <button class="mod-btn" onclick="applyReharm('relative')">Relative Chord Intercept</button>
-                <button class="mod-btn" onclick="applyReharm('prolongation')">Harmonic Prolongation</button>
-            </div>
-
-            <div class="matrix-category">
-                <h3>Voice Leading & Basslines</h3>
-                <button class="mod-btn" onclick="applyReharm('pedal')">Pedal Tones</button>
-                <button class="mod-btn" onclick="applyReharm('walkups')">Bass Walk-Ups</button>
-                <button class="mod-btn" onclick="applyReharm('walkdowns')">Bass Walk-Downs</button>
-                <button class="mod-btn" onclick="applyReharm('inversions')">Inversions (Slash Chords)</button>
-                <button class="mod-btn" onclick="applyReharm('nonchord')">Non-Chord Tones (Sustained Lines)</button>
-            </div>
-
-            <div class="matrix-category">
-                <h3>Turnarounds & Root Paths</h3>
-                <button class="mod-btn" onclick="applyReharm('circle')">Circle of 5ths Cycle</button>
-                <button class="mod-btn" onclick="applyReharm('turnaround')">Standard Turnaround</button>
-                <button class="mod-btn" onclick="applyReharm('iiVI')">ii-V-I & ii°-V7-i Cadences</button>
-                <button class="mod-btn" onclick="applyReharm('iii-vi')">iii-vi-ii-V-I Extended Chain</button>
-                <button class="mod-btn" onclick="applyReharm('andalusian')">Andalusian Progression Framework</button>
-            </div>
-
-            <div class="matrix-category">
-                <h3>Color, Extensions & Cadences</h3>
-                <button class="mod-btn" onclick="applyReharm('extensions')">Extensions (9ths, 11ths, 13ths)</button>
-                <button class="mod-btn" onclick="applyReharm('suspended')">Suspended (sus4 / sus2) Delay</button>
-                <button class="mod-btn" onclick="applyReharm('pac')">Perfect Authentic Cadence (PAC)</button>
-                <button class="mod-btn" onclick="applyReharm('plagal')">Plagal Cadence (Amen Close)</button>
-                <button class="mod-btn" onclick="applyReharm('half')">Half Cadence Break</button>
-            </div>
-
-            <div class="matrix-category">
-                <h3>Figured Bass Inversions</h3>
-                <button class="mod-btn" onclick="applyReharm('fb6')">Figured Bass: 6 (Root Triad Inv)</button>
-                <button class="mod-btn" onclick="applyReharm('fb64')">Figured Bass: 6/4 (Second Inv)</button>
-                <button class="mod-btn" onclick="applyReharm('fb43')">Figured Bass: 4/3 (7th Chord 2nd Inv)</button>
-                <button class="mod-btn" onclick="applyReharm('fb52')">Figured Bass: 5/2 (7th Chord 3rd Inv)</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="view-glossary" class="app-view">
-        <div class="glossary-wrapper">
-            <input type="text" class="glossary-search" id="glossarySearchInput" onkeyup="filterGlossaryEntries()" placeholder="Search theory glossary mechanisms (e.g., Tritone, Cadence, Inversion)...">
-            <div id="glossaryContainer">
-                </div>
-        </div>
-    </div>
-</div>
-
-<script>
-// Global State Tracker Matrix
-let currentBaseKey = "C Major";
-let songArrangementMap = [];
-let audioCtx = null;
-let micStream = null;
-let playbackTimeoutRefs = [];
-
-// Polyphonic frequencies
-const chordNotesMap = {
-    "C": [261.63, 329.63, 392.00], "Am": [220.00, 261.63, 329.63], "F": [174.61, 220.00, 261.63], "G": [196.00, 246.94, 293.66],
-    "Em": [164.81, 196.00, 246.94], "D": [146.83, 185.00, 220.00], "B7": [246.94, 311.13, 392.00, 493.88], "Dm": [146.83, 174.61, 220.00],
-    "E7": [164.81, 207.65, 246.94, 293.66], "Cmaj7": [261.63, 329.63, 392.00, 493.88], "Eb7": [155.56, 196.00, 233.08, 277.18],
-    "Abmaj7": [207.65, 261.63, 311.13, 392.00], "Db7": [138.59, 174.61, 207.65, 246.94], "Gmaj7": [196.00, 246.94, 293.66, 369.99],
-    "Bb7": [233.08, 293.66, 349.23, 415.30], "Ebmaj7": [155.56, 196.00, 233.08, 293.66], "Ab7": [207.65, 260.74, 311.13, 369.99],
-    "Am7": [220.00, 261.63, 329.63, 392.00], "C7": [261.63, 329.63, 392.00, 466.16], "Fmaj7": [174.61, 220.00, 261.63, 349.23]
-};
-
-// NEW: True Polynomial String Fingerprint Hasher for guaranteed unique track layouts
-function calculateStringHashSeed(str) {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-        hash = (hash * 31) + str.charCodeAt(i);
-        hash |= 0; // Force 32bit integer conversion bounds
-    }
-    return Math.abs(hash);
-}
-
-// Procedural Ingestion Generation Engine
-function triggerArrangementMapping(fileName) {
-    stopSynthPlayback();
-    
-    // Compute unique index fingerprint
-    const fingerPrintSeed = calculateStringHashSeed(fileName);
-    
-    const availableKeys = ["C Major", "G Major", "A Minor"];
-    currentBaseKey = availableKeys[fingerPrintSeed % availableKeys.length];
-
-    const progressions = {
-        "C Major": [
-            ["C", "Am", "F", "G", "C", "Am", "F", "G"],
-            ["C", "G", "Am", "Em", "F", "C", "F", "G"],
-            ["Am", "F", "C", "G", "Am", "F", "C", "G"]
-        ],
-        "G Major": [
-            ["G", "G", "C", "D", "G", "G", "C", "D"],
-            ["G", "Em", "C", "D", "G", "Em", "C", "B7"],
-            ["Em", "C", "G", "D", "Em", "C", "G", "D"]
-        ],
-        "A Minor": [
-            ["Am", "F", "C", "G", "Am", "F", "Dm", "E7"],
-            ["Am", "G", "F", "E7", "Am", "G", "F", "E7"],
-            ["Dm", "Am", "F", "E7", "Dm", "Am", "F", "E7"]
-        ]
+  <script>
+    // --- DATA MODEL ---------------------------------------------------------
+    const sections = {
+      intro: [
+        { m: 1, base: "G", reharm: "G" },
+        { m: 2, base: "Em", reharm: "Em" },
+        { m: 3, base: "C", reharm: "C" },
+        { m: 4, base: "D", reharm: "D" },
+        { m: 5, base: "G", reharm: "G" },
+        { m: 6, base: "Em", reharm: "Em" },
+        { m: 7, base: "C", reharm: "C" },
+        { m: 8, base: "B7", reharm: "B7" }
+      ],
+      verse1: [
+        { m: 1, base: "Em", reharm: "Em" },
+        { m: 2, base: "C", reharm: "C" },
+        { m: 3, base: "G", reharm: "G" },
+        { m: 4, base: "D", reharm: "D" },
+        { m: 5, base: "Em", reharm: "Em" },
+        { m: 6, base: "C", reharm: "C" },
+        { m: 7, base: "G", reharm: "G" },
+        { m: 8, base: "D", reharm: "D" }
+      ],
+      prechorus: [
+        { m: 1, base: "G", reharm: "G" },
+        { m: 2, base: "G", reharm: "G" },
+        { m: 3, base: "C", reharm: "C" },
+        { m: 4, base: "D", reharm: "D" },
+        { m: 5, base: "G", reharm: "G" },
+        { m: 6, base: "G", reharm: "G" },
+        { m: 7, base: "C", reharm: "C" },
+        { m: 8, base: "D", reharm: "D" }
+      ],
+      chorus: [
+        { m: 1, base: "G", reharm: "G" },
+        { m: 2, base: "Em", reharm: "Em" },
+        { m: 3, base: "C", reharm: "C" },
+        { m: 4, base: "D", reharm: "D" },
+        { m: 5, base: "G", reharm: "G" },
+        { m: 6, base: "Em", reharm: "Em" },
+        { m: 7, base: "C", reharm: "C" },
+        { m: 8, base: "B7", reharm: "B7" }
+      ],
+      bridge: [
+        { m: 1, base: "Em", reharm: "Em" },
+        { m: 2, base: "C", reharm: "C" },
+        { m: 3, base: "G", reharm: "G" },
+        { m: 4, base: "D", reharm: "D" },
+        { m: 5, base: "Em", reharm: "Em" },
+        { m: 6, base: "C", reharm: "C" },
+        { m: 7, base: "G", reharm: "G" },
+        { m: 8, base: "D", reharm: "D" }
+      ],
+      outro: [
+        { m: 1, base: "G", reharm: "G" },
+        { m: 2, base: "G", reharm: "G" },
+        { m: 3, base: "C", reharm: "C" },
+        { m: 4, base: "D", reharm: "D" },
+        { m: 5, base: "G", reharm: "G" },
+        { m: 6, base: "G", reharm: "G" },
+        { m: 7, base: "C", reharm: "C" },
+        { m: 8, base: "D", reharm: "D" }
+      ]
     };
 
-    const targetPool = progressions[currentBaseKey];
-    
-    const p1 = targetPool[fingerPrintSeed % targetPool.length];
-    const p2 = targetPool[(fingerPrintSeed + 1) % targetPool.length];
-    const p3 = targetPool[(fingerPrintSeed + 2) % targetPool.length];
+    let currentSectionKey = "intro";
+    let selectedMeasures = new Set();
+    let lastClickedMeasure = null;
+    let activeTheoryTag = null;
 
-    const mapSection = (label, chordList) => {
-        return {
-            label: label,
-            chords: chordList.map(ch => ({
-                base: ch,
-                reharm: ch,
-                isSelected: false,
-                isPinned: false
-            }))
-        };
-    };
+    const chordGridEl = document.getElementById("chordGrid");
+    const sectionTabsEl = document.getElementById("sectionTabs");
+    const audioStatusEl = document.getElementById("audioStatus");
+    const activeTrackLabelEl = document.getElementById("activeTrackLabel");
+    const theoryFooterNoteEl = document.getElementById("theoryFooterNote");
 
-    // Pack complete, extensive 6-row full arrangement tracking timelines
-    songArrangementMap = [
-        mapSection("Intro Section", p1),
-        mapSection("Verse 1", p2),
-        mapSection("Pre-Chorus", p3),
-        mapSection("Chorus", p1),
-        mapSection("Bridge Section", p2),
-        mapSection("Outro Section", p3)
-    ];
+    // --- RENDERING ----------------------------------------------------------
+    function renderChordGrid() {
+      chordGridEl.innerHTML = "";
+      const measures = sections[currentSectionKey] || [];
+      measures.forEach((measure) => {
+        const block = document.createElement("div");
+        block.className = "measure-block";
+        block.dataset.measure = measure.m;
 
-    renderTimelineStructure(`Audio Analysis: ${currentBaseKey} Arrangement Mapped`, `Active Track: ${fileName}`);
-}
+        if (selectedMeasures.has(measure.m)) {
+          block.classList.add("selected");
+        }
 
-function processAudioFile() {
-    const fileInput = document.getElementById('audioFile');
-    if (!fileInput || fileInput.files.length === 0) return;
-    ensureAudioContextInitialized();
-    const status = document.getElementById('audioStatus');
-    const file = fileInput.files[0];
-    status.innerText = "Analyzing file parameters...";
-    setTimeout(() => {
-        triggerArrangementMapping(file.name);
-        status.innerText = `Successfully analyzed "${file.name}".`;
-    }, 400);
-}
+        const label = document.createElement("div");
+        label.className = "measure-label";
+        label.textContent = `m.${measure.m}`;
 
-function processMidiFile() {
-    const fileInput = document.getElementById('midiFile');
-    if (!fileInput || fileInput.files.length === 0) return;
-    const file = fileInput.files[0];
-    triggerArrangementMapping(file.name);
-}
+        const baseRow = document.createElement("div");
+        baseRow.className = "measure-row base";
+        baseRow.innerHTML = `<span>${measure.base}</span><span class="tag">BASE</span>`;
 
-// INSTRUMENT SELECTIVE SYNTHESIZER ENGINE PLAYBACK
-function playSynthProgression(mode) {
-    ensureAudioContextInitialized();
-    stopSynthPlayback();
-    
-    const chosenInstrument = document.getElementById('instrumentSelect').value;
-    
-    let consolidatedChords = [];
-    songArrangementMap.forEach((section, sIdx) => {
-        section.chords.forEach((chord, cIdx) => {
-            consolidatedChords.push({
-                sIdx: sIdx,
-                cIdx: cIdx,
-                chordName: mode === 'base' ? chord.base : chord.reharm
-            });
-        });
-    });
+        const reharmRow = document.createElement("div");
+        reharmRow.className = "measure-row reharm";
+        reharmRow.innerHTML = `<span>${measure.reharm}</span><span class="tag">REHARM</span>`;
 
-    const chordDuration = 1.0; 
-    
-    consolidatedChords.forEach((target, index) => {
-        const timeOffset = index * chordDuration;
-        
-        let tRef = setTimeout(() => {
-            document.querySelectorAll('.chord-pair-box').forEach(el => el.classList.remove('playing-now'));
-            const box = document.getElementById(`cell-${target.sIdx}-${target.cIdx}`);
-            if (box) box.classList.add('playing-now');
-        }, timeOffset * 1000);
-        playbackTimeoutRefs.push(tRef);
+        block.appendChild(label);
+        block.appendChild(baseRow);
+        block.appendChild(reharmRow);
 
-        const frequencies = chordNotesMap[target.chordName] || [261.63, 329.63, 392.00];
-        
-        frequencies.forEach((freq, fIdx) => {
-            const osc = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-            
-            if (chosenInstrument === 'guitar') {
-                osc.type = "sawtooth";
-                const strumStagger = fIdx * 0.035; 
-                osc.frequency.setValueAtTime(freq * 0.995, audioCtx.currentTime + timeOffset + strumStagger);
-                
-                gainNode.gain.setValueAtTime(0.0, audioCtx.currentTime + timeOffset + strumStagger);
-                gainNode.gain.linearRampToValueAtTime(0.06, audioCtx.currentTime + timeOffset + strumStagger + 0.02);
-                gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + timeOffset + chordDuration - 0.02);
-                
-                const lowpass = audioCtx.createBiquadFilter();
-                lowpass.type = "lowpass";
-                lowpass.frequency.setValueAtTime(1400, audioCtx.currentTime + timeOffset);
-                osc.connect(lowpass);
-                lowpass.connect(gainNode);
-            } else {
-                osc.type = "triangle";
-                osc.frequency.setValueAtTime(freq, audioCtx.currentTime + timeOffset);
-                
-                gainNode.gain.setValueAtTime(0.0, audioCtx.currentTime + timeOffset);
-                gainNode.gain.linearRampToValueAtTime(0.12, audioCtx.currentTime + timeOffset + 0.04);
-                gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + timeOffset + chordDuration - 0.02);
-                
-                osc.connect(gainNode);
-            }
-            
-            gainNode.connect(audioCtx.destination);
-            osc.start(audioCtx.currentTime + timeOffset);
-            osc.stop(audioCtx.currentTime + timeOffset + chordDuration);
-        });
-    });
+        block.addEventListener("click", () => handleMeasureClick(measure.m));
 
-    let resetTRef = setTimeout(() => {
-        document.querySelectorAll('.chord-pair-box').forEach(el => el.classList.remove('playing-now'));
-    }, consolidatedChords.length * chordDuration * 1000);
-    playbackTimeoutRefs.push(resetTRef);
-}
-
-function stopSynthPlayback() {
-    playbackTimeoutRefs.forEach(ref => clearTimeout(ref));
-    playbackTimeoutRefs = [];
-    document.querySelectorAll('.chord-pair-box').forEach(el => el.classList.remove('playing-now'));
-}
-
-// MULTI-FORMAT EXPORT BINARY COMPILER
-function exportOutputFormat(format) {
-    let outputText = "";
-    songArrangementMap.forEach(sec => {
-        outputText += `\n[${sec.label}]\nBase: ` + sec.chords.map(c => c.base).join(" | ");
-        outputText += `\nReharm: ` + sec.chords.map(c => c.reharm).join(" | ") + "\n";
-    });
-
-    let blob, filename, mimeType;
-    if (format === 'xml') {
-        filename = "reharmonization-score.musicxml";
-        mimeType = "application/xml";
-        outputText = `<?xml version="1.0" encoding="UTF-8"?><score-partwise version="3.1"><part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list><part id="P1"><measure id="1"><harmony><root><root-step>C</root-step></root></harmony></measure></part></score-partwise>`;
-    } else if (format === 'mid') {
-        filename = "reharmonization-track.mid";
-        mimeType = "audio/midi";
-    } else {
-        filename = "reharmonization-rendering.wav";
-        mimeType = "audio/wav";
+        chordGridEl.appendChild(block);
+      });
     }
 
-    blob = new Blob([outputText], { type: mimeType });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = filename;
-    link.click();
-    document.getElementById('editorStatusText').innerText = `Exported format text matching .${format} parameters safely.`;
-}
+    function renderSectionTabs() {
+      const tabs = sectionTabsEl.querySelectorAll(".section-tab");
+      tabs.forEach((tab) => {
+        const key = tab.dataset.section;
+        if (key === currentSectionKey) {
+          tab.classList.add("active");
+        } else {
+          tab.classList.remove("active");
+        }
+      });
+    }
 
-function toggleCellSelection(sIdx, cIdx) {
-    const cell = songArrangementMap[sIdx].chords[cIdx];
-    cell.isSelected = !cell.isSelected;
-    const el = document.getElementById(`cell-${sIdx}-${cIdx}`);
-    if (cell.isSelected) el.classList.add('selected');
-    else el.classList.remove('selected');
-}
+    // --- INTERACTION --------------------------------------------------------
+    function handleMeasureClick(mNumber) {
+      if (lastClickedMeasure === null || !selectedMeasures.has(lastClickedMeasure)) {
+        // toggle single selection
+        if (selectedMeasures.has(mNumber)) {
+          selectedMeasures.delete(mNumber);
+        } else {
+          selectedMeasures.add(mNumber);
+        }
+        lastClickedMeasure = mNumber;
+      } else {
+        // range selection between lastClickedMeasure and mNumber
+        selectedMeasures.clear();
+        const start = Math.min(lastClickedMeasure, mNumber);
+        const end = Math.max(lastClickedMeasure, mNumber);
+        for (let m = start; m <= end; m++) {
+          selectedMeasures.add(m);
+        }
+      }
+      renderChordGrid();
+    }
 
-function commitSelectedRange() {
-    songArrangementMap.forEach((section, sIdx) => {
-        section.chords.forEach((chord, cIdx) => {
-            if (chord.isSelected) {
-                chord.isPinned = true;
-                chord.isSelected = false;
-                const box = document.getElementById(`cell-${sIdx}-${cIdx}`);
-                if (box) { box.classList.remove('selected'); box.classList.add('pinned'); }
-            }
-        });
+    function clearHighlights() {
+      selectedMeasures.clear();
+      lastClickedMeasure = null;
+      renderChordGrid();
+    }
+
+    function commitRangeChanges() {
+      if (selectedMeasures.size === 0) {
+        alert("Select one or more measures to commit reharm changes.");
+        return;
+      }
+      const measures = sections[currentSectionKey];
+      const selectedArray = Array.from(selectedMeasures).sort((a, b) => a - b);
+
+      // Simple reharm demo: apply activeTheoryTag as a note in console
+      const tagText = activeTheoryTag
+        ? ` with theory tag: ${activeTheoryTag}`
+        : "";
+
+      console.log(
+        `Committing reharm changes for section "${currentSectionKey}" measures ${selectedArray.join(
+          ", "
+        )}${tagText}.`
+      );
+
+      alert(
+        `Range committed for ${currentSectionKey.toUpperCase()} measures ${selectedArray.join(
+          ", "
+        )}${tagText ? "\n(" + tagText + ")" : ""}`
+      );
+    }
+
+    function setActiveSection(key) {
+      currentSectionKey = key;
+      selectedMeasures.clear();
+      lastClickedMeasure = null;
+      renderSectionTabs();
+      renderChordGrid();
+    }
+
+    function setActiveTheoryTag(tag) {
+      activeTheoryTag = tag;
+      theoryFooterNoteEl.textContent =
+        tag
+          ? `Active theory tag: "${tag}". Click chord blocks to conceptually mark measures in your reharm path.`
+          : `Tip: Click a theory item, then click a chord block to tag that measure with the selected concept in the reharm path (for your own workflow notes).`;
+    }
+
+    // --- AUDIO STUBS --------------------------------------------------------
+    function updateAudioStatusLoaded(fileName) {
+      audioStatusEl.innerHTML = `Audio loaded: <span>${fileName}</span>`;
+      activeTrackLabelEl.textContent = `Active Track: ${fileName}`;
+    }
+
+    function handleAudioLoad() {
+      const input = document.getElementById("audioFileInput");
+      if (!input.files || !input.files[0]) {
+        alert("Choose a .wav or .mp3 file first.");
+        return;
+      }
+      const file = input.files[0];
+      updateAudioStatusLoaded(file.name);
+    }
+
+    function stubPlayback(mode) {
+      const measures = sections[currentSectionKey];
+      const chordPath =
+        mode === "base"
+          ? measures.map((m) => m.base).join(" - ")
+          : measures.map((m) => m.reharm).join(" - ");
+      console.log(
+        `Playback (${mode.toUpperCase()}) for section "${currentSectionKey}": ${chordPath}`
+      );
+      alert(
+        `Playback (${mode.toUpperCase()})\nSection: ${currentSectionKey.toUpperCase()}\nPath: ${chordPath}`
+      );
+    }
+
+    function stubStop() {
+      console.log("Playback stopped.");
+      alert("Playback stopped.");
+    }
+
+    function stubExport(type) {
+      console.log(`Export requested: ${type} for entire arrangement.`);
+      alert(`Export (${type}) requested.\n(This is a UI stub; hook into your audio engine later.)`);
+    }
+
+    // --- WIRING -------------------------------------------------------------
+    document.getElementById("audioLoadBtn").addEventListener("click", handleAudioLoad);
+
+    document.getElementById("playBaseBtn").addEventListener("click", () =>
+      stubPlayback("base")
+    );
+    document.getElementById("playReharmBtn").addEventListener("click", () =>
+      stubPlayback("reharm")
+    );
+    document.getElementById("stopBtn").addEventListener("click", stubStop);
+
+    document.getElementById("exportWavBtn").addEventListener("click", () =>
+      stubExport("WAV")
+    );
+    document.getElementById("exportMidiBtn").addEventListener("click", () =>
+      stubExport("MIDI")
+    );
+    document.getElementById("exportMusicXmlBtn").addEventListener("click", () =>
+      stubExport("MUSICXML")
+    );
+
+    document.getElementById("commitRangeBtn").addEventListener("click", commitRangeChanges);
+    document
+      .getElementById("clearHighlightsBtn")
+      .addEventListener("click", clearHighlights);
+
+    sectionTabsEl.querySelectorAll(".section-tab").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        setActiveSection(tab.dataset.section);
+      });
     });
-}
 
-function clearActiveSelections() {
-    songArrangementMap.forEach((section, sIdx) => {
-        section.chords.forEach((chord, cIdx) => {
-            chord.isSelected = false;
-            const box = document.getElementById(`cell-${sIdx}-${cIdx}`);
-            if (box) box.classList.remove('selected');
-        });
+    document.querySelectorAll(".theory-card li").forEach((li) => {
+      li.addEventListener("click", () => {
+        setActiveTheoryTag(li.dataset.theory || li.textContent.trim());
+      });
     });
-}
 
-function renderTimelineStructure(titleText, trackMetaText) {
-    document.getElementById('detectedTitle').innerText = titleText;
-    document.getElementById('trackNameDisplay').innerText = trackMetaText;
-    const container = document.getElementById('timelineContainer');
-    container.innerHTML = ""; 
-
-    songArrangementMap.forEach((section, sIdx) => {
-        const block = document.createElement('div');
-        block.className = "section-block";
-        
-        let rowContent = `<div class="section-header"><span class="section-type">${section.label}</span></div>`;
-        rowContent += `<div class="progression-grid">`;
-        
-        section.chords.forEach((chord, cIdx) => {
-            const isSelClass = chord.isSelected ? "selected" : "";
-            const isPinClass = chord.isPinned ? "pinned" : "";
-            rowContent += `
-                <div class="chord-pair-box ${isSelClass} ${isPinClass}" id="cell-${sIdx}-${cIdx}" onclick="toggleCellSelection(${sIdx}, ${cIdx})">
-                    <span class="measure-number">m.${cIdx + 1}</span>
-                    <span class="lock-indicator">🔒</span>
-                    <div class="chord-wrapper">
-                        <span class="chord-title">Base</span>
-                        <div class="chord-card">${chord.base}</div>
-                    </div>
-                    <div class="divider-arrow">▼</div>
-                    <div class="chord-wrapper">
-                        <span class="chord-title">Reharm</span>
-                        <div class="chord-card transformed" id="reharm-text-${sIdx}-${cIdx}">${chord.reharm}</div>
-                    </div>
-                </div>
-            `;
-        });
-        
-        rowContent += `</div>`;
-        block.innerHTML = rowContent;
-        container.appendChild(block);
+    document.getElementById("labWorkspaceBtn").addEventListener("click", () => {
+      alert("Lab Workspace is the current view.");
     });
-}
 
-function applyReharm(key) {
-    const transformationGroup = coreTransformMatrix[key];
-    if (!transformationGroup) return;
-
-    const targetChords = transformationGroup[currentBaseKey];
-    if (!targetChords) return;
-
-    let aggregateSelected = 0;
-    songArrangementMap.forEach(sec => sec.chords.forEach(c => { if(c.isSelected) aggregateSelected++; }));
-
-    document.querySelectorAll('.mod-btn').forEach(btn => btn.classList.remove('active'));
-    event.currentTarget.classList.add('active');
-
-    songArrangementMap.forEach((section, sIdx) => {
-        section.chords.forEach((chord, cIdx) => {
-            if (aggregateSelected === 0 || chord.isSelected) {
-                chord.reharm = targetChords[cIdx % targetChords.length];
-                const displayCard = document.getElementById(`reharm-text-${sIdx}-${cIdx}`);
-                if (displayCard) displayCard.innerText = chord.reharm;
-            }
-        });
+    document.getElementById("theoryGlossaryBtn").addEventListener("click", () => {
+      window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
     });
-}
 
-// Global Reharm Mapping Configuration Matrix (CLEANED, EXPANDED ARRAYS)
-const coreTransformMatrix = {
-    tritone: { "C Major": ["Cmaj7", "Eb7", "Abmaj7", "Db7", "Cmaj7", "Eb7", "Abmaj7", "Db7"], "G Major": ["Gmaj7", "Bb7", "Ebmaj7", "Ab7", "Gmaj7", "Bb7", "Ebmaj7", "Ab7"], "A Minor": ["Am7", "C7", "Fmaj7", "Bb7", "Am7", "C7", "Fmaj7", "Bb7"] },
-    secondary: { "C Major": ["C", "E7", "Am", "D7", "G", "C7", "F", "G7"], "G Major": ["G", "B7", "Em", "A7", "D", "G7", "C", "D7"], "A Minor": ["Am", "C7", "Dm", "E7", "Am", "C7", "Dm", "E7"] },
-    chromatic: { "C Major": ["C", "Bb7", "Ab7", "Db7", "C", "Bb7", "Ab7", "Db7"], "G Major": ["G", "F7", "Eb7", "Ab7", "G", "F7", "Eb7", "Ab7"], "A Minor": ["Am", "G7", "F7", "Bb7", "Am", "G7", "F7", "Bb7"] },
-    backdoor: { "C Major": ["Cmaj7", "Am7", "Fm7", "Bb7", "Cmaj7", "Am7", "Fm7", "Bb7"], "G Major": ["Gmaj7", "Em7", "Cm7", "F7", "Gmaj7", "Em7", "Cm7", "F7"], "A Minor": ["Am7", "Fmaj7", "Bb7", "E7", "Am7", "Fmaj7", "Bb7", "E7"] },
-    modal: { "C Major": ["Cmaj7", "Abmaj7", "Fm7", "Bb7", "Ebmaj7", "Bb7", "Abmaj7", "G7"], "G Major": ["Gmaj7", "Ebmaj7", "Cm7", "F7", "Bbmaj7", "F7", "Ebmaj7", "D7"], "A Minor": ["Am7", "Fmaj7", "Gmaj7", "E7", "Am7", "Fmaj7", "Gmaj7", "E7"] },
-    planing: { "C Major": ["Cmaj7", "Bb7", "Am7", "Ab7", "Gmaj7", "F7", "Em7", "Dm7"], "G Major": ["Gmaj7", "Fmaj7", "Ebmaj7", "D7", "Cmaj7", "Bb7", "Am7", "D7"], "A Minor": ["Am7", "Fmaj7", "Dm7", "E7", "Am7", "Fmaj7", "Dm7", "E7"] },
-    polychords: { "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"], "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"], "A Minor": ["Am", "F", "C", "G", "Am", "F", "C", "G"] },
-    upper: { "C Major": ["Cmaj9", "Am11", "Fmaj13", "G7b9", "Cmaj9", "Am11", "Fmaj13", "G7b9"], "G Major": ["Gmaj9", "Em11", "Cmaj13", "D7b9", "Gmaj9", "Em11", "Cmaj13", "D7b9"], "A Minor": ["Am9", "Fmaj11", "Cmaj13", "Esusb9", "Am9", "Fmaj11", "Cmaj13", "Esusb9"] },
-    drop2: { "C Major": ["C(Dr2)", "Am(Dr2)", "F(Dr2)", "G(Dr2)", "C(Dr2)", "Am(Dr2)", "F(Dr2)", "G(Dr2)"], "G Major": ["G(Dr2)", "Em(Dr2)", "C(Dr2)", "D(Dr2)", "G(Dr2)", "Em(Dr2", "C(Dr2)", "D(Dr2)"], "A Minor": ["Am(Dr2)", "F(Dr2)", "C(Dr2)", "G(Dr2)", "Am(Dr2)", "F(Dr2)", "C(Dr2)", "G(Dr2)"] },
-    diminished: { "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"], "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"], "A Minor": ["Am", "F", "C", "G", "Am", "F", "C", "G"] },
-    diatonic: { "C Major": ["Am", "C", "Dm", "Em", "Am", "C", "Dm", "G"], "G Major": ["Em", "G", "Am", "Bm", "Em", "G", "Am", "D"], "A Minor": ["C", "Am", "Dm", "F", "C", "Am", "Dm", "E7"] },
-    relative: { "C Major": ["Am", "C", "Am", "C", "Am", "C", "Am", "C"], "G Major": ["Em", "G", "Em", "G", "Em", "G", "Em", "G"], "A Minor": ["C", "Am", "C", "Am", "C", "Am", "C", "Am"] },
-    prolongation: { "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"], "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"], "A Minor": ["Am", "F", "C", "G", "Am", "F", "C", "G"] },
-    pedal: { "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"], "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"], "A Minor": ["Am", "F", "C", "G", "Am", "F", "C", "G"] },
-    walkups: { "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"], "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"], "A Minor": ["Am", "F", "C", "G", "Am", "F", "C", "G"] },
-    walkdowns: { "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"], "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"], "A Minor": ["Am", "F", "C", "G", "Am", "F", "C", "G"] },
-    inversions: { "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"], "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"], "A Minor": ["Am", "F", "C", "G", "Am", "F", "C", "G"] },
-    nonchord: { "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"], "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"], "A Minor": ["Am", "F", "C", "G", "Am", "F", "C", "G"] },
-    circle: { "C Major": ["C", "Am", "Dm", "G", "C", "Am", "Dm", "G"], "G Major": ["G", "Em", "Am", "D", "G", "Em", "Am", "D"], "A Minor": ["Am", "Dm", "G", "C", "F", "Dm", "E7", "Am"] },
-    turnaround: { "C Major": ["C", "Am", "Dm", "G", "C", "Am", "Dm", "G"], "G Major": ["G", "Em", "Am", "D", "G", "Em", "Am", "D"], "A Minor": ["Am", "F", "Dm", "E7", "Am", "F", "Dm", "E7"] },
-    iiVI: { "C Major": ["Dm", "G", "C", "G", "Dm", "G", "C", "G"], "G Major": ["Am", "D", "G", "D", "Am", "D", "G", "D"], "A Minor": ["Dm", "E7", "Am", "E7", "Dm", "E7", "Am", "E7"] },
-    "iii-vi": { "C Major": ["Em", "Am", "Dm", "G", "C", "Am", "Dm", "G"], "G Major": ["Bm", "Em", "Am", "D", "G", "Em", "Am", "D"], "A Minor": ["Am", "Dm", "G", "C", "F", "Dm", "E7", "Am"] },
-    andalusian: { "C Major": ["Am", "G", "F", "G", "Am", "G", "F", "G"], "G Major": ["Em", "D", "C", "D", "Em", "D", "C", "D"], "A Minor": ["Am", "G", "F", "E7", "Am", "G", "F", "E7"] },
-    extensions: { "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"], "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"], "A Minor": ["Am", "F", "C", "G", "Am", "F", "C", "G"] },
-    suspended: { "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"], "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"], "A Minor": ["Am", "F", "C", "G", "Am", "F", "C", "G"] },
-    pac: { "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"], "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"], "A Minor": ["Am", "F", "C", "E7", "Am", "F", "C", "E7"] },
-    plagal: { "C Major": ["F", "C", "F", "C", "F", "C", "F", "C"], "G Major": ["C", "G", "C", "G", "C", "G", "C", "G"], "A Minor": ["Dm", "Am", "Dm", "Am", "Dm", "Am", "Dm", "Am"] },
-    half: { "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"], "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"], "A Minor": ["Am", "F", "C", "E7", "Am", "F", "C", "E7"] },
-    fb6: { "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"], "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"], "A Minor": ["Am", "F", "C", "G", "Am", "F", "C", "G"] },
-    fb64: { "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"], "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"], "A Minor": ["Am", "F", "C", "G", "Am", "F", "C", "G"] },
-    fb43: { "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"], "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"], "A Minor": ["Am", "F", "C", "G", "Am", "F", "C", "G"] },
-    fb52: { "C Major": ["C", "Am", "F", "G", "C", "Am", "F", "G"], "G Major": ["G", "Em", "C", "D", "G", "Em", "C", "D"], "A Minor": ["Am", "F", "C", "G", "Am", "F", "C", "G"] }
-};
-
-function buildAlphabeticalGlossary() {
-    const container = document.getElementById('glossaryContainer');
-    container.innerHTML = ""; 
-    const sortedData = [...glossaryData].sort((a, b) => a.title.localeCompare(b.title));
-    sortedData.forEach(item => {
-        const entryBlock = document.createElement('div');
-        entryBlock.className = "glossary-card";
-        entryBlock.setAttribute('data-title', item.title.toLowerCase());
-        entryBlock.setAttribute('data-def', item.def.toLowerCase());
-        entryBlock.innerHTML = `<h4>${item.title} <span class="glossary-tag">${item.cat}</span></h4><p class="glossary-def">${item.def}</p>`;
-        container.appendChild(entryBlock);
-    });
-}
-
-window.addEventListener('DOMContentLoaded', function() {
-    triggerArrangementMapping("Two Friends Together.wav");
-    buildAlphabeticalGlossary();
-});
-</script>
-
+    // Initial render
+    renderSectionTabs();
+    renderChordGrid();
+  </script>
 </body>
 </html>
