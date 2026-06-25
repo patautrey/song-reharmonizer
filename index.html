@@ -1351,34 +1351,142 @@
       chordPaletteEl.style.display = "none";
     });
 
-    // Instrument toggle buttons
-const pianoBtn = document.getElementById("instrumentPianoBtn");
-const guitarBtn = document.getElementById("instrumentGuitarBtn");
+    function clearHighlights() {
+      selectedMeasures = [];
+      lastClickedMeasure = null;
+      renderChordGrid();
+    }
 
-function updateInstrumentButtons() {
-    if (instrumentMode === "piano") {
+    // REHARM STYLE
+    let reharmStyle = "neutral";
+    const reharmStyleSelect = document.getElementById("reharmStyleSelect");
+    reharmStyleSelect.addEventListener("change", () => {
+      reharmStyle = reharmStyleSelect.value;
+    });
+
+    // === STYLE-AWARE REHARM ENGINE ===
+    function suggestReharmForCurrentSection() {
+      const measures = sections[currentSectionKey];
+      if (!measures || measures.length === 0) return;
+
+      // Reset reharm to base for predictable output
+      for (let m of measures) m.reharm = m.base;
+
+      // --- UNIVERSAL SECONDARY DOMINANTS ---
+      for (let i = 0; i < measures.length - 1; i++) {
+        const curr = measures[i];
+        const next = measures[i + 1];
+
+        if (next.base === "G") curr.reharm = "D7";
+        if (next.base === "C") curr.reharm = "G7";
+        if (next.base === "D") curr.reharm = "A7";
+        if (next.base === "Em") curr.reharm = "B7";
+      }
+
+      // STYLE‑SPECIFIC LAYERS
+      if (reharmStyle === "jazz") applyJazzReharm(measures);
+      if (reharmStyle === "pop") applyPopReharm(measures);
+      if (reharmStyle === "gospel") applyGospelReharm(measures);
+      if (reharmStyle === "modal") applyModalInterchange(measures);
+
+      renderChordGrid();
+    }
+
+    // APPLY CHORD TO SELECTED RANGE
+    function applyChordToSelection(chord) {
+      const measures = sections[currentSectionKey];
+      for (let m of measures) {
+        if (selectedMeasures.includes(m.m)) {
+          m.reharm = chord;
+        }
+      }
+      renderChordGrid();
+    }
+
+    // SECTION SWITCHING
+    function setActiveSection(key) {
+      currentSectionKey = key;
+      selectedMeasures = [];
+      lastClickedMeasure = null;
+      renderSectionTabs();
+      renderChordGrid();
+    }
+
+    // WIRING
+    document.getElementById("audioLoadBtn").addEventListener("click", handleAudioLoad);
+    document.getElementById("playAudioFileBtn").addEventListener("click", playImportedAudio);
+
+    document.getElementById("playBaseBtn").addEventListener("click", () => playSection("base"));
+    document.getElementById("playReharmBtn").addEventListener("click", () => playSection("reharm"));
+    document.getElementById("stopBtn").addEventListener("click", stopAllPlayback);
+
+    document.getElementById("exportWavBtn").addEventListener("click", stubExportWav);
+    document.getElementById("exportMidiBtn").addEventListener("click", exportMidi);
+    document.getElementById("exportMusicXmlBtn").addEventListener("click", exportMusicXML);
+
+    document.getElementById("commitRangeBtn").addEventListener("click", commitRangeChanges);
+    document.getElementById("clearHighlightsBtn").addEventListener("click", clearHighlights);
+    document.getElementById("suggestReharmBtn").addEventListener("click", suggestReharmForCurrentSection);
+
+    // Section tab switching
+    const tabs = sectionTabsEl.querySelectorAll(".section-tab");
+    for (let tab of tabs) {
+      tab.addEventListener("click", () => {
+        setActiveSection(tab.getAttribute("data-section"));
+      });
+    }
+
+    // Theory tag selection
+    const theoryItems = document.querySelectorAll(".theory-card li");
+    for (let li of theoryItems) {
+      li.addEventListener("click", () => {
+        const tag = li.getAttribute("data-theory") || li.textContent;
+        activeTheoryTag = tag;
+      });
+    }
+
+    // Chord palette buttons
+    const chordButtons = document.querySelectorAll(".chord-btn");
+    for (let btn of chordButtons) {
+      btn.addEventListener("click", () => {
+        const chord = btn.getAttribute("data-chord");
+        applyChordToSelection(chord);
+      });
+    }
+
+    // Close palette
+    chordPaletteCloseEl.addEventListener("click", () => {
+      chordPaletteEl.style.display = "none";
+    });
+
+    // Instrument toggle buttons
+    const pianoBtn = document.getElementById("instrumentPianoBtn");
+    const guitarBtn = document.getElementById("instrumentGuitarBtn");
+
+    function updateInstrumentButtons() {
+      if (instrumentMode === "piano") {
         pianoBtn.classList.add("active");
         guitarBtn.classList.remove("active");
-    } else {
+      } else {
         guitarBtn.classList.add("active");
         pianoBtn.classList.remove("active");
+      }
     }
-}
 
-pianoBtn.addEventListener("click", () => {
-    instrumentMode = "piano";
+    pianoBtn.addEventListener("click", () => {
+      instrumentMode = "piano";
+      updateInstrumentButtons();
+    });
+
+    guitarBtn.addEventListener("click", () => {
+      instrumentMode = "guitar";
+      updateInstrumentButtons();
+    });
+
+    // INITIAL RENDER
+    renderSectionTabs();
+    renderChordGrid();
     updateInstrumentButtons();
-});
-
-guitarBtn.addEventListener("click", () => {
-    instrumentMode = "guitar";
-    updateInstrumentButtons();
-});
-
-// INITIAL RENDER
-renderSectionTabs();
-renderChordGrid();   // <-- corrected spelling
-updateInstrumentButtons();
-</script>
+  </script>
 </body>
 </html>
