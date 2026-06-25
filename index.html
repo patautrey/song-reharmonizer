@@ -1375,12 +1375,6 @@ guitarBtn.addEventListener("click", () => {
     updateInstrumentButtons();
 });
 
-// Reharm style selector (must be placed AFTER element exists)
-const reharmStyleSelect = document.getElementById("reharmStyleSelect");
-reharmStyleSelect.addEventListener("change", () => {
-    reharmStyle = reharmStyleSelect.value;
-});
-
 // INITIAL RENDER
 renderSectionTabs();
 renderChordGrid();   // <-- corrected spelling
