@@ -138,9 +138,7 @@
     <!-- REHARMONIZER PANEL -->
     <div class="panel" id="reharm-panel">
       <h2>Reharmonizer</h2>
-      <div id="reharmContent">
-        <p class="placeholder">Waiting for transcription…</p>
-      </div>
+      <div id="reharmContent"></div>
     </div>
   </div>
 
@@ -197,7 +195,7 @@
       }
     };
 
-    function displayReharmProfessional(notes) {
+    function displayReharm(notes) {
       const reharmContent = document.getElementById("reharmContent");
 
       reharmContent.innerHTML = `
@@ -240,7 +238,7 @@
         const notes = data.notes || "No notes returned.";
         notesOutput.textContent = notes;
 
-        displayReharmProfessional(notes);
+        displayReharm(notes);
       } catch (err) {
         notesOutput.textContent = "Network error during transcription.";
       }
