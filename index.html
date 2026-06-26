@@ -2,1404 +2,1076 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Song Reharmonization Workspace & Academy</title>
+  <title>Song Reharmonization Workspace — Studio Edition</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <style>
+    /* ---------------------------------------------------------
+       HYBRID GRAPHITE THEME — BASE COLORS
+       --------------------------------------------------------- */
     :root {
-      --bg: #0b1020;
-      --panel: #151a2b;
-      --accent: #3fa9f5;
-      --accent-soft: #2b7bb5;
-      --text: #f5f7ff;
-      --text-soft: #c3c7dd;
-      --danger: #f55f5f;
-      --success: #4fd18b;
-      --border: #262b3f;
+      --graphite-dark: #1a1c1f;
+      --graphite-mid: #2a2d31;
+      --graphite-light: #dfe3e8;
+      --panel-border: #3a3d42;
+      --accent-blue: #4da3ff;
+      --accent-blue-soft: #3a7ac7;
+      --text-light: #f5f7fa;
+      --text-mid: #c7cbd1;
+      --text-dark: #2a2d31;
       --highlight: #ffe08a;
+      --danger: #ff6b6b;
+      --success: #4fd18b;
     }
-    <button class="btn" id="generateSamplesBtn">Generate Piano Samples</button>
 
-<script>
-function generateSineWav(freq, name) {
-  const sr = 44100;
-  const duration = 0.5;
-  const samples = sr * duration;
-  const buffer = new ArrayBuffer(44 + samples * 2);
-  const view = new DataView(buffer);
-
-  function writeString(offset, str) {
-    for (let i = 0; i < str.length; i++) {
-      view.setUint8(offset + i, str.charCodeAt(i));
-    }
-  }
-
-  writeString(0, "RIFF");
-  view.setUint32(4, 36 + samples * 2, true);
-  writeString(8, "WAVE");
-  writeString(12, "fmt ");
-  view.setUint32(16, 16, true);
-  view.setUint16(20, 1, true);
-  view.setUint16(22, 1, true);
-  view.setUint32(24, sr, true);
-  view.setUint32(28, sr * 2, true);
-  view.setUint16(32, 2, true);
-  view.setUint16(34, 16, true);
-  writeString(36, "data");
-  view.setUint32(40, samples * 2, true);
-
-  for (let i = 0; i < samples; i++) {
-    const t = i / sr;
-    const sample = Math.sin(2 * Math.PI * freq * t) * 0.3;
-    view.setInt16(44 + i * 2, sample * 32767, true);
-  }
-
-  const blob = new Blob([buffer], { type: "audio/wav" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = name + ".wav";
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-document.getElementById("generateSamplesBtn").addEventListener("click", () => {
-  generateSineWav(261.63, "C4");
-  generateSineWav(329.63, "E4");
-  generateSineWav(392.00, "G4");
-  generateSineWav(493.88, "B4");
-  alert("Samples generated! Upload them to samples/piano/");
-});
-</script>
-    * {
-      box-sizing: border-box;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-        sans-serif;
-    }
     body {
       margin: 0;
-      background: radial-gradient(circle at top, #1b2340 0, #050814 55%);
-      color: var(--text);
-    }
-    .app-shell {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 16px 16px 32px;
-    }
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-    }
-    header h1 {
-      font-size: 1.4rem;
-      margin: 0;
-      letter-spacing: 0.04em;
-    }
-    header .tagline {
-      font-size: 0.85rem;
-      color: var(--text-soft);
-    }
-    .top-nav {
-      display: flex;
-      gap: 8px;
-      margin-top: 6px;
-    }
-    .btn {
-      border: 1px solid var(--border);
-      background: #1b2135;
-      color: var(--text-soft);
-      padding: 6px 10px;
-      font-size: 0.8rem;
-      border-radius: 4px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: background 0.15s, border-color 0.15s, color 0.15s,
-        transform 0.05s;
-    }
-    .btn.primary {
-      background: var(--accent);
-      border-color: var(--accent-soft);
-      color: #04101f;
-      font-weight: 600;
-    }
-    .btn.danger {
-      background: var(--danger);
-      border-color: #b53b3b;
-      color: #fff;
-    }
-    .btn.success {
-      background: var(--success);
-      border-color: #2c9b61;
-      color: #04101f;
-    }
-    .btn:hover {
-      background: #252c44;
-      border-color: var(--accent-soft);
-      color: var(--text);
-    }
-    .btn.primary:hover {
-      background: #5fc0ff;
-    }
-    .btn:active {
-      transform: scale(0.97);
-    }
-    .layout-grid {
-      display: grid;
-      grid-template-columns: 2.2fr 1.4fr;
-      gap: 16px;
-      margin-top: 10px;
-    }
-    .panel {
-      background: var(--panel);
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      padding: 12px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
-    }
-    .panel h2 {
-      font-size: 0.95rem;
-      margin: 0 0 8px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--text-soft);
-    }
-    .panel h3 {
-      font-size: 0.85rem;
-      margin: 10px 0 6px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--text-soft);
-    }
-    .audio-import-row {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 10px;
-      margin-top: 4px;
-    }
-    .audio-status {
-      font-size: 0.8rem;
-      color: var(--text-soft);
-    }
-    .audio-status span {
-      color: var(--danger);
-    }
-    .file-input {
-      font-size: 0.8rem;
-      color: var(--text-soft);
-    }
-    .analysis-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      margin-bottom: 8px;
-    }
-    .analysis-header .title {
-      font-size: 0.9rem;
-      font-weight: 600;
-    }
-    .analysis-header .subtitle {
-      font-size: 0.8rem;
-      color: var(--text-soft);
-    }
-    .playback-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      align-items: center;
-      margin-bottom: 8px;
-    }
-    .playback-row .instrument-label {
-      font-size: 0.8rem;
-      color: var(--text-soft);
-      margin-right: 6px;
-    }
-    .section-tabs {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-bottom: 8px;
-    }
-    .section-tab {
-      font-size: 0.8rem;
-      padding: 4px 8px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: #1b2135;
-      color: var(--text-soft);
-      cursor: pointer;
-      transition: background 0.15s, border-color 0.15s, color 0.15s;
-    }
-    .section-tab.active {
-      background: var(--accent);
-      border-color: var(--accent-soft);
-      color: #04101f;
-      font-weight: 600;
-    }
-    .chord-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 6px;
-      margin-bottom: 8px;
-      position: relative;
-    }
-    .measure-block {
-      border-radius: 6px;
-      border: 1px solid var(--border);
-      background: #1b2135;
-      padding: 4px 6px;
-      font-size: 0.75rem;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      cursor: pointer;
-      position: relative;
-      transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
-    }
-    .measure-block.selected {
-      border-color: var(--highlight);
-      box-shadow: 0 0 0 1px rgba(255, 224, 138, 0.6);
-      background: #2a3047;
-    }
-    .measure-label {
-      font-size: 0.7rem;
-      color: var(--text-soft);
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-    }
-    .measure-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .measure-row span {
-      font-size: 0.8rem;
-    }
-    .measure-row .tag {
-      font-size: 0.7rem;
-      color: var(--text-soft);
-    }
-    .measure-row.base {
-      color: var(--text);
-    }
-    .measure-row.reharm {
-      color: var(--accent);
-    }
-    .measure-block::after {
-      content: "▼";
-      position: absolute;
-      right: 4px;
-      top: 4px;
-      font-size: 0.65rem;
-      color: var(--text-soft);
-    }
-    .range-actions {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 6px;
-      margin-top: 4px;
-      flex-wrap: wrap;
-    }
-    .range-actions .hint {
-      font-size: 0.75rem;
-      color: var(--text-soft);
-      flex: 1 1 220px;
-    }
-    .range-actions-buttons {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-    .theory-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px;
-      margin-top: 4px;
-    }
-    .theory-card {
-      border-radius: 6px;
-      border: 1px solid var(--border);
-      background: #1b2135;
-      padding: 6px;
-      font-size: 0.75rem;
-    }
-    .theory-card h4 {
-      margin: 0 0 4px;
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: var(--text-soft);
-    }
-    .theory-card ul {
-      list-style: none;
       padding: 0;
-      margin: 0;
-    }
-    .theory-card li {
-      margin: 2px 0;
-      color: var(--text-soft);
-      cursor: pointer;
-      transition: color 0.15s;
-    }
-    .theory-card li:hover {
-      color: var(--accent);
-    }
-    .footer-note {
-      font-size: 0.75rem;
-      color: var(--text-soft);
-      margin-top: 8px;
-    }
-    .footer-note strong {
-      color: var(--accent);
-    }
-    .chord-palette {
-      margin-top: 6px;
-      padding: 8px;
-      border-radius: 6px;
-      border: 1px solid var(--border);
-      background: #101426;
-      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.45);
-      display: none;
-    }
-    .chord-palette-header {
+      background: var(--graphite-light);
+      font-family: "Segoe UI", sans-serif;
+      color: var(--text-dark);
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 6px;
+      height: 100vh;
+      overflow: hidden;
     }
-    .chord-palette-header span {
-      font-size: 0.75rem;
-      color: var(--text-soft);
+
+    /* ---------------------------------------------------------
+       THREE-PANEL STUDIO LAYOUT
+       --------------------------------------------------------- */
+    .studio-container {
+      display: grid;
+      grid-template-columns: 300px 1fr 320px;
+      height: 100%;
+      width: 100%;
     }
-    .chord-palette-groups {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
+
+    /* LEFT PANEL — AUDIO + INSTRUMENTS */
+    .left-panel {
+      background: var(--graphite-dark);
+      border-right: 1px solid var(--panel-border);
+      padding: 20px;
+      overflow-y: auto;
+      color: var(--text-light);
     }
-    .chord-palette-group {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    .chord-palette-group-label {
-      font-size: 0.7rem;
-      color: var(--text-soft);
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-    }
-    .chord-palette-buttons {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-    }
-    .chord-btn {
-      border-radius: 4px;
-      border: 1px solid var(--border);
-      background: #1b2135;
-      color: var(--text-soft);
-      font-size: 0.75rem;
-      padding: 3px 6px;
-      cursor: pointer;
-      transition: background 0.15s, border-color 0.15s, color 0.15s,
-        transform 0.05s;
-    }
-    .chord-btn:hover {
-      background: var(--accent);
-      border-color: var(--accent-soft);
-      color: #04101f;
-    }
-    .chord-palette-close {
-      font-size: 0.7rem;
-      color: var(--text-soft);
-      cursor: pointer;
-    }
-    .instrument-toggle-btn.active {
-      background: var(--success);
-      border-color: #2c9b61;
-      color: #04101f;
+
+    .left-panel h2 {
+      margin-top: 0;
+      color: var(--accent-blue);
       font-weight: 600;
     }
-    .reharm-style-select {
-      font-size: 0.8rem;
-      padding: 4px 6px;
-      border-radius: 4px;
-      border: 1px solid var(--border);
-      background: #1b2135;
-      color: var(--text-soft);
+
+    /* CENTER PANEL — CHORD WORKSPACE */
+    .center-panel {
+      background: var(--graphite-light);
+      padding: 20px;
+      overflow-y: auto;
     }
-    @media (max-width: 900px) {
-      .layout-grid {
-        grid-template-columns: 1fr;
-      }
+
+    .workspace-title {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      color: var(--graphite-dark);
+    }
+
+    /* RIGHT PANEL — THEORY TOOLS */
+    .right-panel {
+      background: var(--graphite-mid);
+      border-left: 1px solid var(--panel-border);
+      padding: 20px;
+      overflow-y: auto;
+      color: var(--text-light);
+    }
+
+    .right-panel h2 {
+      margin-top: 0;
+      color: var(--accent-blue);
+      font-weight: 600;
+    }
+
+    /* GENERIC BUTTON STYLE */
+    .btn {
+      background: var(--accent-blue);
+      color: white;
+      padding: 10px 14px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      margin: 6px 0;
+      width: 100%;
+      text-align: center;
+    }
+
+    .btn:hover {
+      background: var(--accent-blue-soft);
+    }
+
+    /* SECTION HEADERS */
+    .section-header {
+      font-size: 18px;
+      font-weight: 600;
+      margin-top: 20px;
+      margin-bottom: 10px;
+      color: var(--accent-blue);
+    }
+
+    /* Placeholder areas (filled in later chunks) */
+    .placeholder-box {
+      background: rgba(255,255,255,0.4);
+      border: 1px dashed var(--panel-border);
+      padding: 20px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      color: var(--graphite-dark);
+      font-style: italic;
     }
   </style>
 </head>
+
 <body>
-  <div class="app-shell">
-    <header>
-      <div>
-        <h1>Song Reharmonization Workspace</h1>
-        <div class="tagline">Advanced Harmonic Transformation Lab</div>
-        <div class="top-nav">
-          <button class="btn primary" id="labWorkspaceBtn">
-            LAB WORKSPACE
-          </button>
-          <button class="btn" id="theoryGlossaryBtn">THEORY GLOSSARY</button>
-        </div>
+
+  <div class="studio-container">
+
+    <!-- ---------------------------------------------------------
+         LEFT PANEL — AUDIO IMPORT + INSTRUMENTS + SAMPLE GENERATORS
+         --------------------------------------------------------- -->
+    <div class="left-panel">
+      <h2>Audio & Instruments</h2>
+
+      <div class="placeholder-box">
+        Audio Import UI will appear here (Chunk 2)
       </div>
-      <div>
-        <span class="tagline">GitHub Pages · patautrey/song-reharmonizer</span>
+
+      <div class="section-header">Sample Generators</div>
+
+      <button class="btn" id="generatePianoBtn">Generate Piano Samples</button>
+      <button class="btn" id="generateGuitarBtn">Generate Guitar Samples</button>
+
+      <div class="placeholder-box">
+        Instrument selector + transport controls (Chunk 3)
       </div>
-    </header>
-    <div class="layout-grid">
-      <!-- LEFT: AUDIO + ARRANGEMENT -->
-      <section class="panel">
-        <h2>Audio Import</h2>
-        <div class="audio-import-row">
-          <input
-            type="file"
-            accept=".wav,.mp3"
-            id="audioFileInput"
-            class="file-input"
-          />
-          <button class="btn" id="audioLoadBtn">Choose Audio File</button>
-          <button class="btn" id="playAudioFileBtn">PLAY AUDIO FILE</button>
-        </div>
-        <div class="audio-status" id="audioStatus">
-          No audio data loaded. <span>System standby.</span>
-        </div>
-
-        <div style="margin-top: 12px;">
-          <div class="analysis-header">
-            <div>
-              <div class="title">Audio Analysis: G Major Arrangement Mapped</div>
-              <div class="subtitle" id="activeTrackLabel">
-                Active Track: Two Friends Together.wav
-              </div>
-            </div>
-          </div>
-
-          <div class="playback-row">
-            <span class="instrument-label">Instrument:</span>
-            <button class="btn instrument-toggle-btn active" id="instrumentPianoBtn">
-              Piano
-            </button>
-            <button class="btn instrument-toggle-btn" id="instrumentGuitarBtn">
-              Acoustic Guitar
-            </button>
-
-            <select id="reharmStyleSelect" class="reharm-style-select">
-              <option value="neutral">Neutral</option>
-              <option value="jazz">Jazz</option>
-              <option value="pop">Pop</option>
-              <option value="gospel">Gospel</option>
-              <option value="modal">Modal</option>
-            </select>
-
-            <button class="btn success" id="playBaseBtn">PLAY BASE</button>
-            <button class="btn primary" id="playReharmBtn">PLAY REHARM</button>
-            <button class="btn danger" id="stopBtn">STOP</button>
-            <button class="btn" id="exportWavBtn">WAV</button>
-            <button class="btn" id="exportMidiBtn">MIDI</button>
-            <button class="btn" id="exportMusicXmlBtn">MUSICXML</button>
-          </div>
-
-          <h3>Sections</h3>
-          <div class="section-tabs" id="sectionTabs">
-            <button class="section-tab active" data-section="intro">
-              INTRO
-            </button>
-            <button class="section-tab" data-section="verse1">VERSE 1</button>
-            <button class="section-tab" data-section="prechorus">
-              PRE-CHORUS
-            </button>
-            <button class="section-tab" data-section="chorus">CHORUS</button>
-            <button class="section-tab" data-section="bridge">BRIDGE</button>
-            <button class="section-tab" data-section="outro">OUTRO</button>
-          </div>
-
-          <div id="chordGrid" class="chord-grid"></div>
-          <!-- Chord palette -->
-          <div id="chordPalette" class="chord-palette">
-            <div class="chord-palette-header">
-              <span id="chordPaletteLabel">
-                Chord Palette · Apply to selected measures
-              </span>
-              <span class="chord-palette-close" id="chordPaletteClose">
-                Hide
-              </span>
-            </div>
-
-            <div class="chord-palette-groups">
-              <div class="chord-palette-group">
-                <div class="chord-palette-group-label">Key Chords</div>
-                <div class="chord-palette-buttons">
-                  <button class="chord-btn" data-chord="G">G</button>
-                  <button class="chord-btn" data-chord="Em">Em</button>
-                  <button class="chord-btn" data-chord="C">C</button>
-                  <button class="chord-btn" data-chord="D">D</button>
-                  <button class="chord-btn" data-chord="B7">B7</button>
-                  <button class="chord-btn" data-chord="Am">Am</button>
-                  <button class="chord-btn" data-chord="Bm7b5">Bm7b5</button>
-                </div>
-              </div>
-
-              <div class="chord-palette-group">
-                <div class="chord-palette-group-label">Extensions</div>
-                <div class="chord-palette-buttons">
-                  <button class="chord-btn" data-chord="Gmaj7">Gmaj7</button>
-                  <button class="chord-btn" data-chord="G6">G6</button>
-                  <button class="chord-btn" data-chord="Gadd9">Gadd9</button>
-                  <button class="chord-btn" data-chord="Gmaj9">Gmaj9</button>
-                  <button class="chord-btn" data-chord="Em7">Em7</button>
-                  <button class="chord-btn" data-chord="Em9">Em9</button>
-                  <button class="chord-btn" data-chord="Cmaj7">Cmaj7</button>
-                  <button class="chord-btn" data-chord="Cadd9">Cadd9</button>
-                  <button class="chord-btn" data-chord="D7">D7</button>
-                  <button class="chord-btn" data-chord="D9">D9</button>
-                </div>
-              </div>
-
-              <div class="chord-palette-group">
-                <div class="chord-palette-group-label">Colors & Altered</div>
-                <div class="chord-palette-buttons">
-                  <button class="chord-btn" data-chord="Gsus2">Gsus2</button>
-                  <button class="chord-btn" data-chord="Gsus4">Gsus4</button>
-                  <button class="chord-btn" data-chord="G9">G9</button>
-                  <button class="chord-btn" data-chord="G7b9">G7b9</button>
-                  <button class="chord-btn" data-chord="G7#5">G7#5</button>
-                  <button class="chord-btn" data-chord="A7">A7</button>
-                  <button class="chord-btn" data-chord="A7b9">A7b9</button>
-                  <button class="chord-btn" data-chord="E7">E7</button>
-                </div>
-              </div>
-
-              <div class="chord-palette-group">
-                <div class="chord-palette-group-label">Slash & Half‑Dim</div>
-                <div class="chord-palette-buttons">
-                  <button class="chord-btn" data-chord="D/F#">D/F#</button>
-                  <button class="chord-btn" data-chord="C/E">C/E</button>
-                  <button class="chord-btn" data-chord="G/B">G/B</button>
-                  <button class="chord-btn" data-chord="F#m7b5">F#m7b5</button>
-                  <button class="chord-btn" data-chord="E°7">E°7</button>
-                </div>
-              </div>
-
-              <div class="chord-palette-group">
-                <div class="chord-palette-group-label">Secondary Dominants</div>
-                <div class="chord-palette-buttons">
-                  <button class="chord-btn" data-chord="D7">V/V (D7)</button>
-                  <button class="chord-btn" data-chord="A7">V/ii (A7)</button>
-                  <button class="chord-btn" data-chord="E7">V/vi (E7)</button>
-                  <button class="chord-btn" data-chord="B7">V/iii (B7)</button>
-                </div>
-              </div>
-
-              <div class="chord-palette-group">
-                <div class="chord-palette-group-label">Diminished Passing</div>
-                <div class="chord-palette-buttons">
-                  <button class="chord-btn" data-chord="F#m7b5">F#m7b5</button>
-                  <button class="chord-btn" data-chord="Bm7b5">Bm7b5</button>
-                  <button class="chord-btn" data-chord="E°7">E°7</button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="range-actions">
-            <div class="hint">
-              Click chord blocks above to map adjustments. Select a range, then
-              choose a chord from the palette and commit changes. Or let the
-              system propose a reharm for the current section.
-            </div>
-            <div class="range-actions-buttons">
-              <button class="btn" id="suggestReharmBtn">
-                SUGGEST REHARM FOR SECTION
-              </button>
-              <button class="btn success" id="commitRangeBtn">
-                COMMIT RANGE CHANGES
-              </button>
-              <button class="btn danger" id="clearHighlightsBtn">
-                CLEAR HIGHLIGHTS
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- RIGHT: THEORY GLOSSARY -->
-      <aside class="panel">
-        <h2>Theory Glossary</h2>
-
-        <h3>Dominant Alterations</h3>
-        <div class="theory-grid">
-          <div class="theory-card">
-            <h4>Dominant Alterations</h4>
-            <ul>
-              <li data-theory="Tritone Substitution">Tritone Substitution</li>
-              <li data-theory="Secondary Dominants">Secondary Dominants</li>
-              <li data-theory="Chromatic Dominants">Chromatic Dominants</li>
-              <li data-theory="Backdoor Dominant">Backdoor Dominant</li>
-            </ul>
-          </div>
-
-          <div class="theory-card">
-            <h4>Modal & Voicing Textures</h4>
-            <ul>
-              <li data-theory="Modal Parallel Borrowing">Modal Parallel Borrowing</li>
-              <li data-theory="Planing / Parallelism">Planing / Parallelism</li>
-              <li data-theory="Poly Chords">Poly Chords</li>
-              <li data-theory="Upper Structures">Upper Structures</li>
-              <li data-theory="Drop 2 Voicing">Drop 2 Voicing</li>
-            </ul>
-          </div>
-
-          <div class="theory-card">
-            <h4>Passing & Functional Shifts</h4>
-            <ul>
-              <li data-theory="Diminished Passing Chords">Diminished Passing Chords</li>
-              <li data-theory="Diatonic Substitution">Diatonic Substitution</li>
-              <li data-theory="Relative Chord Intercept">Relative Chord Intercept</li>
-              <li data-theory="Harmonic Prolongation">Harmonic Prolongation</li>
-            </ul>
-          </div>
-
-          <div class="theory-card">
-            <h4>Voice Leading & Basslines</h4>
-            <ul>
-              <li data-theory="Pedal Tones">Pedal Tones</li>
-              <li data-theory="Bass Walk-Ups">Bass Walk-Ups</li>
-              <li data-theory="Bass Walk-Downs">Bass Walk-Downs</li>
-              <li data-theory="Inversions (Slash Chords)">Inversions (Slash Chords)</li>
-              <li data-theory="Non-Chord Tones (Sustained Lines)">Non-Chord Tones (Sustained Lines)</li>
-            </ul>
-          </div>
-
-          <div class="theory-card">
-            <h4>Turnarounds & Root Paths</h4>
-            <ul>
-              <li data-theory="Circle of 5ths Cycle">Circle of 5ths Cycle</li>
-              <li data-theory="Standard Turnaround">Standard Turnaround</li>
-              <li data-theory="ii-V-I & iiº-V7-i Cadences">ii-V-I & iiº-V7-i Cadences</li>
-              <li data-theory="iii-vi-ii-V-I Extended Chain">iii-vi-ii-V-I Extended Chain</li>
-              <li data-theory="Andalusian Progression Framework">Andalusian Progression Framework</li>
-            </ul>
-          </div>
-
-          <div class="theory-card">
-            <h4>Color, Extensions & Cadences</h4>
-            <ul>
-              <li data-theory="Extensions (9ths, 11ths, 13ths)">Extensions (9ths, 11ths, 13ths)</li>
-              <li data-theory="Suspended (sus4 / sus2)">Suspended (sus4 / sus2)</li>
-              <li data-theory="Perfect Authentic Cadence">Perfect Authentic Cadence (PAC)</li>
-              <li data-theory="Plagal Cadence (Amen Close)">Plagal Cadence (Amen Close)</li>
-              <li data-theory="Half Cadence Break">Half Cadence Break</li>
-            </ul>
-          </div>
-
-          <div class="theory-card">
-            <h4>Figured Bass Inversions</h4>
-            <ul>
-              <li data-theory="Figured Bass: 6 (Root Triad Inv)">Figured Bass: 6 (Root Triad Inv)</li>
-              <li data-theory="Figured Bass: 6/4 (Second Inv)">Figured Bass: 6/4 (Second Inv)</li>
-              <li data-theory="Figured Bass: 4/3 (7th Chord 2nd Inv)">Figured Bass: 4/3 (7th Chord 2nd Inv)</li>
-              <li data-theory="Figured Bass: 5/2 (7th Chord 3rd Inv)">Figured Bass: 5/2 (7th Chord 3rd Inv)</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="footer-note" id="theoryFooterNote">
-          <strong>Tip:</strong> Click a theory item, then click a chord block to
-          tag that measure with the selected concept in the reharm path (for
-          your own workflow notes).
-        </div>
-      </aside>
     </div>
+
+    <!-- ---------------------------------------------------------
+         CENTER PANEL — CHORD WORKSPACE
+         --------------------------------------------------------- -->
+    <div class="center-panel">
+      <div class="workspace-title">Chord Workspace</div>
+
+      <div class="placeholder-box">
+        Chord grid + reharm engine UI will appear here (Chunk 4–5)
+      </div>
+    </div>
+
+    <!-- ---------------------------------------------------------
+         RIGHT PANEL — THEORY GLOSSARY
+         --------------------------------------------------------- -->
+    <div class="right-panel">
+      <h2>Theory Tools</h2>
+
+      <div class="placeholder-box">
+        Theory glossary + tagging tools will appear here (Chunk 6)
+      </div>
+    </div>
+
   </div>
-  <script>
-    // AUDIO CONTEXT
-    let audioCtx = null;
-    let activeOscillators = [];
-    let playbackTimeouts = [];
-    let currentAudioSource = null;
 
-    function ensureAudioContext() {
-      if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      if (audioCtx.state === "suspended") {
-        audioCtx.resume();
-      }
-    }
+  <!-- Scripts will be added in Chunks 7–8 -->
 
-    document.addEventListener("click", ensureAudioContext, { once: true });
-    document.addEventListener("touchstart", ensureAudioContext, { once: true });
-
-    // NOTE FREQUENCIES
-    const noteFreqs = {
-      C4: 261.63,
-      Cs4: 277.18,
-      D4: 293.66,
-      Ds4: 311.13,
-      E4: 329.63,
-      F4: 349.23,
-      Fs4: 369.99,
-      G4: 392.0,
-      Gs4: 415.3,
-      A4: 440.0,
-      As4: 466.16,
-      B4: 493.88
-    };
-
-    // CHORD → PITCHES
-    function chordToPitches(chord) {
-      const rootMap = {
-        "G": "G4",
-        "Gmaj7": "G4",
-        "Gmaj9": "G4",
-        "G7": "G4",
-        "G6": "G4",
-        "Gadd9": "G4",
-        "Gsus2": "G4",
-        "Gsus4": "G4",
-        "G9": "G4",
-        "G7b9": "G4",
-        "G7#5": "G4",
-
-        "Em": "E4",
-        "Em7": "E4",
-        "Em9": "E4",
-
-        "C": "C4",
-        "Cmaj7": "C4",
-        "Cadd9": "C4",
-
-        "D": "D4",
-        "D7": "D4",
-        "D9": "D4",
-
-        "B7": "B4",
-        "Am": "A4",
-
-        "Bm7b5": "B4",
-        "F#m7b5": "Fs4",
-        "E°7": "E4",
-
-        "A7": "A4",
-        "A7b9": "A4",
-        "E7": "E4",
-
-        "D/F#": "D4",
-        "C/E": "C4",
-        "G/B": "G4"
-      };
-
-      const base = rootMap[chord] || "C4";
-      const f = noteFreqs[base];
-
-      if (["G","C","D","Am"].includes(chord))
-        return [f, f*1.26, f*1.498];
-
-      if (chord === "Em")
-        return [f, f*1.189, f*1.498];
-
-      if (["Gmaj7","Cmaj7","Gmaj9"].includes(chord))
-        return [f, f*1.26, f*1.498, f*1.888];
-
-      if (["G7","D7","D9","G7b9","G7#5","A7","A7b9","E7","B7"].includes(chord))
-        return [f, f*1.26, f*1.498, f*1.782];
-
-      if (chord === "G6")
-        return [f, f*1.26, f*1.498, f*1.682];
-
-      if (["Gadd9","Cadd9","G9"].includes(chord))
-        return [f, f*1.26, f*1.498, f*2.245];
-
-      if (chord === "Gsus2")
-        return [f, f*1.122, f*1.498];
-      if (chord === "Gsus4")
-        return [f, f*1.335, f*1.498];
-
-      if (["Em7","Em9"].includes(chord))
-        return [f, f*1.189, f*1.498, f*1.782];
-
-      if (["Bm7b5","F#m7b5"].includes(chord))
-        return [f, f*1.189, f*1.414, f*1.782];
-
-      if (chord === "E°7")
-        return [f, f*1.189, f*1.414, f*1.682];
-
-      if (["D/F#","C/E","G/B"].includes(chord))
-        return [f, f*1.26, f*1.498];
-
-      return [f, f*1.26, f*1.498];
-    }
-
-    function stopAllPlayback() {
-      for (let t of playbackTimeouts) clearTimeout(t);
-      playbackTimeouts = [];
-
-      for (let osc of activeOscillators) {
-        try { osc.stop(); } catch(e){}
-      }
-      activeOscillators = [];
-
-      if (currentAudioSource) {
-        try { currentAudioSource.stop(); } catch(e){}
-        currentAudioSource = null;
-      }
-    }
-
-    // INSTRUMENT MODE
-    let instrumentMode = "piano";
-
-    // PIANO SAMPLE ENGINE
-    const pianoSamples = {};
-    const pianoNotes = ["C4","E4","G4","B4"];
-
-    async function loadPianoSamples() {
-      ensureAudioContext();
-      const base = "samples/piano/";
-      for (let n of pianoNotes) {
-        if (pianoSamples[n]) continue;
-        const resp = await fetch(base + n + ".wav");
-        const arr = await resp.arrayBuffer();
-        pianoSamples[n] = await audioCtx.decodeAudioData(arr);
-      }
-    }
-
-    function playPianoChord(pitches, startTime, duration) {
-      for (let p of pitches) {
-        let nearest = "C4";
-        let best = Infinity;
-        for (let s of pianoNotes) {
-          const diff = Math.abs(noteFreqs[s] - p);
-          if (diff < best) { best = diff; nearest = s; }
-        }
-
-        const src = audioCtx.createBufferSource();
-        src.buffer = pianoSamples[nearest];
-        src.playbackRate.value = p / noteFreqs[nearest];
-
-        const gain = audioCtx.createGain();
-        gain.gain.setValueAtTime(0.001, startTime);
-        gain.gain.exponentialRampToValueAtTime(0.6, startTime + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
-
-        src.connect(gain).connect(audioCtx.destination);
-        src.start(startTime);
-        src.stop(startTime + duration + 0.1);
-      }
-    }
-
-    // ACOUSTIC GUITAR ENGINE (Karplus-Strong)
-    function pluckString(freq, startTime, duration) {
-      const length = Math.floor(audioCtx.sampleRate / freq);
-      const noise = audioCtx.createBuffer(1, length, audioCtx.sampleRate);
-      const data = noise.getChannelData(0);
-
-      for (let i = 0; i < length; i++) data[i] = Math.random()*2 - 1;
-
-      const src = audioCtx.createBufferSource();
-      src.buffer = noise;
-
-      const filter = audioCtx.createBiquadFilter();
-      filter.type = "lowpass";
-      filter.frequency.value = 2500;
-
-      const gain = audioCtx.createGain();
-      gain.gain.setValueAtTime(0.001, startTime);
-      gain.gain.exponentialRampToValueAtTime(0.4, startTime + 0.01);
-      gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
-
-      src.connect(filter).connect(gain).connect(audioCtx.destination);
-      src.start(startTime);
-      src.stop(startTime + duration + 0.1);
-    }
-
-    function playGuitarChord(pitches, startTime, duration) {
-      for (let p of pitches) pluckString(p, startTime, duration);
-    }
-
-    async function playChord(chord, startTime, duration) {
-      ensureAudioContext();
-      const pitches = chordToPitches(chord);
-      const t0 = audioCtx.currentTime + startTime;
-      const dur = duration || 0.8;
-
-      if (instrumentMode === "piano") {
-        await loadPianoSamples();
-        playPianoChord(pitches, t0, dur);
-      } else {
-        playGuitarChord(pitches, t0, dur);
-      }
-    }
-
-    // AUDIO FILE (stubbed decode)
-    let loadedAudioBuffer = null;
-
-    function updateAudioStatusLoaded(fileName) {
-      audioStatusEl.innerHTML = "Audio loaded: <span>" + fileName + "</span>";
-      activeTrackLabelEl.textContent = "Active Track: " + fileName;
-    }
-
-    function handleAudioLoad() {
-      const input = document.getElementById("audioFileInput");
-      if (!input.files || !input.files[0]) {
-        alert("Choose a .wav or .mp3 file first.");
-        return;
-      }
-
-      const file = input.files[0];
-      updateAudioStatusLoaded(file.name);
-      ensureAudioContext();
-
-      const reader = new FileReader();
-      reader.onload = e => {
-        const arrayBuffer = e.target.result;
-        audioCtx.decodeAudioData(
-          arrayBuffer,
-          buffer => {
-            loadedAudioBuffer = buffer;
-          },
-          () => alert("Could not decode this audio file.")
-        );
-      };
-      reader.readAsArrayBuffer(file);
-    }
-
-    function playImportedAudio() {
-      if (!loadedAudioBuffer) {
-        alert("No audio file loaded yet.");
-        return;
-      }
-
-      stopAllPlayback();
-      ensureAudioContext();
-
-      const src = audioCtx.createBufferSource();
-      src.buffer = loadedAudioBuffer;
-      src.connect(audioCtx.destination);
-      src.start();
-
-      currentAudioSource = src;
-    }
-
-    // EXPORT STUBS
-    function stubExportWav() {
-      alert("WAV export is a placeholder in this version.");
-    }
-
-    function exportMidi() {
-      alert("MIDI export is a placeholder in this version.");
-    }
-
-    function exportMusicXML() {
-      alert("MusicXML export is a placeholder in this version.");
-    }
-    // DATA MODEL
-    const sections = {
-      intro: [
-        { m: 1, base: "G", reharm: "G" },
-        { m: 2, base: "Em", reharm: "Em" },
-        { m: 3, base: "C", reharm: "C" },
-        { m: 4, base: "D", reharm: "D" },
-        { m: 5, base: "G", reharm: "G" },
-        { m: 6, base: "Em", reharm: "Em" },
-        { m: 7, base: "C", reharm: "C" },
-        { m: 8, base: "B7", reharm: "B7" }
-      ],
-      verse1: [
-        { m: 1, base: "Em", reharm: "Em" },
-        { m: 2, base: "C", reharm: "C" },
-        { m: 3, base: "G", reharm: "G" },
-        { m: 4, base: "D", reharm: "D" },
-        { m: 5, base: "Em", reharm: "Em" },
-        { m: 6, base: "C", reharm: "C" },
-        { m: 7, base: "G", reharm: "G" },
-        { m: 8, base: "D", reharm: "D" }
-      ],
-      prechorus: [
-        { m: 1, base: "G", reharm: "G" },
-        { m: 2, base: "G", reharm: "G" },
-        { m: 3, base: "C", reharm: "C" },
-        { m: 4, base: "D", reharm: "D" },
-        { m: 5, base: "G", reharm: "G" },
-        { m: 6, base: "G", reharm: "G" },
-        { m: 7, base: "C", reharm: "C" },
-        { m: 8, base: "D", reharm: "D" }
-      ],
-      chorus: [
-        { m: 1, base: "G", reharm: "G" },
-        { m: 2, base: "Em", reharm: "Em" },
-        { m: 3, base: "C", reharm: "C" },
-        { m: 4, base: "D", reharm: "D" },
-        { m: 5, base: "G", reharm: "G" },
-        { m: 6, base: "Em", reharm: "Em" },
-        { m: 7, base: "C", reharm: "C" },
-        { m: 8, base: "B7", reharm: "B7" }
-      ],
-      bridge: [
-        { m: 1, base: "Em", reharm: "Em" },
-        { m: 2, base: "C", reharm: "C" },
-        { m: 3, base: "G", reharm: "G" },
-        { m: 4, base: "D", reharm: "D" },
-        { m: 5, base: "Em", reharm: "Em" },
-        { m: 6, base: "C", reharm: "C" },
-        { m: 7, base: "G", reharm: "G" },
-        { m: 8, base: "D", reharm: "D" }
-      ],
-      outro: [
-        { m: 1, base: "G", reharm: "G" },
-        { m: 2, base: "G", reharm: "G" },
-        { m: 3, base: "C", reharm: "C" },
-        { m: 4, base: "D", reharm: "D" },
-        { m: 5, base: "G", reharm: "G" },
-        { m: 6, base: "G", reharm: "G" },
-        { m: 7, base: "C", reharm: "C" },
-        { m: 8, base: "D", reharm: "D" }
-      ]
-    };
-
-    let currentSectionKey = "intro";
-    let selectedMeasures = [];
-    let lastClickedMeasure = null;
-    let activeTheoryTag = null;
-
-    const chordGridEl = document.getElementById("chordGrid");
-    const sectionTabsEl = document.getElementById("sectionTabs");
-    const audioStatusEl = document.getElementById("audioStatus");
-    const activeTrackLabelEl = document.getElementById("activeTrackLabel");
-    const theoryFooterNoteEl = document.getElementById("theoryFooterNote");
-    const chordPaletteEl = document.getElementById("chordPalette");
-    const chordPaletteLabelEl = document.getElementById("chordPaletteLabel");
-    const chordPaletteCloseEl = document.getElementById("chordPaletteClose");
-
-    function renderSectionTabs() {
-      const tabs = sectionTabsEl.querySelectorAll(".section-tab");
-      for (let i = 0; i < tabs.length; i++) {
-        const tab = tabs[i];
-        if (tab.getAttribute("data-section") === currentSectionKey) {
-          tab.classList.add("active");
-        } else {
-          tab.classList.remove("active");
-        }
-      }
-    }
-
-    function renderChordGrid() {
-      chordGridEl.innerHTML = "";
-      const measures = sections[currentSectionKey];
-
-      for (let i = 0; i < measures.length; i++) {
-        const measure = measures[i];
-        const block = document.createElement("div");
-        block.className = "measure-block";
-        block.setAttribute("data-measure", measure.m);
-
-        if (selectedMeasures.indexOf(measure.m) !== -1) {
-          block.classList.add("selected");
-        }
-
-        const label = document.createElement("div");
-        label.className = "measure-label";
-        label.textContent = "m." + measure.m;
-
-        const baseRow = document.createElement("div");
-        baseRow.className = "measure-row base";
-        baseRow.innerHTML =
-          "<span>" + measure.base + "</span><span class=\"tag\">BASE</span>";
-
-        const reharmRow = document.createElement("div");
-        reharmRow.className = "measure-row reharm";
-        reharmRow.innerHTML =
-          "<span>" + measure.reharm + "</span><span class=\"tag\">REHARM</span>";
-
-        block.appendChild(label);
-        block.appendChild(baseRow);
-        block.appendChild(reharmRow);
-
-        block.addEventListener("click", (function(mNumber) {
-          return function() {
-            handleMeasureClick(mNumber);
-          };
-        })(measure.m));
-
-        chordGridEl.appendChild(block);
-      }
-
-      updateChordPaletteVisibility();
-    }
-
-    function updateChordPaletteVisibility() {
-      if (selectedMeasures.length === 0) {
-        chordPaletteEl.style.display = "none";
-        chordPaletteLabelEl.textContent =
-          "Chord Palette · Select measures to apply chords";
-        return;
-      }
-      const sorted = selectedMeasures.slice().sort((a, b) => a - b);
-      const rangeText =
-        sorted.length === 1
-          ? "m." + sorted[0]
-          : "m." + sorted[0] + "–m." + sorted[sorted.length - 1];
-
-      chordPaletteLabelEl.textContent =
-        "Chord Palette · Applying to " +
-        currentSectionKey.toUpperCase() +
-        " " +
-        rangeText;
-
-      chordPaletteEl.style.display = "block";
-    }
-
-    function handleMeasureClick(mNumber) {
-      const idx = selectedMeasures.indexOf(mNumber);
-
-      if (lastClickedMeasure === null || selectedMeasures.indexOf(lastClickedMeasure) === -1) {
-        if (idx !== -1) {
-          selectedMeasures.splice(idx, 1);
-        } else {
-          selectedMeasures.push(mNumber);
-        }
-        lastClickedMeasure = mNumber;
-      } else {
-        selectedMeasures = [];
-        const start = Math.min(lastClickedMeasure, mNumber);
-        const end = Math.max(lastClickedMeasure, mNumber);
-        for (let m = start; m <= end; m++) {
-          selectedMeasures.push(m);
-        }
-      }
-
-      renderChordGrid();
-    }
-
-    function clearHighlights() {
-      selectedMeasures = [];
-      lastClickedMeasure = null;
-      renderChordGrid();
-    }
-
-    function commitRangeChanges() {
-      // For now, just clear selection and re-render.
-      selectedMeasures = [];
-      lastClickedMeasure = null;
-      renderChordGrid();
-    }
-    // REHARM STYLE
-    let reharmStyle = "neutral";
-    const reharmStyleSelect = document.getElementById("reharmStyleSelect");
-    reharmStyleSelect.addEventListener("change", () => {
-      reharmStyle = reharmStyleSelect.value;
-    });
-
-    // === STYLE-SPECIFIC REHARM FUNCTIONS ===
-
-    // Jazz reharm (simple colorization)
-    function applyJazzReharm(measures) {
-      for (let i = 0; i < measures.length; i++) {
-        const m = measures[i];
-        if (m.reharm === "G") m.reharm = "Gmaj7";
-        if (m.reharm === "C") m.reharm = "Cmaj7";
-        if (m.reharm === "Em") m.reharm = "Em7";
-        if (m.reharm === "D") m.reharm = "D7";
-      }
-    }
-
-    // Pop reharm (add9 / 6 flavors)
-    function applyPopReharm(measures) {
-      for (let i = 0; i < measures.length; i++) {
-        const m = measures[i];
-        if (m.reharm === "G") m.reharm = "Gadd9";
-        if (m.reharm === "C") m.reharm = "Cadd9";
-        if (m.reharm === "Em") m.reharm = "Em7";
-        if (m.reharm === "D") m.reharm = "D9";
-      }
-    }
-
-    // Gospel reharm
-    function applyGospelReharm(measures) {
-      for (let i = 0; i < measures.length; i++) {
-        const m = measures[i];
-
-        if (m.reharm === "G") m.reharm = "Gmaj9";
-        if (m.reharm === "C") m.reharm = "Cmaj9";
-        if (m.reharm === "Em") m.reharm = "Em9";
-
-        if (m.reharm === "D") m.reharm = "D9";
-        if (m.reharm === "A7") m.reharm = "A7b9";
-
-        if (i < measures.length - 1) {
-          const next = measures[i + 1].reharm;
-          if (next === "Gmaj9") m.reharm = "F#m7b5";
-        }
-      }
-    }
-
-    // Modal interchange (parallel minor borrowing)
-    function applyModalInterchange(measures) {
-      for (let i = 0; i < measures.length; i++) {
-        const m = measures[i];
-
-        if (m.base === "C" && Math.random() < 0.15) m.reharm = "Eb";
-        if (m.base === "D" && Math.random() < 0.15) m.reharm = "Dm";
-        if (m.base === "G" && Math.random() < 0.12) m.reharm = "F";
-        if (m.base === "Am" && Math.random() < 0.12) m.reharm = "Cm";
-      }
-    }
-
-    // STYLE-AWARE REHARM ENGINE
-    function suggestReharmForCurrentSection() {
-      const measures = sections[currentSectionKey];
-      if (!measures || measures.length === 0) return;
-
-      for (let m of measures) m.reharm = m.base;
-
-      for (let i = 0; i < measures.length - 1; i++) {
-        const curr = measures[i];
-        const next = measures[i + 1];
-
-        if (next.base === "G") curr.reharm = "D7";
-        if (next.base === "C") curr.reharm = "G7";
-        if (next.base === "D") curr.reharm = "A7";
-        if (next.base === "Em") curr.reharm = "B7";
-      }
-
-      if (reharmStyle === "jazz") applyJazzReharm(measures);
-      if (reharmStyle === "pop") applyPopReharm(measures);
-      if (reharmStyle === "gospel") applyGospelReharm(measures);
-      if (reharmStyle === "modal") applyModalInterchange(measures);
-
-      renderChordGrid();
-    }
-
-    function applyChordToSelection(chord) {
-      const measures = sections[currentSectionKey];
-      for (let m of measures) {
-        if (selectedMeasures.includes(m.m)) {
-          m.reharm = chord;
-        }
-      }
-      renderChordGrid();
-    }
-
-    function setActiveSection(key) {
-      currentSectionKey = key;
-      selectedMeasures = [];
-      lastClickedMeasure = null;
-      renderSectionTabs();
-      renderChordGrid();
-    }
-
-    function playSection(mode) {
-      stopAllPlayback();
-      ensureAudioContext();
-
-      const measures = sections[currentSectionKey];
-      const chordPath = measures.map(m =>
-        mode === "base" ? m.base : m.reharm
-      );
-
-      const beatDur = 0.8;
-
-      for (let i = 0; i < chordPath.length; i++) {
-        const chord = chordPath[i];
-        const timeoutId = setTimeout(() => {
-          playChord(chord, 0, 0.7);
-        }, i * beatDur * 1000);
-
-        playbackTimeouts.push(timeoutId);
-      }
-    }
-    // WIRING
-    document.getElementById("audioLoadBtn").addEventListener("click", handleAudioLoad);
-    document.getElementById("playAudioFileBtn").addEventListener("click", playImportedAudio);
-
-    document.getElementById("playBaseBtn").addEventListener("click", () => playSection("base"));
-    document.getElementById("playReharmBtn").addEventListener("click", () => playSection("reharm"));
-    document.getElementById("stopBtn").addEventListener("click", stopAllPlayback);
-
-    document.getElementById("exportWavBtn").addEventListener("click", stubExportWav);
-    document.getElementById("exportMidiBtn").addEventListener("click", exportMidi);
-    document.getElementById("exportMusicXmlBtn").addEventListener("click", exportMusicXML);
-
-    document.getElementById("commitRangeBtn").addEventListener("click", commitRangeChanges);
-    document.getElementById("clearHighlightsBtn").addEventListener("click", clearHighlights);
-    document.getElementById("suggestReharmBtn").addEventListener("click", suggestReharmForCurrentSection);
-
-    // Section tab switching
-    const tabs = sectionTabsEl.querySelectorAll(".section-tab");
-    for (let tab of tabs) {
-      tab.addEventListener("click", () => {
-        setActiveSection(tab.getAttribute("data-section"));
-      });
-    }
-
-    // Theory tag selection
-    const theoryItems = document.querySelectorAll(".theory-card li");
-    for (let li of theoryItems) {
-      li.addEventListener("click", () => {
-        const tag = li.getAttribute("data-theory") || li.textContent;
-        activeTheoryTag = tag;
-      });
-    }
-
-    // Scroll buttons
-    document.getElementById("labWorkspaceBtn").addEventListener("click", () => {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    });
-    document.getElementById("theoryGlossaryBtn").addEventListener("click", () => {
-      window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
-    });
-
-    // Chord palette buttons
-    const chordButtons = document.querySelectorAll(".chord-btn");
-    for (let btn of chordButtons) {
-      btn.addEventListener("click", () => {
-        const chord = btn.getAttribute("data-chord");
-        applyChordToSelection(chord);
-      });
-    }
-
-    // Close palette
-    chordPaletteCloseEl.addEventListener("click", () => {
-      chordPaletteEl.style.display = "none";
-    });
-
-    // Instrument toggle buttons
-    const pianoBtn = document.getElementById("instrumentPianoBtn");
-    const guitarBtn = document.getElementById("instrumentGuitarBtn");
-
-    function updateInstrumentButtons() {
-      if (instrumentMode === "piano") {
-        pianoBtn.classList.add("active");
-        guitarBtn.classList.remove("active");
-      } else {
-        guitarBtn.classList.add("active");
-        pianoBtn.classList.remove("active");
-      }
-    }
-
-    pianoBtn.addEventListener("click", () => {
-      instrumentMode = "piano";
-      updateInstrumentButtons();
-    });
-
-    guitarBtn.addEventListener("click", () => {
-      instrumentMode = "guitar";
-      updateInstrumentButtons();
-    });
-
-    // INITIAL RENDER
-    renderSectionTabs();
-    renderChordGrid();
-    updateInstrumentButtons();
-  </script>
 </body>
 </html>
+<!-- ============================
+     CHUNK 2 — AUDIO + INSTRUMENT UI
+     ============================ -->
+
+<!-- Replace the first placeholder-box in the LEFT PANEL with this: -->
+<div class="audio-import">
+  <div class="section-header">Audio Import</div>
+
+  <label class="file-label">
+    <input type="file" id="audioFileInput" accept="audio/*" />
+    Choose Audio File
+  </label>
+
+  <div id="audioFileName" class="file-name-display">
+    No file selected
+  </div>
+
+  <audio id="audioPlayer" controls style="width:100%; margin-top:10px;">
+    Your browser does not support audio playback.
+  </audio>
+</div>
+
+<!-- Replace the second placeholder-box in the LEFT PANEL with this: -->
+<div class="instrument-controls">
+  <div class="section-header">Instrument</div>
+
+  <select id="instrumentSelect" class="instrument-select">
+    <option value="piano">Piano</option>
+    <option value="guitar">Guitar</option>
+  </select>
+
+  <div class="section-header">Transport</div>
+
+  <button class="btn" id="playBaseBtn">Play Base</button>
+  <button class="btn" id="playReharmBtn">Play Reharm</button>
+  <button class="btn" id="stopBtn">Stop</button>
+
+  <div class="section-header">Export</div>
+
+  <button class="btn" id="exportWavBtn">Export WAV</button>
+  <button class="btn" id="exportMidiBtn">Export MIDI</button>
+  <button class="btn" id="exportMusicXmlBtn">Export MusicXML</button>
+</div>
+
+<!-- ============================
+     CHUNK 2 — SUPPORTING CSS
+     ============================ -->
+
+<style>
+  .file-label {
+    display: block;
+    background: var(--accent-blue);
+    color: white;
+    padding: 10px;
+    border-radius: 6px;
+    text-align: center;
+    cursor: pointer;
+    margin-bottom: 10px;
+  }
+
+  .file-label:hover {
+    background: var(--accent-blue-soft);
+  }
+
+  .file-label input {
+    display: none;
+  }
+
+  .file-name-display {
+    font-size: 13px;
+    color: var(--text-mid);
+    margin-bottom: 10px;
+  }
+
+  .instrument-select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid var(--panel-border);
+    background: var(--graphite-light);
+    color: var(--graphite-dark);
+    font-size: 14px;
+    margin-bottom: 15px;
+  }
+</style>
+<!-- ============================
+     CHUNK 3 — CHORD WORKSPACE GRID
+     ============================ -->
+
+<div class="workspace-title">Chord Workspace</div>
+
+<div id="chordGrid" class="chord-grid">
+  <!-- Chords will be dynamically inserted here in Chunk 4 -->
+</div>
+
+<style>
+  /* ---------------------------------------------------------
+     CHORD GRID LAYOUT
+     --------------------------------------------------------- */
+  .chord-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+    padding: 10px;
+  }
+
+  .chord-cell {
+    background: white;
+    border: 2px solid var(--panel-border);
+    border-radius: 8px;
+    padding: 14px;
+    text-align: center;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--graphite-dark);
+    cursor: pointer;
+    transition: 0.15s ease;
+    user-select: none;
+  }
+
+  .chord-cell:hover {
+    border-color: var(--accent-blue);
+    transform: translateY(-2px);
+  }
+
+  .chord-cell.selected {
+    background: var(--accent-blue);
+    color: white;
+    border-color: var(--accent-blue-soft);
+  }
+
+  /* Section title styling (overrides placeholder) */
+  .workspace-title {
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 15px;
+    color: var(--graphite-dark);
+  }
+</style>
+<!-- ============================
+     CHUNK 4 — CHORD ENGINE UI
+     ============================ -->
+
+<style>
+  /* ---------------------------------------------------------
+     CHORD EDITOR POPUP
+     --------------------------------------------------------- */
+  .chord-editor-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.55);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+  }
+
+  .chord-editor {
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    width: 360px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.35);
+  }
+
+  .chord-editor h3 {
+    margin-top: 0;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--graphite-dark);
+  }
+
+  .chord-editor label {
+    display: block;
+    margin-top: 12px;
+    font-size: 14px;
+    color: var(--graphite-dark);
+  }
+
+  .chord-editor input,
+  .chord-editor select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 6px;
+    border-radius: 6px;
+    border: 1px solid var(--panel-border);
+    font-size: 14px;
+  }
+
+  .editor-btn-row {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+  }
+
+  .editor-btn {
+    flex: 1;
+    margin: 0 5px;
+    padding: 10px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .editor-save {
+    background: var(--accent-blue);
+    color: white;
+  }
+
+  .editor-save:hover {
+    background: var(--accent-blue-soft);
+  }
+
+  .editor-cancel {
+    background: var(--danger);
+    color: white;
+  }
+
+  .editor-cancel:hover {
+    background: #d95353;
+  }
+
+  /* ---------------------------------------------------------
+     ADD CHORD BUTTON
+     --------------------------------------------------------- */
+  #addChordBtn {
+    background: var(--success);
+    color: white;
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    width: 100%;
+    margin-bottom: 15px;
+    font-weight: 600;
+  }
+
+  #addChordBtn:hover {
+    background: #3cbf78;
+  }
+</style>
+
+<!-- ADD CHORD BUTTON ABOVE THE GRID -->
+<button id="addChordBtn">+ Add Chord</button>
+
+<!-- CHORD EDITOR POPUP -->
+<div id="chordEditorOverlay" class="chord-editor-overlay">
+  <div class="chord-editor">
+    <h3>Edit Chord</h3>
+
+    <label>Root Note</label>
+    <select id="editorRoot">
+      <option>C</option><option>C#</option><option>D</option><option>D#</option>
+      <option>E</option><option>F</option><option>F#</option><option>G</option>
+      <option>G#</option><option>A</option><option>A#</option><option>B</option>
+    </select>
+
+    <label>Chord Quality</label>
+    <select id="editorQuality">
+      <option>maj</option>
+      <option>min</option>
+      <option>dim</option>
+      <option>aug</option>
+      <option>7</option>
+      <option>maj7</option>
+      <option>min7</option>
+      <option>sus2</option>
+      <option>sus4</option>
+    </select>
+
+    <label>Extension (optional)</label>
+    <input id="editorExtension" placeholder="e.g. 9, 11, 13" />
+
+    <div class="editor-btn-row">
+      <button class="editor-btn editor-save" id="saveChordBtn">Save</button>
+      <button class="editor-btn editor-cancel" id="cancelChordBtn">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------------------------------------------------------
+   CHUNK 4 — BASIC CHORD GRID INTERACTION LOGIC
+   (Full reharm logic comes in Chunk 5)
+   --------------------------------------------------------- */
+
+let chordGrid = document.getElementById("chordGrid");
+let chordEditorOverlay = document.getElementById("chordEditorOverlay");
+
+let editorRoot = document.getElementById("editorRoot");
+let editorQuality = document.getElementById("editorQuality");
+let editorExtension = document.getElementById("editorExtension");
+
+let saveChordBtn = document.getElementById("saveChordBtn");
+let cancelChordBtn = document.getElementById("cancelChordBtn");
+
+let addChordBtn = document.getElementById("addChordBtn");
+
+let editingIndex = null;
+let chordList = [];
+
+/* -------------------------
+   ADD NEW CHORD
+   ------------------------- */
+addChordBtn.onclick = () => {
+  editingIndex = null;
+  editorRoot.value = "C";
+  editorQuality.value = "maj";
+  editorExtension.value = "";
+  chordEditorOverlay.style.display = "flex";
+};
+
+/* -------------------------
+   SAVE CHORD
+   ------------------------- */
+saveChordBtn.onclick = () => {
+  let chordText = editorRoot.value + editorQuality.value;
+
+  if (editorExtension.value.trim() !== "") {
+    chordText += "(" + editorExtension.value.trim() + ")";
+  }
+
+  if (editingIndex === null) {
+    chordList.push(chordText);
+  } else {
+    chordList[editingIndex] = chordText;
+  }
+
+  renderChordGrid();
+  chordEditorOverlay.style.display = "none";
+};
+
+/* -------------------------
+   CANCEL EDIT
+   ------------------------- */
+cancelChordBtn.onclick = () => {
+  chordEditorOverlay.style.display = "none";
+};
+
+/* -------------------------
+   RENDER GRID
+   ------------------------- */
+function renderChordGrid() {
+  chordGrid.innerHTML = "";
+
+  chordList.forEach((chord, index) => {
+    let cell = document.createElement("div");
+    cell.className = "chord-cell";
+    cell.textContent = chord;
+
+    cell.onclick = () => {
+      editingIndex = index;
+
+      // Parse chord text
+      let match = chord.match(/^([A-G]#?)([a-z0-9]+)?(?:\((.*?)\))?$/);
+      if (match) {
+        editorRoot.value = match[1];
+        editorQuality.value = match[2] || "maj";
+        editorExtension.value = match[3] || "";
+      }
+
+      chordEditorOverlay.style.display = "flex";
+    };
+
+    chordGrid.appendChild(cell);
+  });
+}
+</script>
+<!-- ============================
+     CHUNK 5 — REHARM ENGINE LOGIC
+     ============================ -->
+
+<script>
+/* ---------------------------------------------------------
+   CHORD → INTERVAL MAP
+   --------------------------------------------------------- */
+const CHORD_QUALITIES = {
+  "maj":  [0, 4, 7],
+  "min":  [0, 3, 7],
+  "dim":  [0, 3, 6],
+  "aug":  [0, 4, 8],
+  "7":    [0, 4, 7, 10],
+  "maj7": [0, 4, 7, 11],
+  "min7": [0, 3, 7, 10],
+  "sus2": [0, 2, 7],
+  "sus4": [0, 5, 7]
+};
+
+/* ---------------------------------------------------------
+   NOTE → SEMITONE MAP
+   --------------------------------------------------------- */
+const NOTE_TO_SEMITONE = {
+  "C": 0,  "C#": 1, "D": 2,  "D#": 3,
+  "E": 4,  "F": 5,  "F#": 6, "G": 7,
+  "G#": 8, "A": 9,  "A#": 10,"B": 11
+};
+
+/* ---------------------------------------------------------
+   PARSE CHORD TEXT → COMPONENTS
+   --------------------------------------------------------- */
+function parseChord(chordText) {
+  let match = chordText.match(/^([A-G]#?)([a-z0-9]+)?(?:\((.*?)\))?$/);
+
+  if (!match) return null;
+
+  return {
+    root: match[1],
+    quality: match[2] || "maj",
+    extension: match[3] || null
+  };
+}
+
+/* ---------------------------------------------------------
+   CHORD → SEMITONE LIST
+   --------------------------------------------------------- */
+function chordToSemitones(chordText) {
+  let parsed = parseChord(chordText);
+  if (!parsed) return [];
+
+  let base = NOTE_TO_SEMITONE[parsed.root];
+  let intervals = CHORD_QUALITIES[parsed.quality] || [0, 4, 7];
+
+  let tones = intervals.map(i => base + i);
+
+  // Add extension if present
+  if (parsed.extension) {
+    let ext = parsed.extension.trim();
+    if (ext === "9") tones.push(base + 14);
+    if (ext === "11") tones.push(base + 17);
+    if (ext === "13") tones.push(base + 21);
+  }
+
+  return tones;
+}
+
+/* ---------------------------------------------------------
+   CHORD LIST → PLAYBACK VOICING MAP
+   (Used by audio engine in Chunk 7)
+   --------------------------------------------------------- */
+function buildVoicingMap() {
+  return chordList.map(chord => {
+    let tones = chordToSemitones(chord);
+
+    // Normalize to one octave for pitch‑shifting
+    let normalized = tones.map(t => ((t % 12) + 12) % 12);
+
+    return {
+      chord,
+      tones: normalized
+    };
+  });
+}
+
+/* ---------------------------------------------------------
+   DEBUG BUTTON (optional)
+   --------------------------------------------------------- */
+window.debugVoicings = () => {
+  console.log("Voicing Map:", buildVoicingMap());
+};
+</script>
+<!-- ============================
+     CHUNK 6 — THEORY PANEL (RIGHT SIDE)
+     ============================ -->
+
+<div class="theory-section">
+  <h2>Theory Tools</h2>
+
+  <div class="theory-category">
+    <div class="theory-title">Diatonic Functions</div>
+    <div class="theory-tags">
+      <button class="theory-tag" data-tag="Tonic">Tonic</button>
+      <button class="theory-tag" data-tag="Subdominant">Subdominant</button>
+      <button class="theory-tag" data-tag="Dominant">Dominant</button>
+    </div>
+  </div>
+
+  <div class="theory-category">
+    <div class="theory-title">Modal Interchange</div>
+    <div class="theory-tags">
+      <button class="theory-tag" data-tag="bIII">♭III</button>
+      <button class="theory-tag" data-tag="bVI">♭VI</button>
+      <button class="theory-tag" data-tag="bVII">♭VII</button>
+      <button class="theory-tag" data-tag="iv">iv</button>
+    </div>
+  </div>
+
+  <div class="theory-category">
+    <div class="theory-title">Secondary Dominants</div>
+    <div class="theory-tags">
+      <button class="theory-tag" data-tag="V/ii">V/ii</button>
+      <button class="theory-tag" data-tag="V/iii">V/iii</button>
+      <button class="theory-tag" data-tag="V/IV">V/IV</button>
+      <button class="theory-tag" data-tag="V/V">V/V</button>
+      <button class="theory-tag" data-tag="V/vi">V/vi</button>
+    </div>
+  </div>
+
+  <div class="theory-category">
+    <div class="theory-title">Tritone Subs</div>
+    <div class="theory-tags">
+      <button class="theory-tag" data-tag="SubV">SubV</button>
+      <button class="theory-tag" data-tag="SubV/V">SubV/V</button>
+    </div>
+  </div>
+
+  <div class="theory-category">
+    <div class="theory-title">Extensions</div>
+    <div class="theory-tags">
+      <button class="theory-tag" data-tag="add9">add9</button>
+      <button class="theory-tag" data-tag="add11">add11</button>
+      <button class="theory-tag" data-tag="add13">add13</button>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* ---------------------------------------------------------
+     THEORY PANEL STYLING
+     --------------------------------------------------------- */
+  .theory-section {
+    margin-top: 10px;
+  }
+
+  .theory-category {
+    margin-bottom: 25px;
+  }
+
+  .theory-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--accent-blue);
+  }
+
+  .theory-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .theory-tag {
+    background: var(--graphite-light);
+    color: var(--graphite-dark);
+    border: 1px solid var(--panel-border);
+    border-radius: 6px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: 0.15s ease;
+  }
+
+  .theory-tag:hover {
+    background: var(--accent-blue);
+    color: white;
+    border-color: var(--accent-blue-soft);
+  }
+</style>
+
+<script>
+/* ---------------------------------------------------------
+   CHUNK 6 — THEORY TAG CLICK HANDLER
+   --------------------------------------------------------- */
+
+document.querySelectorAll(".theory-tag").forEach(tag => {
+  tag.addEventListener("click", () => {
+    let selected = document.querySelector(".chord-cell.selected");
+    if (!selected) {
+      alert("Select a chord first.");
+      return;
+    }
+
+    let tagText = tag.dataset.tag;
+
+    // Append tag to chord text
+    selected.textContent += " [" + tagText + "]";
+
+    // Update chordList array
+    let index = Array.from(chordGrid.children).indexOf(selected);
+    chordList[index] = selected.textContent;
+  });
+});
+</script>
+<!-- ============================
+     CHUNK 7 — AUDIO ENGINE
+     ============================ -->
+
+<script>
+/* ---------------------------------------------------------
+   MASTER AUDIO CONTEXT
+   --------------------------------------------------------- */
+let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+/* ---------------------------------------------------------
+   SAMPLE BUFFERS
+   --------------------------------------------------------- */
+let pianoSamples = {};
+let guitarSamples = {};
+
+const SAMPLE_NOTES = ["C4", "E4", "G4", "B4"];
+
+/* ---------------------------------------------------------
+   LOAD SAMPLES FROM /samples/piano/ AND /samples/guitar/
+   --------------------------------------------------------- */
+async function loadSample(url) {
+  let response = await fetch(url);
+  let arrayBuffer = await response.arrayBuffer();
+  return await audioCtx.decodeAudioData(arrayBuffer);
+}
+
+async function loadInstrumentSamples() {
+  // Piano
+  for (let note of SAMPLE_NOTES) {
+    pianoSamples[note] = await loadSample(`samples/piano/${note}.wav`);
+  }
+
+  // Guitar
+  for (let note of SAMPLE_NOTES) {
+    guitarSamples[note] = await loadSample(`samples/guitar/${note}.wav`);
+  }
+
+  console.log("Samples loaded.");
+}
+
+/* ---------------------------------------------------------
+   PITCH SHIFTING UTILITY
+   --------------------------------------------------------- */
+function playSample(buffer, semitoneShift, timeOffset = 0) {
+  let source = audioCtx.createBufferSource();
+  source.buffer = buffer;
+
+  // Pitch shift ratio
+  let ratio = Math.pow(2, semitoneShift / 12);
+  source.playbackRate.value = ratio;
+
+  source.connect(audioCtx.destination);
+  source.start(audioCtx.currentTime + timeOffset);
+
+  return source;
+}
+
+/* ---------------------------------------------------------
+   CHORD PLAYBACK
+   --------------------------------------------------------- */
+function playChord(tones, instrument = "piano") {
+  let sampleSet = instrument === "guitar" ? guitarSamples : pianoSamples;
+
+  // Use C4 as the base sample for pitch shifting
+  let baseBuffer = sampleSet["C4"];
+
+  tones.forEach((tone, index) => {
+    // Slight stagger for realism
+    let delay = index * 0.015;
+
+    playSample(baseBuffer, tone, delay);
+  });
+}
+
+/* ---------------------------------------------------------
+   PLAYBACK SEQUENCES
+   --------------------------------------------------------- */
+let isPlaying = false;
+let playIndex = 0;
+let playTimer = null;
+
+function playChordSequence(isReharm = false) {
+  if (isPlaying) return;
+
+  isPlaying = true;
+  playIndex = 0;
+
+  let voicingMap = buildVoicingMap();
+  let instrument = document.getElementById("instrumentSelect").value;
+
+  function step() {
+    if (playIndex >= voicingMap.length) {
+      stopPlayback();
+      return;
+    }
+
+    let tones = voicingMap[playIndex].tones;
+    playChord(tones, instrument);
+
+    playIndex++;
+    playTimer = setTimeout(step, 1200); // 1.2 seconds per chord
+  }
+
+  step();
+}
+
+function stopPlayback() {
+  isPlaying = false;
+  clearTimeout(playTimer);
+}
+
+/* ---------------------------------------------------------
+   TRANSPORT BUTTONS
+   --------------------------------------------------------- */
+document.getElementById("playBaseBtn").onclick = () => {
+  playChordSequence(false);
+};
+
+document.getElementById("playReharmBtn").onclick = () => {
+  playChordSequence(true);
+};
+
+document.getElementById("stopBtn").onclick = () => {
+  stopPlayback();
+};
+
+/* ---------------------------------------------------------
+   EXPORT PLACEHOLDERS (IMPLEMENTED LATER)
+   --------------------------------------------------------- */
+document.getElementById("exportWavBtn").onclick = () => {
+  alert("WAV export coming soon.");
+};
+
+document.getElementById("exportMidiBtn").onclick = () => {
+  alert("MIDI export coming soon.");
+};
+
+document.getElementById("exportMusicXmlBtn").onclick = () => {
+  alert("MusicXML export coming soon.");
+};
+
+/* ---------------------------------------------------------
+   LOAD SAMPLES ON STARTUP
+   --------------------------------------------------------- */
+window.addEventListener("load", () => {
+  loadInstrumentSamples();
+});
+</script>
+<!-- ============================
+     CHUNK 8 — SAMPLE GENERATORS
+     ============================ -->
+
+<script>
+/* ---------------------------------------------------------
+   UTILITY: DOWNLOAD BUFFER AS WAV
+   --------------------------------------------------------- */
+function downloadWav(audioBuffer, filename) {
+  let wavData = audioBufferToWav(audioBuffer);
+  let blob = new Blob([wavData], { type: "audio/wav" });
+  let url = URL.createObjectURL(blob);
+
+  let a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+
+/* ---------------------------------------------------------
+   AUDIOBUFFER → WAV ENCODER
+   --------------------------------------------------------- */
+function audioBufferToWav(buffer) {
+  let numOfChan = buffer.numberOfChannels,
+      length = buffer.length * numOfChan * 2 + 44,
+      bufferArray = new ArrayBuffer(length),
+      view = new DataView(bufferArray),
+      channels = [],
+      i, sample,
+      offset = 0,
+      pos = 0;
+
+  // Write WAV header
+  function writeString(s) {
+    for (let i = 0; i < s.length; i++) {
+      view.setUint8(pos++, s.charCodeAt(i));
+    }
+  }
+
+  writeString("RIFF");
+  view.setUint32(pos, length - 8, true); pos += 4;
+  writeString("WAVE");
+  writeString("fmt ");
+  view.setUint32(pos, 16, true); pos += 4;
+  view.setUint16(pos, 1, true); pos += 2;
+  view.setUint16(pos, numOfChan, true); pos += 2;
+  view.setUint32(pos, buffer.sampleRate, true); pos += 4;
+  view.setUint32(pos, buffer.sampleRate * numOfChan * 2, true); pos += 4;
+  view.setUint16(pos, numOfChan * 2, true); pos += 2;
+  view.setUint16(pos, 16, true); pos += 2;
+  writeString("data");
+  view.setUint32(pos, length - pos - 4, true); pos += 4;
+
+  // Write interleaved data
+  for (i = 0; i < numOfChan; i++) {
+    channels.push(buffer.getChannelData(i));
+  }
+
+  while (pos < length) {
+    for (i = 0; i < numOfChan; i++) {
+      sample = Math.max(-1, Math.min(1, channels[i][offset]));
+      view.setInt16(pos, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+      pos += 2;
+    }
+    offset++;
+  }
+
+  return bufferArray;
+}
+
+/* ---------------------------------------------------------
+   GENERATE PIANO SAMPLES (SINE WAVES)
+   --------------------------------------------------------- */
+function generatePianoSample(freq) {
+  let duration = 1.2;
+  let sampleRate = audioCtx.sampleRate;
+  let frameCount = sampleRate * duration;
+
+  let buffer = audioCtx.createBuffer(1, frameCount, sampleRate);
+  let data = buffer.getChannelData(0);
+
+  for (let i = 0; i < frameCount; i++) {
+    let t = i / sampleRate;
+    let env = Math.exp(-3 * t); // fast decay
+    data[i] = Math.sin(2 * Math.PI * freq * t) * env;
+  }
+
+  return buffer;
+}
+
+/* ---------------------------------------------------------
+   GENERATE GUITAR SAMPLES (HARD PICK, MEDIUM DECAY)
+   --------------------------------------------------------- */
+function generateGuitarSample(freq) {
+  let duration = 1.4;
+  let sampleRate = audioCtx.sampleRate;
+  let frameCount = sampleRate * duration;
+
+  let buffer = audioCtx.createBuffer(1, frameCount, sampleRate);
+  let data = buffer.getChannelData(0);
+
+  for (let i = 0; i < frameCount; i++) {
+    let t = i / sampleRate;
+
+    // Hard pick attack
+    let attack = Math.exp(-60 * t);
+
+    // Medium decay body
+    let decay = Math.exp(-2.8 * t);
+
+    // Slight brightness (acoustic pluck)
+    let tone =
+      Math.sin(2 * Math.PI * freq * t) * 0.7 +
+      Math.sin(2 * Math.PI * freq * 2 * t) * 0.2 +
+      Math.sin(2 * Math.PI * freq * 3 * t) * 0.1;
+
+    data[i] = tone * attack * decay;
+  }
+
+  return buffer;
+}
+
+/* ---------------------------------------------------------
+   NOTE → FREQUENCY MAP
+   --------------------------------------------------------- */
+const NOTE_FREQ = {
+  "C4": 261.63,
+  "E4": 329.63,
+  "G4": 392.00,
+  "B4": 493.88
+};
+
+/* ---------------------------------------------------------
+   GENERATE PIANO SAMPLES BUTTON
+   --------------------------------------------------------- */
+document.getElementById("generatePianoBtn").onclick = () => {
+  for (let note of SAMPLE_NOTES) {
+    let buffer = generatePianoSample(NOTE_FREQ[note]);
+    downloadWav(buffer, `${note}.wav`);
+  }
+  alert("Piano samples generated.");
+};
+
+/* ---------------------------------------------------------
+   GENERATE GUITAR SAMPLES BUTTON
+   --------------------------------------------------------- */
+document.getElementById("generateGuitarBtn").onclick = () => {
+  for (let note of SAMPLE_NOTES) {
+    let buffer = generateGuitarSample(NOTE_FREQ[note]);
+    downloadWav(buffer, `${note}.wav`);
+  }
+  alert("Guitar samples generated.");
+};
+</script>
