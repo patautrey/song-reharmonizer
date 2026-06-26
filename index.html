@@ -68,8 +68,8 @@
     }
 
     .workspace-title {
-      font-size: 24px;
-      font-weight: 600;
+      font-size: 26px;
+      font-weight: 700;
       margin-bottom: 15px;
       color: var(--graphite-dark);
     }
@@ -116,15 +116,213 @@
       color: var(--accent-blue);
     }
 
-    /* Placeholder areas (filled in later chunks) */
-    .placeholder-box {
-      background: rgba(255,255,255,0.4);
-      border: 1px dashed var(--panel-border);
-      padding: 20px;
+    /* FILE INPUT */
+    .file-label {
+      display: block;
+      background: var(--accent-blue);
+      color: white;
+      padding: 10px;
       border-radius: 6px;
-      margin-bottom: 20px;
+      text-align: center;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+
+    .file-label:hover {
+      background: var(--accent-blue-soft);
+    }
+
+    .file-label input {
+      display: none;
+    }
+
+    .file-name-display {
+      font-size: 13px;
+      color: var(--text-mid);
+      margin-bottom: 10px;
+    }
+
+    .instrument-select {
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid var(--panel-border);
+      background: var(--graphite-light);
       color: var(--graphite-dark);
-      font-style: italic;
+      font-size: 14px;
+      margin-bottom: 15px;
+    }
+
+    /* CHORD GRID */
+    .chord-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 12px;
+      padding: 10px;
+    }
+
+    .chord-cell {
+      background: white;
+      border: 2px solid var(--panel-border);
+      border-radius: 8px;
+      padding: 14px;
+      text-align: center;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--graphite-dark);
+      cursor: pointer;
+      transition: 0.15s ease;
+      user-select: none;
+    }
+
+    .chord-cell:hover {
+      border-color: var(--accent-blue);
+      transform: translateY(-2px);
+    }
+
+    .chord-cell.selected {
+      background: var(--accent-blue);
+      color: white;
+      border-color: var(--accent-blue-soft);
+    }
+
+    /* CHORD EDITOR POPUP */
+    .chord-editor-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.55);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+
+    .chord-editor {
+      background: white;
+      padding: 25px;
+      border-radius: 10px;
+      width: 360px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.35);
+    }
+
+    .chord-editor h3 {
+      margin-top: 0;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--graphite-dark);
+    }
+
+    .chord-editor label {
+      display: block;
+      margin-top: 12px;
+      font-size: 14px;
+      color: var(--graphite-dark);
+    }
+
+    .chord-editor input,
+    .chord-editor select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      border-radius: 6px;
+      border: 1px solid var(--panel-border);
+      font-size: 14px;
+    }
+
+    .editor-btn-row {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+
+    .editor-btn {
+      flex: 1;
+      margin: 0 5px;
+      padding: 10px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .editor-save {
+      background: var(--accent-blue);
+      color: white;
+    }
+
+    .editor-save:hover {
+      background: var(--accent-blue-soft);
+    }
+
+    .editor-cancel {
+      background: var(--danger);
+      color: white;
+    }
+
+    .editor-cancel:hover {
+      background: #d95353;
+    }
+
+    /* ADD CHORD BUTTON */
+    #addChordBtn {
+      background: var(--success);
+      color: white;
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      width: 100%;
+      margin-bottom: 15px;
+      font-weight: 600;
+    }
+
+    #addChordBtn:hover {
+      background: #3cbf78;
+    }
+
+    /* THEORY PANEL */
+    .theory-section {
+      margin-top: 10px;
+    }
+
+    .theory-category {
+      margin-bottom: 25px;
+    }
+
+    .theory-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--accent-blue);
+    }
+
+    .theory-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .theory-tag {
+      background: var(--graphite-light);
+      color: var(--graphite-dark);
+      border: 1px solid var(--panel-border);
+      border-radius: 6px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: 0.15s ease;
+    }
+
+    .theory-tag:hover {
+      background: var(--accent-blue);
+      color: white;
+      border-color: var(--accent-blue-soft);
     }
   </style>
 </head>
@@ -133,945 +331,234 @@
 
   <div class="studio-container">
 
-    <!-- ---------------------------------------------------------
-         LEFT PANEL — AUDIO IMPORT + INSTRUMENTS + SAMPLE GENERATORS
-         --------------------------------------------------------- -->
+    <!-- LEFT PANEL -->
     <div class="left-panel">
       <h2>Audio & Instruments</h2>
 
-      <div class="placeholder-box">
-        Audio Import UI will appear here (Chunk 2)
+      <!-- AUDIO IMPORT -->
+      <div class="audio-import">
+        <div class="section-header">Audio Import</div>
+
+        <label class="file-label">
+          <input type="file" id="audioFileInput" accept="audio/*" />
+          Choose Audio File
+        </label>
+
+        <div id="audioFileName" class="file-name-display">
+          No file selected
+        </div>
+
+        <audio id="audioPlayer" controls style="width:100%; margin-top:10px;">
+          Your browser does not support audio playback.
+        </audio>
       </div>
 
+      <!-- SAMPLE GENERATORS -->
       <div class="section-header">Sample Generators</div>
-
       <button class="btn" id="generatePianoBtn">Generate Piano Samples</button>
       <button class="btn" id="generateGuitarBtn">Generate Guitar Samples</button>
 
-      <div class="placeholder-box">
-        Instrument selector + transport controls (Chunk 3)
+      <!-- INSTRUMENT + TRANSPORT -->
+      <div class="instrument-controls">
+        <div class="section-header">Instrument</div>
+
+        <select id="instrumentSelect" class="instrument-select">
+          <option value="piano">Piano</option>
+          <option value="guitar">Guitar</option>
+        </select>
+
+        <div class="section-header">Transport</div>
+
+        <button class="btn" id="playBaseBtn">Play Base</button>
+        <button class="btn" id="playReharmBtn">Play Reharm</button>
+        <button class="btn" id="stopBtn">Stop</button>
+
+        <div class="section-header">Export</div>
+
+        <button class="btn" id="exportWavBtn">Export WAV</button>
+        <button class="btn" id="exportMidiBtn">Export MIDI</button>
+        <button class="btn" id="exportMusicXmlBtn">Export MusicXML</button>
       </div>
     </div>
 
-    <!-- ---------------------------------------------------------
-         CENTER PANEL — CHORD WORKSPACE
-         --------------------------------------------------------- -->
+    <!-- CENTER PANEL -->
     <div class="center-panel">
       <div class="workspace-title">Chord Workspace</div>
 
-      <div class="placeholder-box">
-        Chord grid + reharm engine UI will appear here (Chunk 4–5)
-      </div>
+      <button id="addChordBtn">+ Add Chord</button>
+
+      <div id="chordGrid" class="chord-grid"></div>
     </div>
 
-    <!-- ---------------------------------------------------------
-         RIGHT PANEL — THEORY GLOSSARY
-         --------------------------------------------------------- -->
+    <!-- RIGHT PANEL -->
     <div class="right-panel">
       <h2>Theory Tools</h2>
 
-      <div class="placeholder-box">
-        Theory glossary + tagging tools will appear here (Chunk 6)
+      <div class="theory-section">
+
+        <div class="theory-category">
+          <div class="theory-title">Diatonic Functions</div>
+          <div class="theory-tags">
+            <button class="theory-tag" data-tag="Tonic">Tonic</button>
+            <button class="theory-tag" data-tag="Subdominant">Subdominant</button>
+            <button class="theory-tag" data-tag="Dominant">Dominant</button>
+          </div>
+        </div>
+
+        <div class="theory-category">
+          <div class="theory-title">Modal Interchange</div>
+          <div class="theory-tags">
+            <button class="theory-tag" data-tag="bIII">♭III</button>
+            <button class="theory-tag" data-tag="bVI">♭VI</button>
+            <button class="theory-tag" data-tag="bVII">♭VII</button>
+            <button class="theory-tag" data-tag="iv">iv</button>
+          </div>
+        </div>
+
+        <div class="theory-category">
+          <div class="theory-title">Secondary Dominants</div>
+          <div class="theory-tags">
+            <button class="theory-tag" data-tag="V/ii">V/ii</button>
+            <button class="theory-tag" data-tag="V/iii">V/iii</button>
+            <button class="theory-tag" data-tag="V/IV">V/IV</button>
+            <button class="theory-tag" data-tag="V/V">V/V</button>
+            <button class="theory-tag" data-tag="V/vi">V/vi</button>
+          </div>
+        </div>
+
+        <div class="theory-category">
+          <div class="theory-title">Tritone Subs</div>
+          <div class="theory-tags">
+            <button class="theory-tag" data-tag="SubV">SubV</button>
+            <button class="theory-tag" data-tag="SubV/V">SubV/V</button>
+          </div>
+        </div>
+
+        <div class="theory-category">
+          <div class="theory-title">Extensions</div>
+          <div class="theory-tags">
+            <button class="theory-tag" data-tag="add9">add9</button>
+            <button class="theory-tag" data-tag="add11">add11</button>
+            <button class="theory-tag" data-tag="add13">add13</button>
+          </div>
+        </div>
+
       </div>
     </div>
 
   </div>
 
-  <!-- Scripts will be added in Chunks 7–8 -->
+  <!-- CHORD EDITOR POPUP -->
+  <div id="chordEditorOverlay" class="chord-editor-overlay">
+    <div class="chord-editor">
+      <h3>Edit Chord</h3>
 
-</body>
-</html>
-<!-- ============================
-     CHUNK 2 — AUDIO + INSTRUMENT UI
-     ============================ -->
+      <label>Root Note</label>
+      <select id="editorRoot">
+        <option>C</option><option>C#</option><option>D</option><option>D#</option>
+        <option>E</option><option>F</option><option>F#</option><option>G</option>
+        <option>G#</option><option>A</option><option>A#</option><option>B</option>
+      </select>
 
-<!-- Replace the first placeholder-box in the LEFT PANEL with this: -->
-<div class="audio-import">
-  <div class="section-header">Audio Import</div>
+      <label>Chord Quality</label>
+      <select id="editorQuality">
+        <option>maj</option>
+        <option>min</option>
+        <option>dim</option>
+        <option>aug</option>
+        <option>7</option>
+        <option>maj7</option>
+        <option>min7</option>
+        <option>sus2</option>
+        <option>sus4</option>
+      </select>
 
-  <label class="file-label">
-    <input type="file" id="audioFileInput" accept="audio/*" />
-    Choose Audio File
-  </label>
+      <label>Extension (optional)</label>
+      <input id="editorExtension" placeholder="e.g. 9, 11, 13" />
 
-  <div id="audioFileName" class="file-name-display">
-    No file selected
-  </div>
-
-  <audio id="audioPlayer" controls style="width:100%; margin-top:10px;">
-    Your browser does not support audio playback.
-  </audio>
-</div>
-
-<!-- Replace the second placeholder-box in the LEFT PANEL with this: -->
-<div class="instrument-controls">
-  <div class="section-header">Instrument</div>
-
-  <select id="instrumentSelect" class="instrument-select">
-    <option value="piano">Piano</option>
-    <option value="guitar">Guitar</option>
-  </select>
-
-  <div class="section-header">Transport</div>
-
-  <button class="btn" id="playBaseBtn">Play Base</button>
-  <button class="btn" id="playReharmBtn">Play Reharm</button>
-  <button class="btn" id="stopBtn">Stop</button>
-
-  <div class="section-header">Export</div>
-
-  <button class="btn" id="exportWavBtn">Export WAV</button>
-  <button class="btn" id="exportMidiBtn">Export MIDI</button>
-  <button class="btn" id="exportMusicXmlBtn">Export MusicXML</button>
-</div>
-
-<!-- ============================
-     CHUNK 2 — SUPPORTING CSS
-     ============================ -->
-
-<style>
-  .file-label {
-    display: block;
-    background: var(--accent-blue);
-    color: white;
-    padding: 10px;
-    border-radius: 6px;
-    text-align: center;
-    cursor: pointer;
-    margin-bottom: 10px;
-  }
-
-  .file-label:hover {
-    background: var(--accent-blue-soft);
-  }
-
-  .file-label input {
-    display: none;
-  }
-
-  .file-name-display {
-    font-size: 13px;
-    color: var(--text-mid);
-    margin-bottom: 10px;
-  }
-
-  .instrument-select {
-    width: 100%;
-    padding: 10px;
-    border-radius: 6px;
-    border: 1px solid var(--panel-border);
-    background: var(--graphite-light);
-    color: var(--graphite-dark);
-    font-size: 14px;
-    margin-bottom: 15px;
-  }
-</style>
-<!-- ============================
-     CHUNK 3 — CHORD WORKSPACE GRID
-     ============================ -->
-
-<div class="workspace-title">Chord Workspace</div>
-
-<div id="chordGrid" class="chord-grid">
-  <!-- Chords will be dynamically inserted here in Chunk 4 -->
-</div>
-
-<style>
-  /* ---------------------------------------------------------
-     CHORD GRID LAYOUT
-     --------------------------------------------------------- */
-  .chord-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 12px;
-    padding: 10px;
-  }
-
-  .chord-cell {
-    background: white;
-    border: 2px solid var(--panel-border);
-    border-radius: 8px;
-    padding: 14px;
-    text-align: center;
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--graphite-dark);
-    cursor: pointer;
-    transition: 0.15s ease;
-    user-select: none;
-  }
-
-  .chord-cell:hover {
-    border-color: var(--accent-blue);
-    transform: translateY(-2px);
-  }
-
-  .chord-cell.selected {
-    background: var(--accent-blue);
-    color: white;
-    border-color: var(--accent-blue-soft);
-  }
-
-  /* Section title styling (overrides placeholder) */
-  .workspace-title {
-    font-size: 26px;
-    font-weight: 700;
-    margin-bottom: 15px;
-    color: var(--graphite-dark);
-  }
-</style>
-<!-- ============================
-     CHUNK 4 — CHORD ENGINE UI
-     ============================ -->
-
-<style>
-  /* ---------------------------------------------------------
-     CHORD EDITOR POPUP
-     --------------------------------------------------------- */
-  .chord-editor-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.55);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 999;
-  }
-
-  .chord-editor {
-    background: white;
-    padding: 25px;
-    border-radius: 10px;
-    width: 360px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.35);
-  }
-
-  .chord-editor h3 {
-    margin-top: 0;
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--graphite-dark);
-  }
-
-  .chord-editor label {
-    display: block;
-    margin-top: 12px;
-    font-size: 14px;
-    color: var(--graphite-dark);
-  }
-
-  .chord-editor input,
-  .chord-editor select {
-    width: 100%;
-    padding: 10px;
-    margin-top: 6px;
-    border-radius: 6px;
-    border: 1px solid var(--panel-border);
-    font-size: 14px;
-  }
-
-  .editor-btn-row {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 20px;
-  }
-
-  .editor-btn {
-    flex: 1;
-    margin: 0 5px;
-    padding: 10px;
-    border-radius: 6px;
-    border: none;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 600;
-  }
-
-  .editor-save {
-    background: var(--accent-blue);
-    color: white;
-  }
-
-  .editor-save:hover {
-    background: var(--accent-blue-soft);
-  }
-
-  .editor-cancel {
-    background: var(--danger);
-    color: white;
-  }
-
-  .editor-cancel:hover {
-    background: #d95353;
-  }
-
-  /* ---------------------------------------------------------
-     ADD CHORD BUTTON
-     --------------------------------------------------------- */
-  #addChordBtn {
-    background: var(--success);
-    color: white;
-    padding: 12px;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    font-size: 16px;
-    width: 100%;
-    margin-bottom: 15px;
-    font-weight: 600;
-  }
-
-  #addChordBtn:hover {
-    background: #3cbf78;
-  }
-</style>
-
-<!-- ADD CHORD BUTTON ABOVE THE GRID -->
-<button id="addChordBtn">+ Add Chord</button>
-
-<!-- CHORD EDITOR POPUP -->
-<div id="chordEditorOverlay" class="chord-editor-overlay">
-  <div class="chord-editor">
-    <h3>Edit Chord</h3>
-
-    <label>Root Note</label>
-    <select id="editorRoot">
-      <option>C</option><option>C#</option><option>D</option><option>D#</option>
-      <option>E</option><option>F</option><option>F#</option><option>G</option>
-      <option>G#</option><option>A</option><option>A#</option><option>B</option>
-    </select>
-
-    <label>Chord Quality</label>
-    <select id="editorQuality">
-      <option>maj</option>
-      <option>min</option>
-      <option>dim</option>
-      <option>aug</option>
-      <option>7</option>
-      <option>maj7</option>
-      <option>min7</option>
-      <option>sus2</option>
-      <option>sus4</option>
-    </select>
-
-    <label>Extension (optional)</label>
-    <input id="editorExtension" placeholder="e.g. 9, 11, 13" />
-
-    <div class="editor-btn-row">
-      <button class="editor-btn editor-save" id="saveChordBtn">Save</button>
-      <button class="editor-btn editor-cancel" id="cancelChordBtn">Cancel</button>
+      <div class="editor-btn-row">
+        <button class="editor-btn editor-save" id="saveChordBtn">Save</button>
+        <button class="editor-btn editor-cancel" id="cancelChordBtn">Cancel</button>
+      </div>
     </div>
   </div>
-</div>
 
-<script>
-/* ---------------------------------------------------------
-   CHUNK 4 — BASIC CHORD GRID INTERACTION LOGIC
-   (Full reharm logic comes in Chunk 5)
-   --------------------------------------------------------- */
+  <!-- FULL SCRIPT BLOCK -->
+  <script>
+    /* ---------------------------------------------------------
+       CHORD ENGINE
+       --------------------------------------------------------- */
+    let chordGrid = document.getElementById("chordGrid");
+    let chordEditorOverlay = document.getElementById("chordEditorOverlay");
 
-let chordGrid = document.getElementById("chordGrid");
-let chordEditorOverlay = document.getElementById("chordEditorOverlay");
+    let editorRoot = document.getElementById("editorRoot");
+    let editorQuality = document.getElementById("editorQuality");
+    let editorExtension = document.getElementById("editorExtension");
 
-let editorRoot = document.getElementById("editorRoot");
-let editorQuality = document.getElementById("editorQuality");
-let editorExtension = document.getElementById("editorExtension");
+    let saveChordBtn = document.getElementById("saveChordBtn");
+    let cancelChordBtn = document.getElementById("cancelChordBtn");
 
-let saveChordBtn = document.getElementById("saveChordBtn");
-let cancelChordBtn = document.getElementById("cancelChordBtn");
+    let addChordBtn = document.getElementById("addChordBtn");
 
-let addChordBtn = document.getElementById("addChordBtn");
+    let editingIndex = null;
+    let chordList = [];
 
-let editingIndex = null;
-let chordList = [];
-
-/* -------------------------
-   ADD NEW CHORD
-   ------------------------- */
-addChordBtn.onclick = () => {
-  editingIndex = null;
-  editorRoot.value = "C";
-  editorQuality.value = "maj";
-  editorExtension.value = "";
-  chordEditorOverlay.style.display = "flex";
-};
-
-/* -------------------------
-   SAVE CHORD
-   ------------------------- */
-saveChordBtn.onclick = () => {
-  let chordText = editorRoot.value + editorQuality.value;
-
-  if (editorExtension.value.trim() !== "") {
-    chordText += "(" + editorExtension.value.trim() + ")";
-  }
-
-  if (editingIndex === null) {
-    chordList.push(chordText);
-  } else {
-    chordList[editingIndex] = chordText;
-  }
-
-  renderChordGrid();
-  chordEditorOverlay.style.display = "none";
-};
-
-/* -------------------------
-   CANCEL EDIT
-   ------------------------- */
-cancelChordBtn.onclick = () => {
-  chordEditorOverlay.style.display = "none";
-};
-
-/* -------------------------
-   RENDER GRID
-   ------------------------- */
-function renderChordGrid() {
-  chordGrid.innerHTML = "";
-
-  chordList.forEach((chord, index) => {
-    let cell = document.createElement("div");
-    cell.className = "chord-cell";
-    cell.textContent = chord;
-
-    cell.onclick = () => {
-      editingIndex = index;
-
-      // Parse chord text
-      let match = chord.match(/^([A-G]#?)([a-z0-9]+)?(?:\((.*?)\))?$/);
-      if (match) {
-        editorRoot.value = match[1];
-        editorQuality.value = match[2] || "maj";
-        editorExtension.value = match[3] || "";
-      }
-
+    addChordBtn.onclick = () => {
+      editingIndex = null;
+      editorRoot.value = "C";
+      editorQuality.value = "maj";
+      editorExtension.value = "";
       chordEditorOverlay.style.display = "flex";
     };
 
-    chordGrid.appendChild(cell);
-  });
-}
-</script>
-<!-- ============================
-     CHUNK 5 — REHARM ENGINE LOGIC
-     ============================ -->
+    saveChordBtn.onclick = () => {
+      let chordText = editorRoot.value + editorQuality.value;
 
-<script>
-/* ---------------------------------------------------------
-   CHORD → INTERVAL MAP
-   --------------------------------------------------------- */
-const CHORD_QUALITIES = {
-  "maj":  [0, 4, 7],
-  "min":  [0, 3, 7],
-  "dim":  [0, 3, 6],
-  "aug":  [0, 4, 8],
-  "7":    [0, 4, 7, 10],
-  "maj7": [0, 4, 7, 11],
-  "min7": [0, 3, 7, 10],
-  "sus2": [0, 2, 7],
-  "sus4": [0, 5, 7]
-};
+      if (editorExtension.value.trim() !== "") {
+        chordText += "(" + editorExtension.value.trim() + ")";
+      }
 
-/* ---------------------------------------------------------
-   NOTE → SEMITONE MAP
-   --------------------------------------------------------- */
-const NOTE_TO_SEMITONE = {
-  "C": 0,  "C#": 1, "D": 2,  "D#": 3,
-  "E": 4,  "F": 5,  "F#": 6, "G": 7,
-  "G#": 8, "A": 9,  "A#": 10,"B": 11
-};
+      if (editingIndex === null) {
+        chordList.push(chordText);
+      } else {
+        chordList[editingIndex] = chordText;
+      }
 
-/* ---------------------------------------------------------
-   PARSE CHORD TEXT → COMPONENTS
-   --------------------------------------------------------- */
-function parseChord(chordText) {
-  let match = chordText.match(/^([A-G]#?)([a-z0-9]+)?(?:\((.*?)\))?$/);
-
-  if (!match) return null;
-
-  return {
-    root: match[1],
-    quality: match[2] || "maj",
-    extension: match[3] || null
-  };
-}
-
-/* ---------------------------------------------------------
-   CHORD → SEMITONE LIST
-   --------------------------------------------------------- */
-function chordToSemitones(chordText) {
-  let parsed = parseChord(chordText);
-  if (!parsed) return [];
-
-  let base = NOTE_TO_SEMITONE[parsed.root];
-  let intervals = CHORD_QUALITIES[parsed.quality] || [0, 4, 7];
-
-  let tones = intervals.map(i => base + i);
-
-  // Add extension if present
-  if (parsed.extension) {
-    let ext = parsed.extension.trim();
-    if (ext === "9") tones.push(base + 14);
-    if (ext === "11") tones.push(base + 17);
-    if (ext === "13") tones.push(base + 21);
-  }
-
-  return tones;
-}
-
-/* ---------------------------------------------------------
-   CHORD LIST → PLAYBACK VOICING MAP
-   (Used by audio engine in Chunk 7)
-   --------------------------------------------------------- */
-function buildVoicingMap() {
-  return chordList.map(chord => {
-    let tones = chordToSemitones(chord);
-
-    // Normalize to one octave for pitch‑shifting
-    let normalized = tones.map(t => ((t % 12) + 12) % 12);
-
-    return {
-      chord,
-      tones: normalized
+      renderChordGrid();
+      chordEditorOverlay.style.display = "none";
     };
-  });
-}
 
-/* ---------------------------------------------------------
-   DEBUG BUTTON (optional)
-   --------------------------------------------------------- */
-window.debugVoicings = () => {
-  console.log("Voicing Map:", buildVoicingMap());
-};
-</script>
-<!-- ============================
-     CHUNK 6 — THEORY PANEL (RIGHT SIDE)
-     ============================ -->
+    cancelChordBtn.onclick = () => {
+      chordEditorOverlay.style.display = "none";
+    };
 
-<div class="theory-section">
-  <h2>Theory Tools</h2>
+    function renderChordGrid() {
+      chordGrid.innerHTML = "";
 
-  <div class="theory-category">
-    <div class="theory-title">Diatonic Functions</div>
-    <div class="theory-tags">
-      <button class="theory-tag" data-tag="Tonic">Tonic</button>
-      <button class="theory-tag" data-tag="Subdominant">Subdominant</button>
-      <button class="theory-tag" data-tag="Dominant">Dominant</button>
-    </div>
-  </div>
+      chordList.forEach((chord, index) => {
+        let cell = document.createElement("div");
+        cell.className = "chord-cell";
+        cell.textContent = chord;
 
-  <div class="theory-category">
-    <div class="theory-title">Modal Interchange</div>
-    <div class="theory-tags">
-      <button class="theory-tag" data-tag="bIII">♭III</button>
-      <button class="theory-tag" data-tag="bVI">♭VI</button>
-      <button class="theory-tag" data-tag="bVII">♭VII</button>
-      <button class="theory-tag" data-tag="iv">iv</button>
-    </div>
-  </div>
+        cell.onclick = () => {
+          editingIndex = index;
 
-  <div class="theory-category">
-    <div class="theory-title">Secondary Dominants</div>
-    <div class="theory-tags">
-      <button class="theory-tag" data-tag="V/ii">V/ii</button>
-      <button class="theory-tag" data-tag="V/iii">V/iii</button>
-      <button class="theory-tag" data-tag="V/IV">V/IV</button>
-      <button class="theory-tag" data-tag="V/V">V/V</button>
-      <button class="theory-tag" data-tag="V/vi">V/vi</button>
-    </div>
-  </div>
+          let match = chord.match(/^([A-G]#?)([a-z0-9]+)?(?:\((.*?)\))?$/);
+          if (match) {
+            editorRoot.value = match[1];
+            editorQuality.value = match[2] || "maj";
+            editorExtension.value = match[3] || "";
+          }
 
-  <div class="theory-category">
-    <div class="theory-title">Tritone Subs</div>
-    <div class="theory-tags">
-      <button class="theory-tag" data-tag="SubV">SubV</button>
-      <button class="theory-tag" data-tag="SubV/V">SubV/V</button>
-    </div>
-  </div>
+          chordEditorOverlay.style.display = "flex";
+        };
 
-  <div class="theory-category">
-    <div class="theory-title">Extensions</div>
-    <div class="theory-tags">
-      <button class="theory-tag" data-tag="add9">add9</button>
-      <button class="theory-tag" data-tag="add11">add11</button>
-      <button class="theory-tag" data-tag="add13">add13</button>
-    </div>
-  </div>
-</div>
-
-<style>
-  /* ---------------------------------------------------------
-     THEORY PANEL STYLING
-     --------------------------------------------------------- */
-  .theory-section {
-    margin-top: 10px;
-  }
-
-  .theory-category {
-    margin-bottom: 25px;
-  }
-
-  .theory-title {
-    font-size: 16px;
-    font-weight: 600;
-    margin-bottom: 8px;
-    color: var(--accent-blue);
-  }
-
-  .theory-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  .theory-tag {
-    background: var(--graphite-light);
-    color: var(--graphite-dark);
-    border: 1px solid var(--panel-border);
-    border-radius: 6px;
-    padding: 6px 10px;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 600;
-    transition: 0.15s ease;
-  }
-
-  .theory-tag:hover {
-    background: var(--accent-blue);
-    color: white;
-    border-color: var(--accent-blue-soft);
-  }
-</style>
-
-<script>
-/* ---------------------------------------------------------
-   CHUNK 6 — THEORY TAG CLICK HANDLER
-   --------------------------------------------------------- */
-
-document.querySelectorAll(".theory-tag").forEach(tag => {
-  tag.addEventListener("click", () => {
-    let selected = document.querySelector(".chord-cell.selected");
-    if (!selected) {
-      alert("Select a chord first.");
-      return;
+        chordGrid.appendChild(cell);
+      });
     }
 
-    let tagText = tag.dataset.tag;
-
-    // Append tag to chord text
-    selected.textContent += " [" + tagText + "]";
-
-    // Update chordList array
-    let index = Array.from(chordGrid.children).indexOf(selected);
-    chordList[index] = selected.textContent;
-  });
-});
-</script>
-<!-- ============================
-     CHUNK 7 — AUDIO ENGINE
-     ============================ -->
-
-<script>
-/* ---------------------------------------------------------
-   MASTER AUDIO CONTEXT
-   --------------------------------------------------------- */
-let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-/* ---------------------------------------------------------
-   SAMPLE BUFFERS
-   --------------------------------------------------------- */
-let pianoSamples = {};
-let guitarSamples = {};
-
-const SAMPLE_NOTES = ["C4", "E4", "G4", "B4"];
-
-/* ---------------------------------------------------------
-   LOAD SAMPLES FROM /samples/piano/ AND /samples/guitar/
-   --------------------------------------------------------- */
-async function loadSample(url) {
-  let response = await fetch(url);
-  let arrayBuffer = await response.arrayBuffer();
-  return await audioCtx.decodeAudioData(arrayBuffer);
-}
-
-async function loadInstrumentSamples() {
-  // Piano
-  for (let note of SAMPLE_NOTES) {
-    pianoSamples[note] = await loadSample(`samples/piano/${note}.wav`);
-  }
-
-  // Guitar
-  for (let note of SAMPLE_NOTES) {
-    guitarSamples[note] = await loadSample(`samples/guitar/${note}.wav`);
-  }
-
-  console.log("Samples loaded.");
-}
-
-/* ---------------------------------------------------------
-   PITCH SHIFTING UTILITY
-   --------------------------------------------------------- */
-function playSample(buffer, semitoneShift, timeOffset = 0) {
-  let source = audioCtx.createBufferSource();
-  source.buffer = buffer;
-
-  // Pitch shift ratio
-  let ratio = Math.pow(2, semitoneShift / 12);
-  source.playbackRate.value = ratio;
-
-  source.connect(audioCtx.destination);
-  source.start(audioCtx.currentTime + timeOffset);
-
-  return source;
-}
-
-/* ---------------------------------------------------------
-   CHORD PLAYBACK
-   --------------------------------------------------------- */
-function playChord(tones, instrument = "piano") {
-  let sampleSet = instrument === "guitar" ? guitarSamples : pianoSamples;
-
-  // Use C4 as the base sample for pitch shifting
-  let baseBuffer = sampleSet["C4"];
-
-  tones.forEach((tone, index) => {
-    // Slight stagger for realism
-    let delay = index * 0.015;
-
-    playSample(baseBuffer, tone, delay);
-  });
-}
-
-/* ---------------------------------------------------------
-   PLAYBACK SEQUENCES
-   --------------------------------------------------------- */
-let isPlaying = false;
-let playIndex = 0;
-let playTimer = null;
-
-function playChordSequence(isReharm = false) {
-  if (isPlaying) return;
-
-  isPlaying = true;
-  playIndex = 0;
-
-  let voicingMap = buildVoicingMap();
-  let instrument = document.getElementById("instrumentSelect").value;
-
-  function step() {
-    if (playIndex >= voicingMap.length) {
-      stopPlayback();
-      return;
-    }
-
-    let tones = voicingMap[playIndex].tones;
-    playChord(tones, instrument);
-
-    playIndex++;
-    playTimer = setTimeout(step, 1200); // 1.2 seconds per chord
-  }
-
-  step();
-}
-
-function stopPlayback() {
-  isPlaying = false;
-  clearTimeout(playTimer);
-}
-
-/* ---------------------------------------------------------
-   TRANSPORT BUTTONS
-   --------------------------------------------------------- */
-document.getElementById("playBaseBtn").onclick = () => {
-  playChordSequence(false);
-};
-
-document.getElementById("playReharmBtn").onclick = () => {
-  playChordSequence(true);
-};
-
-document.getElementById("stopBtn").onclick = () => {
-  stopPlayback();
-};
-
-/* ---------------------------------------------------------
-   EXPORT PLACEHOLDERS (IMPLEMENTED LATER)
-   --------------------------------------------------------- */
-document.getElementById("exportWavBtn").onclick = () => {
-  alert("WAV export coming soon.");
-};
-
-document.getElementById("exportMidiBtn").onclick = () => {
-  alert("MIDI export coming soon.");
-};
-
-document.getElementById("exportMusicXmlBtn").onclick = () => {
-  alert("MusicXML export coming soon.");
-};
-
-/* ---------------------------------------------------------
-   LOAD SAMPLES ON STARTUP
-   --------------------------------------------------------- */
-window.addEventListener("load", () => {
-  loadInstrumentSamples();
-});
-</script>
-<!-- ============================
-     CHUNK 8 — SAMPLE GENERATORS
-     ============================ -->
-
-<script>
-/* ---------------------------------------------------------
-   UTILITY: DOWNLOAD BUFFER AS WAV
-   --------------------------------------------------------- */
-function downloadWav(audioBuffer, filename) {
-  let wavData = audioBufferToWav(audioBuffer);
-  let blob = new Blob([wavData], { type: "audio/wav" });
-  let url = URL.createObjectURL(blob);
-
-  let a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.click();
-
-  URL.revokeObjectURL(url);
-}
-
-/* ---------------------------------------------------------
-   AUDIOBUFFER → WAV ENCODER
-   --------------------------------------------------------- */
-function audioBufferToWav(buffer) {
-  let numOfChan = buffer.numberOfChannels,
-      length = buffer.length * numOfChan * 2 + 44,
-      bufferArray = new ArrayBuffer(length),
-      view = new DataView(bufferArray),
-      channels = [],
-      i, sample,
-      offset = 0,
-      pos = 0;
-
-  // Write WAV header
-  function writeString(s) {
-    for (let i = 0; i < s.length; i++) {
-      view.setUint8(pos++, s.charCodeAt(i));
-    }
-  }
-
-  writeString("RIFF");
-  view.setUint32(pos, length - 8, true); pos += 4;
-  writeString("WAVE");
-  writeString("fmt ");
-  view.setUint32(pos, 16, true); pos += 4;
-  view.setUint16(pos, 1, true); pos += 2;
-  view.setUint16(pos, numOfChan, true); pos += 2;
-  view.setUint32(pos, buffer.sampleRate, true); pos += 4;
-  view.setUint32(pos, buffer.sampleRate * numOfChan * 2, true); pos += 4;
-  view.setUint16(pos, numOfChan * 2, true); pos += 2;
-  view.setUint16(pos, 16, true); pos += 2;
-  writeString("data");
-  view.setUint32(pos, length - pos - 4, true); pos += 4;
-
-  // Write interleaved data
-  for (i = 0; i < numOfChan; i++) {
-    channels.push(buffer.getChannelData(i));
-  }
-
-  while (pos < length) {
-    for (i = 0; i < numOfChan; i++) {
-      sample = Math.max(-1, Math.min(1, channels[i][offset]));
-      view.setInt16(pos, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
-      pos += 2;
-    }
-    offset++;
-  }
-
-  return bufferArray;
-}
-
-/* ---------------------------------------------------------
-   GENERATE PIANO SAMPLES (SINE WAVES)
-   --------------------------------------------------------- */
-function generatePianoSample(freq) {
-  let duration = 1.2;
-  let sampleRate = audioCtx.sampleRate;
-  let frameCount = sampleRate * duration;
-
-  let buffer = audioCtx.createBuffer(1, frameCount, sampleRate);
-  let data = buffer.getChannelData(0);
-
-  for (let i = 0; i < frameCount; i++) {
-    let t = i / sampleRate;
-    let env = Math.exp(-3 * t); // fast decay
-    data[i] = Math.sin(2 * Math.PI * freq * t) * env;
-  }
-
-  return buffer;
-}
-
-/* ---------------------------------------------------------
-   GENERATE GUITAR SAMPLES (HARD PICK, MEDIUM DECAY)
-   --------------------------------------------------------- */
-function generateGuitarSample(freq) {
-  let duration = 1.4;
-  let sampleRate = audioCtx.sampleRate;
-  let frameCount = sampleRate * duration;
-
-  let buffer = audioCtx.createBuffer(1, frameCount, sampleRate);
-  let data = buffer.getChannelData(0);
-
-  for (let i = 0; i < frameCount; i++) {
-    let t = i / sampleRate;
-
-    // Hard pick attack
-    let attack = Math.exp(-60 * t);
-
-    // Medium decay body
-    let decay = Math.exp(-2.8 * t);
-
-    // Slight brightness (acoustic pluck)
-    let tone =
-      Math.sin(2 * Math.PI * freq * t) * 0.7 +
-      Math.sin(2 * Math.PI * freq * 2 * t) * 0.2 +
-      Math.sin(2 * Math.PI * freq * 3 * t) * 0.1;
-
-    data[i] = tone * attack * decay;
-  }
-
-  return buffer;
-}
-
-/* ---------------------------------------------------------
-   NOTE → FREQUENCY MAP
-   --------------------------------------------------------- */
-const NOTE_FREQ = {
-  "C4": 261.63,
-  "E4": 329.63,
-  "G4": 392.00,
-  "B4": 493.88
-};
-
-/* ---------------------------------------------------------
-   GENERATE PIANO SAMPLES BUTTON
-   --------------------------------------------------------- */
-document.getElementById("generatePianoBtn").onclick = () => {
-  for (let note of SAMPLE_NOTES) {
-    let buffer = generatePianoSample(NOTE_FREQ[note]);
-    downloadWav(buffer, `${note}.wav`);
-  }
-  alert("Piano samples generated.");
-};
-
-/* ---------------------------------------------------------
-   GENERATE GUITAR SAMPLES BUTTON
-   --------------------------------------------------------- */
-document.getElementById("generateGuitarBtn").onclick = () => {
-  for (let note of SAMPLE_NOTES) {
-    let buffer = generateGuitarSample(NOTE_FREQ[note]);
-    downloadWav(buffer, `${note}.wav`);
-  }
-  alert("Guitar samples generated.");
-};
-</script>
+    /* ---------------------------------------------------------
+       REHARM ENGINE
+       --------------------------------------------------------- */
+    const CHORD_QUALITIES = {
+      "maj":  [0, 4, 
