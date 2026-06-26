@@ -8,14 +8,15 @@ const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
 
-// Basic Pitch
+// Import transcription engine
 const { basicPitch } = require("./utils/basicPitchWrapper");
+const { extractNotes } = require("./utils/postprocess");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Upload folder
+// Multer upload directory
 const upload = multer({ dest: "uploads/" });
 
 // -------------------------
@@ -31,17 +32,19 @@ app.post("/transcribe", upload.single("audio"), async (req, res) => {
     const audioData = await fs.promises.readFile(filePath);
 
     // Run Basic Pitch transcription
-    const output = await basicPitch(audioData);
+    const rawOutput = await basicPitch(audioData);
 
-    // Extract notes
-    const notes = output?.notes
-      ?.map(n => `${n.pitch} (${n.start_time.toFixed(2)}s → ${n.end_time.toFixed(2)}s)`)
-      .join("\n") || "No notes detected.";
+    // Convert raw model output to readable notes
+    const notesArray = extractNotes(rawOutput);
+
+    const notesText = notesArray
+      .map(n => `${n.pitch} (${n.start_time.toFixed(2)}s → ${n.end_time.toFixed(2)}s) vel=${n.velocity}`)
+      .join("\n");
 
     // Clean up temp file
     fs.unlinkSync(filePath);
 
-    res.json({ notes });
+    res.json({ notes: notesText });
 
   } catch (err) {
     console.error("SERVER ERROR:", err);
