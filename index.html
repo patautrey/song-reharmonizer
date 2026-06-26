@@ -486,6 +486,31 @@
   <!-- FULL SCRIPT BLOCK -->
   <script>
     /* ---------------------------------------------------------
+       AUDIO IMPORT HANDLER (FIXED)
+       --------------------------------------------------------- */
+    const audioInput = document.getElementById("audioFileInput");
+    const audioPlayer = document.getElementById("audioPlayer");
+    const audioFileName = document.getElementById("audioFileName");
+
+    let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let loadedAudioBuffer = null;
+
+    audioInput.addEventListener("change", async () => {
+      const file = audioInput.files[0];
+      if (!file) return;
+
+      audioFileName.textContent = file.name;
+
+      const url = URL.createObjectURL(file);
+      audioPlayer.src = url;
+
+      const arrayBuffer = await file.arrayBuffer();
+      loadedAudioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+
+      console.log("Audio imported:", loadedAudioBuffer);
+    });
+
+    /* ---------------------------------------------------------
        CHORD ENGINE
        --------------------------------------------------------- */
     let chordGrid = document.getElementById("chordGrid");
@@ -561,4 +586,309 @@
        REHARM ENGINE
        --------------------------------------------------------- */
     const CHORD_QUALITIES = {
-      "maj":  [0, 4, 
+      "maj":  [0, 4, 7],
+      "min":  [0, 3, 7],
+      "dim":  [0, 3, 6],
+      "aug":  [0, 4, 8],
+      "7":    [0, 4, 7, 10],
+      "maj7": [0, 4, 7, 11],
+      "min7": [0, 3, 7, 10],
+      "sus2": [0, 2, 7],
+      "sus4": [0, 5, 7]
+    };
+
+    const NOTE_TO_SEMITONE = {
+      "C": 0,  "C#": 1, "D": 2,  "D#": 3,
+      "E": 4,  "F": 5,  "F#": 6, "G": 7,
+      "G#": 8, "A": 9,  "A#": 10,"B": 11
+    };
+
+    function parseChord(chordText) {
+      let match = chordText.match(/^([A-G]#?)([a-z0-9]+)?(?:\((.*?)\))?$/);
+      if (!match) return null;
+
+      return {
+        root: match[1],
+        quality: match[2] || "maj",
+        extension: match[3] || null
+      };
+    }
+
+    function chordToSemitones(chordText) {
+      let parsed = parseChord(chordText);
+      if (!parsed) return [];
+
+      let base = NOTE_TO_SEMITONE[parsed.root];
+      let intervals = CHORD_QUALITIES[parsed.quality] || [0, 4, 7];
+
+      let tones = intervals.map(i => base + i);
+
+      if (parsed.extension) {
+        let ext = parsed.extension.trim();
+        if (ext === "9") tones.push(base + 14);
+        if (ext === "11") tones.push(base + 17);
+        if (ext === "13") tones.push(base + 21);
+      }
+
+      return tones;
+    }
+
+    function buildVoicingMap() {
+      return chordList.map(chord => {
+        let tones = chordToSemitones(chord);
+        let normalized = tones.map(t => ((t % 12) + 12) % 12);
+
+        return {
+          chord,
+          tones: normalized
+        };
+      });
+    }
+
+    /* ---------------------------------------------------------
+       THEORY TAGGING
+       --------------------------------------------------------- */
+    document.querySelectorAll(".theory-tag").forEach(tag => {
+      tag.addEventListener("click", () => {
+        let selected = document.querySelector(".chord-cell.selected");
+        if (!selected) {
+          alert("Select a chord first.");
+          return;
+        }
+
+        let tagText = tag.dataset.tag;
+        selected.textContent += " [" + tagText + "]";
+
+        let index = Array.from(chordGrid.children).indexOf(selected);
+        chordList[index] = selected.textContent;
+      });
+    });
+
+    /* ---------------------------------------------------------
+       AUDIO ENGINE
+       --------------------------------------------------------- */
+    let pianoSamples = {};
+    let guitarSamples = {};
+
+    const SAMPLE_NOTES = ["C4", "E4", "G4", "B4"];
+
+    async function loadSample(url) {
+      let response = await fetch(url);
+      let arrayBuffer = await response.arrayBuffer();
+      return await audioCtx.decodeAudioData(arrayBuffer);
+    }
+
+    async function loadInstrumentSamples() {
+      for (let note of SAMPLE_NOTES) {
+        pianoSamples[note] = await loadSample(`samples/piano/${note}.wav`);
+        guitarSamples[note] = await loadSample(`samples/guitar/${note}.wav`);
+      }
+      console.log("Samples loaded.");
+    }
+
+    function playSample(buffer, semitoneShift, timeOffset = 0) {
+      let source = audioCtx.createBufferSource();
+      source.buffer = buffer;
+
+      let ratio = Math.pow(2, semitoneShift / 12);
+      source.playbackRate.value = ratio;
+
+      source.connect(audioCtx.destination);
+      source.start(audioCtx.currentTime + timeOffset);
+
+      return source;
+    }
+
+    function playChord(tones, instrument = "piano") {
+      let sampleSet = instrument === "guitar" ? guitarSamples : pianoSamples;
+      let baseBuffer = sampleSet["C4"];
+
+      tones.forEach((tone, index) => {
+        let delay = index * 0.015;
+        playSample(baseBuffer, tone, delay);
+      });
+    }
+
+    let isPlaying = false;
+    let playIndex = 0;
+    let playTimer = null;
+
+    function playChordSequence() {
+      if (isPlaying) return;
+
+      isPlaying = true;
+      playIndex = 0;
+
+      let voicingMap = buildVoicingMap();
+      let instrument = document.getElementById("instrumentSelect").value;
+
+      function step() {
+        if (playIndex >= voicingMap.length) {
+          stopPlayback();
+          return;
+        }
+
+        let tones = voicingMap[playIndex].tones;
+        playChord(tones, instrument);
+
+        playIndex++;
+        playTimer = setTimeout(step, 1200);
+      }
+
+      step();
+    }
+
+    function stopPlayback() {
+      isPlaying = false;
+      clearTimeout(playTimer);
+    }
+
+    document.getElementById("playBaseBtn").onclick = playChordSequence;
+    document.getElementById("playReharmBtn").onclick = playChordSequence;
+    document.getElementById("stopBtn").onclick = stopPlayback;
+
+    /* ---------------------------------------------------------
+       EXPORT PLACEHOLDERS
+       --------------------------------------------------------- */
+    document.getElementById("exportWavBtn").onclick = () => alert("WAV export coming soon.");
+    document.getElementById("exportMidiBtn").onclick = () => alert("MIDI export coming soon.");
+    document.getElementById("exportMusicXmlBtn").onclick = () => alert("MusicXML export coming soon.");
+
+    /* ---------------------------------------------------------
+       SAMPLE GENERATORS
+       --------------------------------------------------------- */
+    function audioBufferToWav(buffer) {
+      let numOfChan = buffer.numberOfChannels,
+          length = buffer.length * numOfChan * 2 + 44,
+          bufferArray = new ArrayBuffer(length),
+          view = new DataView(bufferArray),
+          channels = [],
+          i, sample,
+          offset = 0,
+          pos = 0;
+
+      function writeString(s) {
+        for (let i = 0; i < s.length; i++) {
+          view.setUint8(pos++, s.charCodeAt(i));
+        }
+      }
+
+      writeString("RIFF");
+      view.setUint32(pos, length - 8, true); pos += 4;
+      writeString("WAVE");
+      writeString("fmt ");
+      view.setUint32(pos, 16, true); pos += 4;
+      view.setUint16(pos, 1, true); pos += 2;
+      view.setUint16(pos, numOfChan, true); pos += 2;
+      view.setUint32(pos, buffer.sampleRate, true); pos += 4;
+      view.setUint32(pos, buffer.sampleRate * numOfChan * 2, true); pos += 4;
+      view.setUint16(pos, numOfChan * 2, true); pos += 2;
+      view.setUint16(pos, 16, true); pos += 2;
+      writeString("data");
+      view.setUint32(pos, length - pos - 4, true); pos += 4;
+
+      for (i = 0; i < numOfChan; i++) {
+        channels.push(buffer.getChannelData(i));
+      }
+
+      while (pos < length) {
+        for (i = 0; i < numOfChan; i++) {
+          sample = Math.max(-1, Math.min(1, channels[i][offset]));
+          view.setInt16(pos, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+          pos += 2;
+        }
+        offset++;
+      }
+
+      return bufferArray;
+    }
+
+    function downloadWav(audioBuffer, filename) {
+      let wavData = audioBufferToWav(audioBuffer);
+      let blob = new Blob([wavData], { type: "audio/wav" });
+      let url = URL.createObjectURL(blob);
+
+      let a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+
+      URL.revokeObjectURL(url);
+    }
+
+    const NOTE_FREQ = {
+      "C4": 261.63,
+      "E4": 329.63,
+      "G4": 392.00,
+      "B4": 493.88
+    };
+
+    function generatePianoSample(freq) {
+      let duration = 1.2;
+      let sampleRate = audioCtx.sampleRate;
+      let frameCount = sampleRate * duration;
+
+      let buffer = audioCtx.createBuffer(1, frameCount, sampleRate);
+      let data = buffer.getChannelData(0);
+
+      for (let i = 0; i < frameCount; i++) {
+        let t = i / sampleRate;
+        let env = Math.exp(-3 * t);
+        data[i] = Math.sin(2 * Math.PI * freq * t) * env;
+      }
+
+      return buffer;
+    }
+
+    function generateGuitarSample(freq) {
+      let duration = 1.4;
+      let sampleRate = audioCtx.sampleRate;
+      let frameCount = sampleRate * duration;
+
+      let buffer = audioCtx.createBuffer(1, frameCount, sampleRate);
+      let data = buffer.getChannelData(0);
+
+      for (let i = 0; i < frameCount; i++) {
+        let t = i / sampleRate;
+
+        let attack = Math.exp(-60 * t);
+        let decay = Math.exp(-2.8 * t);
+
+        let tone =
+          Math.sin(2 * Math.PI * freq * t) * 0.7 +
+          Math.sin(2 * Math.PI * freq * 2 * t) * 0.2 +
+          Math.sin(2 * Math.PI * freq * 3 * t) * 0.1;
+
+        data[i] = tone * attack * decay;
+      }
+
+      return buffer;
+    }
+
+    document.getElementById("generatePianoBtn").onclick = () => {
+      for (let note of SAMPLE_NOTES) {
+        let buffer = generatePianoSample(NOTE_FREQ[note]);
+        downloadWav(buffer, `${note}.wav`);
+      }
+      alert("Piano samples generated.");
+    };
+
+    document.getElementById("generateGuitarBtn").onclick = () => {
+      for (let note of SAMPLE_NOTES) {
+        let buffer = generateGuitarSample(NOTE_FREQ[note]);
+        downloadWav(buffer, `${note}.wav`);
+      }
+      alert("Guitar samples generated.");
+    };
+
+    /* ---------------------------------------------------------
+       LOAD SAMPLES ON STARTUP
+       --------------------------------------------------------- */
+    window.addEventListener("load", () => {
+      loadInstrumentSamples();
+    });
+
+  </script>
+
+</body>
+</html>
