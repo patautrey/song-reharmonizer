@@ -1,893 +1,283 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Song Reharmonization Workspace — Studio Edition</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Song Reharmonizer — Three Panel UI</title>
 
-  <style>
-    /* ---------------------------------------------------------
-       HYBRID GRAPHITE THEME — BASE COLORS
-       --------------------------------------------------------- */
-    :root {
-      --graphite-dark: #1a1c1f;
-      --graphite-mid: #2a2d31;
-      --graphite-light: #dfe3e8;
-      --panel-border: #3a3d42;
-      --accent-blue: #4da3ff;
-      --accent-blue-soft: #3a7ac7;
-      --text-light: #f5f7fa;
-      --text-mid: #c7cbd1;
-      --text-dark: #2a2d31;
-      --highlight: #ffe08a;
-      --danger: #ff6b6b;
-      --success: #4fd18b;
-    }
+<style>
+  /* ============================
+     GLOBAL HIGH-CONTRAST THEME
+     ============================ */
 
-    body {
-      margin: 0;
-      padding: 0;
-      background: var(--graphite-light);
-      font-family: "Segoe UI", sans-serif;
-      color: var(--text-dark);
-      display: flex;
-      height: 100vh;
-      overflow: hidden;
-    }
+  body {
+    margin: 0;
+    padding: 0;
+    background: #0d0d0d;
+    color: #ffffff;
+    font-family: Arial, Helvetica, sans-serif;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
 
-    /* ---------------------------------------------------------
-       THREE-PANEL STUDIO LAYOUT
-       --------------------------------------------------------- */
-    .studio-container {
-      display: grid;
-      grid-template-columns: 300px 1fr 320px;
-      height: 100%;
-      width: 100%;
-    }
+  /* ============================
+     TOP NAV BAR
+     ============================ */
+  #topbar {
+    background: #111;
+    padding: 14px 20px;
+    font-size: 20px;
+    font-weight: bold;
+    border-bottom: 2px solid #333;
+    letter-spacing: 0.5px;
+  }
 
-    /* LEFT PANEL — AUDIO + INSTRUMENTS */
-    .left-panel {
-      background: var(--graphite-dark);
-      border-right: 1px solid var(--panel-border);
-      padding: 20px;
-      overflow-y: auto;
-      color: var(--text-light);
-    }
+  /* ============================
+     THREE PANEL LAYOUT
+     ============================ */
+  #container {
+    display: flex;
+    flex: 1;
+    height: calc(100vh - 60px);
+  }
 
-    .left-panel h2 {
-      margin-top: 0;
-      color: var(--accent-blue);
-      font-weight: 600;
-    }
+  .panel {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    border-right: 2px solid #333;
+  }
 
-    /* CENTER PANEL — CHORD WORKSPACE */
-    .center-panel {
-      background: var(--graphite-light);
-      padding: 20px;
-      overflow-y: auto;
-    }
+  .panel:last-child {
+    border-right: none;
+  }
 
-    .workspace-title {
-      font-size: 26px;
-      font-weight: 700;
-      margin-bottom: 15px;
-      color: var(--graphite-dark);
-    }
+  .panel h2 {
+    margin-top: 0;
+    font-size: 22px;
+    border-bottom: 2px solid #444;
+    padding-bottom: 8px;
+  }
 
-    /* RIGHT PANEL — THEORY TOOLS */
-    .right-panel {
-      background: var(--graphite-mid);
-      border-left: 1px solid var(--panel-border);
-      padding: 20px;
-      overflow-y: auto;
-      color: var(--text-light);
-    }
+  /* ============================
+     BUTTONS
+     ============================ */
+  button {
+    background: #222;
+    color: #fff;
+    border: 2px solid #555;
+    padding: 10px 16px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-right: 10px;
+    margin-top: 10px;
+  }
 
-    .right-panel h2 {
-      margin-top: 0;
-      color: var(--accent-blue);
-      font-weight: 600;
-    }
+  button:hover {
+    background: #333;
+    border-color: #888;
+  }
 
-    /* GENERIC BUTTON STYLE */
-    .btn {
-      background: var(--accent-blue);
-      color: white;
-      padding: 10px 14px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
-      margin: 6px 0;
-      width: 100%;
-      text-align: center;
-    }
+  /* ============================
+     NOTES VIEWER
+     ============================ */
+  #notesOutput {
+    background: #111;
+    border: 2px solid #444;
+    padding: 12px;
+    margin-top: 15px;
+    white-space: pre-wrap;
+    font-family: monospace;
+    font-size: 14px;
+  }
+  /* ============================
+     AUDIO RECORDER + UPLOAD UI
+     ============================ */
+  #recorderControls {
+    margin-top: 15px;
+  }
 
-    .btn:hover {
-      background: var(--accent-blue-soft);
-    }
+  #uploadInput {
+    margin-top: 20px;
+  }
 
-    /* SECTION HEADERS */
-    .section-header {
-      font-size: 18px;
-      font-weight: 600;
-      margin-top: 20px;
-      margin-bottom: 10px;
-      color: var(--accent-blue);
-    }
-
-    /* FILE INPUT */
-    .file-label {
-      display: block;
-      background: var(--accent-blue);
-      color: white;
-      padding: 10px;
-      border-radius: 6px;
-      text-align: center;
-      cursor: pointer;
-      margin-bottom: 10px;
-    }
-
-    .file-label:hover {
-      background: var(--accent-blue-soft);
-    }
-
-    .file-label input {
-      display: none;
-    }
-
-    .file-name-display {
-      font-size: 13px;
-      color: var(--text-mid);
-      margin-bottom: 10px;
-    }
-
-    .instrument-select {
-      width: 100%;
-      padding: 10px;
-      border-radius: 6px;
-      border: 1px solid var(--panel-border);
-      background: var(--graphite-light);
-      color: var(--graphite-dark);
-      font-size: 14px;
-      margin-bottom: 15px;
-    }
-
-    /* CHORD GRID */
-    .chord-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-      gap: 12px;
-      padding: 10px;
-    }
-
-    .chord-cell {
-      background: white;
-      border: 2px solid var(--panel-border);
-      border-radius: 8px;
-      padding: 14px;
-      text-align: center;
-      font-size: 18px;
-      font-weight: 600;
-      color: var(--graphite-dark);
-      cursor: pointer;
-      transition: 0.15s ease;
-      user-select: none;
-    }
-
-    .chord-cell:hover {
-      border-color: var(--accent-blue);
-      transform: translateY(-2px);
-    }
-
-    .chord-cell.selected {
-      background: var(--accent-blue);
-      color: white;
-      border-color: var(--accent-blue-soft);
-    }
-
-    /* CHORD EDITOR POPUP */
-    .chord-editor-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.55);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 999;
-    }
-
-    .chord-editor {
-      background: white;
-      padding: 25px;
-      border-radius: 10px;
-      width: 360px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.35);
-    }
-
-    .chord-editor h3 {
-      margin-top: 0;
-      font-size: 22px;
-      font-weight: 700;
-      color: var(--graphite-dark);
-    }
-
-    .chord-editor label {
-      display: block;
-      margin-top: 12px;
-      font-size: 14px;
-      color: var(--graphite-dark);
-    }
-
-    .chord-editor input,
-    .chord-editor select {
-      width: 100%;
-      padding: 10px;
-      margin-top: 6px;
-      border-radius: 6px;
-      border: 1px solid var(--panel-border);
-      font-size: 14px;
-    }
-
-    .editor-btn-row {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 20px;
-    }
-
-    .editor-btn {
-      flex: 1;
-      margin: 0 5px;
-      padding: 10px;
-      border-radius: 6px;
-      border: none;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 600;
-    }
-
-    .editor-save {
-      background: var(--accent-blue);
-      color: white;
-    }
-
-    .editor-save:hover {
-      background: var(--accent-blue-soft);
-    }
-
-    .editor-cancel {
-      background: var(--danger);
-      color: white;
-    }
-
-    .editor-cancel:hover {
-      background: #d95353;
-    }
-
-    /* ADD CHORD BUTTON */
-    #addChordBtn {
-      background: var(--success);
-      color: white;
-      padding: 12px;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-      font-size: 16px;
-      width: 100%;
-      margin-bottom: 15px;
-      font-weight: 600;
-    }
-
-    #addChordBtn:hover {
-      background: #3cbf78;
-    }
-
-    /* THEORY PANEL */
-    .theory-section {
-      margin-top: 10px;
-    }
-
-    .theory-category {
-      margin-bottom: 25px;
-    }
-
-    .theory-title {
-      font-size: 16px;
-      font-weight: 600;
-      margin-bottom: 8px;
-      color: var(--accent-blue);
-    }
-
-    .theory-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .theory-tag {
-      background: var(--graphite-light);
-      color: var(--graphite-dark);
-      border: 1px solid var(--panel-border);
-      border-radius: 6px;
-      padding: 6px 10px;
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 600;
-      transition: 0.15s ease;
-    }
-
-    .theory-tag:hover {
-      background: var(--accent-blue);
-      color: white;
-      border-color: var(--accent-blue-soft);
-    }
-  </style>
+  /* ============================
+     RIGHT PANEL PLACEHOLDER
+     ============================ */
+  #reharmPanel {
+    background: #0f0f0f;
+    border: 2px solid #333;
+    padding: 12px;
+    margin-top: 15px;
+  }
+</style>
 </head>
 
 <body>
 
-  <div class="studio-container">
-
-    <!-- LEFT PANEL -->
-    <div class="left-panel">
-      <h2>Audio & Instruments</h2>
-
-      <!-- AUDIO IMPORT -->
-      <div class="audio-import">
-        <div class="section-header">Audio Import</div>
-
-        <label class="file-label">
-          <input type="file" id="audioFileInput" accept="audio/*" />
-          Choose Audio File
-        </label>
-
-        <div id="audioFileName" class="file-name-display">
-          No file selected
-        </div>
-
-        <audio id="audioPlayer" controls style="width:100%; margin-top:10px;">
-          Your browser does not support audio playback.
-        </audio>
-      </div>
-
-      <!-- SAMPLE GENERATORS -->
-      <div class="section-header">Sample Generators</div>
-      <button class="btn" id="generatePianoBtn">Generate Piano Samples</button>
-      <button class="btn" id="generateGuitarBtn">Generate Guitar Samples</button>
-
-      <!-- INSTRUMENT + TRANSPORT -->
-      <div class="instrument-controls">
-        <div class="section-header">Instrument</div>
-
-        <select id="instrumentSelect" class="instrument-select">
-          <option value="piano">Piano</option>
-          <option value="guitar">Guitar</option>
-        </select>
-
-        <div class="section-header">Transport</div>
-
-        <button class="btn" id="playBaseBtn">Play Base</button>
-        <button class="btn" id="playReharmBtn">Play Reharm</button>
-        <button class="btn" id="stopBtn">Stop</button>
-
-        <div class="section-header">Export</div>
-
-        <button class="btn" id="exportWavBtn">Export WAV</button>
-        <button class="btn" id="exportMidiBtn">Export MIDI</button>
-        <button class="btn" id="exportMusicXmlBtn">Export MusicXML</button>
-      </div>
-    </div>
-
-    <!-- CENTER PANEL -->
-    <div class="center-panel">
-      <div class="workspace-title">Chord Workspace</div>
-
-      <button id="addChordBtn">+ Add Chord</button>
-
-      <div id="chordGrid" class="chord-grid"></div>
-    </div>
-
-    <!-- RIGHT PANEL -->
-    <div class="right-panel">
-      <h2>Theory Tools</h2>
-
-      <div class="theory-section">
-
-        <div class="theory-category">
-          <div class="theory-title">Diatonic Functions</div>
-          <div class="theory-tags">
-            <button class="theory-tag" data-tag="Tonic">Tonic</button>
-            <button class="theory-tag" data-tag="Subdominant">Subdominant</button>
-            <button class="theory-tag" data-tag="Dominant">Dominant</button>
-          </div>
-        </div>
-
-        <div class="theory-category">
-          <div class="theory-title">Modal Interchange</div>
-          <div class="theory-tags">
-            <button class="theory-tag" data-tag="bIII">♭III</button>
-            <button class="theory-tag" data-tag="bVI">♭VI</button>
-            <button class="theory-tag" data-tag="bVII">♭VII</button>
-            <button class="theory-tag" data-tag="iv">iv</button>
-          </div>
-        </div>
-
-        <div class="theory-category">
-          <div class="theory-title">Secondary Dominants</div>
-          <div class="theory-tags">
-            <button class="theory-tag" data-tag="V/ii">V/ii</button>
-            <button class="theory-tag" data-tag="V/iii">V/iii</button>
-            <button class="theory-tag" data-tag="V/IV">V/IV</button>
-            <button class="theory-tag" data-tag="V/V">V/V</button>
-            <button class="theory-tag" data-tag="V/vi">V/vi</button>
-          </div>
-        </div>
-
-        <div class="theory-category">
-          <div class="theory-title">Tritone Subs</div>
-          <div class="theory-tags">
-            <button class="theory-tag" data-tag="SubV">SubV</button>
-            <button class="theory-tag" data-tag="SubV/V">SubV/V</button>
-          </div>
-        </div>
-
-        <div class="theory-category">
-          <div class="theory-title">Extensions</div>
-          <div class="theory-tags">
-            <button class="theory-tag" data-tag="add9">add9</button>
-            <button class="theory-tag" data-tag="add11">add11</button>
-            <button class="theory-tag" data-tag="add13">add13</button>
-          </div>
-        </div>
-
-      </div>
-    </div>
-
+  <!-- ============================
+       TOP NAV BAR
+       ============================ -->
+  <div id="topbar">
+    🎵 Song Reharmonizer — High‑Contrast Studio UI
   </div>
 
-  <!-- CHORD EDITOR POPUP -->
-  <div id="chordEditorOverlay" class="chord-editor-overlay">
-    <div class="chord-editor">
-      <h3>Edit Chord</h3>
+  <!-- ============================
+       MAIN THREE PANEL CONTAINER
+       ============================ -->
+  <div id="container">
+    <!-- ============================
+         LEFT PANEL — RECORDER + UPLOAD
+         ============================ -->
+    <div class="panel" id="leftPanel">
+      <h2>Audio Input</h2>
 
-      <label>Root Note</label>
-      <select id="editorRoot">
-        <option>C</option><option>C#</option><option>D</option><option>D#</option>
-        <option>E</option><option>F</option><option>F#</option><option>G</option>
-        <option>G#</option><option>A</option><option>A#</option><option>B</option>
-      </select>
+      <div id="recorderControls">
+        <button id="startRecordBtn">🎙️ Start Recording</button>
+        <button id="stopRecordBtn" disabled>⏹️ Stop Recording</button>
+      </div>
 
-      <label>Chord Quality</label>
-      <select id="editorQuality">
-        <option>maj</option>
-        <option>min</option>
-        <option>dim</option>
-        <option>aug</option>
-        <option>7</option>
-        <option>maj7</option>
-        <option>min7</option>
-        <option>sus2</option>
-        <option>sus4</option>
-      </select>
+      <div id="uploadSection">
+        <h3>Or Upload WAV</h3>
+        <input type="file" id="uploadInput" accept=".wav" />
+      </div>
 
-      <label>Extension (optional)</label>
-      <input id="editorExtension" placeholder="e.g. 9, 11, 13" />
-
-      <div class="editor-btn-row">
-        <button class="editor-btn editor-save" id="saveChordBtn">Save</button>
-        <button class="editor-btn editor-cancel" id="cancelChordBtn">Cancel</button>
+      <div id="recordingStatus" style="margin-top: 20px; color: #0f0;">
+        <!-- Status messages appear here -->
       </div>
     </div>
-  </div>
+    <!-- ============================
+         CENTER PANEL — NOTES VIEWER
+         ============================ -->
+    <div class="panel" id="centerPanel">
+      <h2>Transcribed Notes</h2>
 
-  <!-- FULL SCRIPT BLOCK -->
+      <button id="transcribeBtn">🎼 Transcribe Audio</button>
+
+      <div id="notesOutput">
+        <!-- Transcribed notes will appear here -->
+        No notes yet. Record or upload audio to begin.
+      </div>
+    </div>
+    <!-- ============================
+         RIGHT PANEL — REHARMONIZER
+         ============================ -->
+    <div class="panel" id="rightPanel">
+      <h2>Reharmonizer</h2>
+
+      <div id="reharmPanel">
+        This panel will host your reharmonization tools,
+        chord suggestions, voicing engines, and MIDI exports.
+        For now, it’s a placeholder — fully wired and ready
+        for your next development steps.
+      </div>
+    </div>
+  </div> <!-- end of #container -->
+
+  <!-- ============================
+       JAVASCRIPT — RECORDER + UPLOAD
+       ============================ -->
   <script>
-    /* ---------------------------------------------------------
-       AUDIO IMPORT HANDLER (FIXED)
-       --------------------------------------------------------- */
-    const audioInput = document.getElementById("audioFileInput");
-    const audioPlayer = document.getElementById("audioPlayer");
-    const audioFileName = document.getElementById("audioFileName");
+    let mediaRecorder;
+    let recordedChunks = [];
+    let lastRecordedBlob = null;
 
-    let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    let loadedAudioBuffer = null;
+    const startBtn = document.getElementById("startRecordBtn");
+    const stopBtn = document.getElementById("stopRecordBtn");
+    const statusDiv = document.getElementById("recordingStatus");
+    const uploadInput = document.getElementById("uploadInput");
 
-    audioInput.addEventListener("change", async () => {
-      const file = audioInput.files[0];
-      if (!file) return;
+    /* ============================
+       START RECORDING
+       ============================ */
+    startBtn.onclick = async () => {
+      recordedChunks = [];
+      statusDiv.textContent = "Recording…";
 
-      audioFileName.textContent = file.name;
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream);
 
-      const url = URL.createObjectURL(file);
-      audioPlayer.src = url;
-
-      const arrayBuffer = await file.arrayBuffer();
-      loadedAudioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-
-      console.log("Audio imported:", loadedAudioBuffer);
-    });
-
-    /* ---------------------------------------------------------
-       CHORD ENGINE
-       --------------------------------------------------------- */
-    let chordGrid = document.getElementById("chordGrid");
-    let chordEditorOverlay = document.getElementById("chordEditorOverlay");
-
-    let editorRoot = document.getElementById("editorRoot");
-    let editorQuality = document.getElementById("editorQuality");
-    let editorExtension = document.getElementById("editorExtension");
-
-    let saveChordBtn = document.getElementById("saveChordBtn");
-    let cancelChordBtn = document.getElementById("cancelChordBtn");
-
-    let addChordBtn = document.getElementById("addChordBtn");
-
-    let editingIndex = null;
-    let chordList = [];
-
-    addChordBtn.onclick = () => {
-      editingIndex = null;
-      editorRoot.value = "C";
-      editorQuality.value = "maj";
-      editorExtension.value = "";
-      chordEditorOverlay.style.display = "flex";
-    };
-
-    saveChordBtn.onclick = () => {
-      let chordText = editorRoot.value + editorQuality.value;
-
-      if (editorExtension.value.trim() !== "") {
-        chordText += "(" + editorExtension.value.trim() + ")";
-      }
-
-      if (editingIndex === null) {
-        chordList.push(chordText);
-      } else {
-        chordList[editingIndex] = chordText;
-      }
-
-      renderChordGrid();
-      chordEditorOverlay.style.display = "none";
-    };
-
-    cancelChordBtn.onclick = () => {
-      chordEditorOverlay.style.display = "none";
-    };
-
-    function renderChordGrid() {
-      chordGrid.innerHTML = "";
-
-      chordList.forEach((chord, index) => {
-        let cell = document.createElement("div");
-        cell.className = "chord-cell";
-        cell.textContent = chord;
-
-        cell.onclick = () => {
-          editingIndex = index;
-
-          let match = chord.match(/^([A-G]#?)([a-z0-9]+)?(?:\((.*?)\))?$/);
-          if (match) {
-            editorRoot.value = match[1];
-            editorQuality.value = match[2] || "maj";
-            editorExtension.value = match[3] || "";
-          }
-
-          chordEditorOverlay.style.display = "flex";
-        };
-
-        chordGrid.appendChild(cell);
-      });
-    }
-
-    /* ---------------------------------------------------------
-       REHARM ENGINE
-       --------------------------------------------------------- */
-    const CHORD_QUALITIES = {
-      "maj":  [0, 4, 7],
-      "min":  [0, 3, 7],
-      "dim":  [0, 3, 6],
-      "aug":  [0, 4, 8],
-      "7":    [0, 4, 7, 10],
-      "maj7": [0, 4, 7, 11],
-      "min7": [0, 3, 7, 10],
-      "sus2": [0, 2, 7],
-      "sus4": [0, 5, 7]
-    };
-
-    const NOTE_TO_SEMITONE = {
-      "C": 0,  "C#": 1, "D": 2,  "D#": 3,
-      "E": 4,  "F": 5,  "F#": 6, "G": 7,
-      "G#": 8, "A": 9,  "A#": 10,"B": 11
-    };
-
-    function parseChord(chordText) {
-      let match = chordText.match(/^([A-G]#?)([a-z0-9]+)?(?:\((.*?)\))?$/);
-      if (!match) return null;
-
-      return {
-        root: match[1],
-        quality: match[2] || "maj",
-        extension: match[3] || null
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) recordedChunks.push(e.data);
       };
-    }
 
-    function chordToSemitones(chordText) {
-      let parsed = parseChord(chordText);
-      if (!parsed) return [];
+      mediaRecorder.onstop = () => {
+        lastRecordedBlob = new Blob(recordedChunks, { type: "audio/wav" });
+        statusDiv.textContent = "Recording complete.";
+      };
 
-      let base = NOTE_TO_SEMITONE[parsed.root];
-      let intervals = CHORD_QUALITIES[parsed.quality] || [0, 4, 7];
-
-      let tones = intervals.map(i => base + i);
-
-      if (parsed.extension) {
-        let ext = parsed.extension.trim();
-        if (ext === "9") tones.push(base + 14);
-        if (ext === "11") tones.push(base + 17);
-        if (ext === "13") tones.push(base + 21);
-      }
-
-      return tones;
-    }
-
-    function buildVoicingMap() {
-      return chordList.map(chord => {
-        let tones = chordToSemitones(chord);
-        let normalized = tones.map(t => ((t % 12) + 12) % 12);
-
-        return {
-          chord,
-          tones: normalized
-        };
-      });
-    }
-
-    /* ---------------------------------------------------------
-       THEORY TAGGING
-       --------------------------------------------------------- */
-    document.querySelectorAll(".theory-tag").forEach(tag => {
-      tag.addEventListener("click", () => {
-        let selected = document.querySelector(".chord-cell.selected");
-        if (!selected) {
-          alert("Select a chord first.");
-          return;
-        }
-
-        let tagText = tag.dataset.tag;
-        selected.textContent += " [" + tagText + "]";
-
-        let index = Array.from(chordGrid.children).indexOf(selected);
-        chordList[index] = selected.textContent;
-      });
-    });
-
-    /* ---------------------------------------------------------
-       AUDIO ENGINE
-       --------------------------------------------------------- */
-    let pianoSamples = {};
-    let guitarSamples = {};
-
-    const SAMPLE_NOTES = ["C4", "E4", "G4", "B4"];
-
-    async function loadSample(url) {
-      let response = await fetch(url);
-      let arrayBuffer = await response.arrayBuffer();
-      return await audioCtx.decodeAudioData(arrayBuffer);
-    }
-
-    async function loadInstrumentSamples() {
-      for (let note of SAMPLE_NOTES) {
-        pianoSamples[note] = await loadSample(`samples/piano/${note}.wav`);
-        guitarSamples[note] = await loadSample(`samples/guitar/${note}.wav`);
-      }
-      console.log("Samples loaded.");
-    }
-
-    function playSample(buffer, semitoneShift, timeOffset = 0) {
-      let source = audioCtx.createBufferSource();
-      source.buffer = buffer;
-
-      let ratio = Math.pow(2, semitoneShift / 12);
-      source.playbackRate.value = ratio;
-
-      source.connect(audioCtx.destination);
-      source.start(audioCtx.currentTime + timeOffset);
-
-      return source;
-    }
-
-    function playChord(tones, instrument = "piano") {
-      let sampleSet = instrument === "guitar" ? guitarSamples : pianoSamples;
-      let baseBuffer = sampleSet["C4"];
-
-      tones.forEach((tone, index) => {
-        let delay = index * 0.015;
-        playSample(baseBuffer, tone, delay);
-      });
-    }
-
-    let isPlaying = false;
-    let playIndex = 0;
-    let playTimer = null;
-
-    function playChordSequence() {
-      if (isPlaying) return;
-
-      isPlaying = true;
-      playIndex = 0;
-
-      let voicingMap = buildVoicingMap();
-      let instrument = document.getElementById("instrumentSelect").value;
-
-      function step() {
-        if (playIndex >= voicingMap.length) {
-          stopPlayback();
-          return;
-        }
-
-        let tones = voicingMap[playIndex].tones;
-        playChord(tones, instrument);
-
-        playIndex++;
-        playTimer = setTimeout(step, 1200);
-      }
-
-      step();
-    }
-
-    function stopPlayback() {
-      isPlaying = false;
-      clearTimeout(playTimer);
-    }
-
-    document.getElementById("playBaseBtn").onclick = playChordSequence;
-    document.getElementById("playReharmBtn").onclick = playChordSequence;
-    document.getElementById("stopBtn").onclick = stopPlayback;
-
-    /* ---------------------------------------------------------
-       EXPORT PLACEHOLDERS
-       --------------------------------------------------------- */
-    document.getElementById("exportWavBtn").onclick = () => alert("WAV export coming soon.");
-    document.getElementById("exportMidiBtn").onclick = () => alert("MIDI export coming soon.");
-    document.getElementById("exportMusicXmlBtn").onclick = () => alert("MusicXML export coming soon.");
-
-    /* ---------------------------------------------------------
-       SAMPLE GENERATORS
-       --------------------------------------------------------- */
-    function audioBufferToWav(buffer) {
-      let numOfChan = buffer.numberOfChannels,
-          length = buffer.length * numOfChan * 2 + 44,
-          bufferArray = new ArrayBuffer(length),
-          view = new DataView(bufferArray),
-          channels = [],
-          i, sample,
-          offset = 0,
-          pos = 0;
-
-      function writeString(s) {
-        for (let i = 0; i < s.length; i++) {
-          view.setUint8(pos++, s.charCodeAt(i));
-        }
-      }
-
-      writeString("RIFF");
-      view.setUint32(pos, length - 8, true); pos += 4;
-      writeString("WAVE");
-      writeString("fmt ");
-      view.setUint32(pos, 16, true); pos += 4;
-      view.setUint16(pos, 1, true); pos += 2;
-      view.setUint16(pos, numOfChan, true); pos += 2;
-      view.setUint32(pos, buffer.sampleRate, true); pos += 4;
-      view.setUint32(pos, buffer.sampleRate * numOfChan * 2, true); pos += 4;
-      view.setUint16(pos, numOfChan * 2, true); pos += 2;
-      view.setUint16(pos, 16, true); pos += 2;
-      writeString("data");
-      view.setUint32(pos, length - pos - 4, true); pos += 4;
-
-      for (i = 0; i < numOfChan; i++) {
-        channels.push(buffer.getChannelData(i));
-      }
-
-      while (pos < length) {
-        for (i = 0; i < numOfChan; i++) {
-          sample = Math.max(-1, Math.min(1, channels[i][offset]));
-          view.setInt16(pos, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
-          pos += 2;
-        }
-        offset++;
-      }
-
-      return bufferArray;
-    }
-
-    function downloadWav(audioBuffer, filename) {
-      let wavData = audioBufferToWav(audioBuffer);
-      let blob = new Blob([wavData], { type: "audio/wav" });
-      let url = URL.createObjectURL(blob);
-
-      let a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      a.click();
-
-      URL.revokeObjectURL(url);
-    }
-
-    const NOTE_FREQ = {
-      "C4": 261.63,
-      "E4": 329.63,
-      "G4": 392.00,
-      "B4": 493.88
+      mediaRecorder.start();
+      startBtn.disabled = true;
+      stopBtn.disabled = false;
     };
 
-    function generatePianoSample(freq) {
-      let duration = 1.2;
-      let sampleRate = audioCtx.sampleRate;
-      let frameCount = sampleRate * duration;
-
-      let buffer = audioCtx.createBuffer(1, frameCount, sampleRate);
-      let data = buffer.getChannelData(0);
-
-      for (let i = 0; i < frameCount; i++) {
-        let t = i / sampleRate;
-        let env = Math.exp(-3 * t);
-        data[i] = Math.sin(2 * Math.PI * freq * t) * env;
+    /* ============================
+       STOP RECORDING
+       ============================ */
+    stopBtn.onclick = () => {
+      if (mediaRecorder && mediaRecorder.state !== "inactive") {
+        mediaRecorder.stop();
       }
-
-      return buffer;
-    }
-
-    function generateGuitarSample(freq) {
-      let duration = 1.4;
-      let sampleRate = audioCtx.sampleRate;
-      let frameCount = sampleRate * duration;
-
-      let buffer = audioCtx.createBuffer(1, frameCount, sampleRate);
-      let data = buffer.getChannelData(0);
-
-      for (let i = 0; i < frameCount; i++) {
-        let t = i / sampleRate;
-
-        let attack = Math.exp(-60 * t);
-        let decay = Math.exp(-2.8 * t);
-
-        let tone =
-          Math.sin(2 * Math.PI * freq * t) * 0.7 +
-          Math.sin(2 * Math.PI * freq * 2 * t) * 0.2 +
-          Math.sin(2 * Math.PI * freq * 3 * t) * 0.1;
-
-        data[i] = tone * attack * decay;
-      }
-
-      return buffer;
-    }
-
-    document.getElementById("generatePianoBtn").onclick = () => {
-      for (let note of SAMPLE_NOTES) {
-        let buffer = generatePianoSample(NOTE_FREQ[note]);
-        downloadWav(buffer, `${note}.wav`);
-      }
-      alert("Piano samples generated.");
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
     };
 
-    document.getElementById("generateGuitarBtn").onclick = () => {
-      for (let note of SAMPLE_NOTES) {
-        let buffer = generateGuitarSample(NOTE_FREQ[note]);
-        downloadWav(buffer, `${note}.wav`);
+    /* ============================
+       HANDLE WAV UPLOAD
+       ============================ */
+    uploadInput.onchange = (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        lastRecordedBlob = file;
+        statusDiv.textContent = "WAV file loaded.";
       }
-      alert("Guitar samples generated.");
+    };
+    /* ============================
+       TRANSCRIBE BUTTON HANDLER
+       ============================ */
+    const transcribeBtn = document.getElementById("transcribeBtn");
+    const notesOutput = document.getElementById("notesOutput");
+
+    transcribeBtn.onclick = async () => {
+      if (!lastRecordedBlob) {
+        notesOutput.textContent = "No audio available. Record or upload a WAV first.";
+        return;
+      }
+
+      notesOutput.textContent = "Transcribing… please wait.";
+
+      try {
+        const notes = await transcribeAudio(lastRecordedBlob);
+        notesOutput.textContent = JSON.stringify(notes, null, 2);
+      } catch (err) {
+        notesOutput.textContent = "Error during transcription: " + err;
+      }
     };
 
-    /* ---------------------------------------------------------
-       LOAD SAMPLES ON STARTUP
-       --------------------------------------------------------- */
-    window.addEventListener("load", () => {
-      loadInstrumentSamples();
-    });
+    /* ============================
+       CORE TRANSCRIPTION FUNCTION
+       ============================ */
+    async function transcribeAudio(blob) {
+      const formData = new FormData();
+      formData.append("audio", blob, "audio.wav");
 
+      // ⭐ Your LIVE cloud transcription server
+      const SERVER_URL = "https://shiny-lamp-4j6wx946j7q2q56w-5000.app.github.dev/transcribe";
+
+      const response = await fetch(SERVER_URL, {
+        method: "POST",
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error("Server returned " + response.status);
+      }
+
+      const data = await response.json();
+      return data.notes;
+    }
   </script>
 
 </body>
