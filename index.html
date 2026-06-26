@@ -1,200 +1,137 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Song Reharmonizer — Three Panel UI</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Song Reharmonizer — High-Contrast Studio UI</title>
 
-<style>
-  /* ============================
-     GLOBAL HIGH-CONTRAST THEME
-     ============================ */
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #000;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
 
-  body {
-    margin: 0;
-    padding: 0;
-    background: #0d0d0d;
-    color: #ffffff;
-    font-family: Arial, Helvetica, sans-serif;
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    overflow: hidden;
-  }
+    #topbar {
+      background: #111;
+      padding: 12px;
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+      border-bottom: 2px solid #333;
+    }
 
-  /* ============================
-     TOP NAV BAR
-     ============================ */
-  #topbar {
-    background: #111;
-    padding: 14px 20px;
-    font-size: 20px;
-    font-weight: bold;
-    border-bottom: 2px solid #333;
-    letter-spacing: 0.5px;
-  }
+    #container {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
 
-  /* ============================
-     THREE PANEL LAYOUT
-     ============================ */
-  #container {
-    display: flex;
-    flex: 1;
-    height: calc(100vh - 60px);
-  }
+    .panel {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+      border-right: 2px solid #333;
+    }
 
-  .panel {
-    flex: 1;
-    padding: 20px;
-    overflow-y: auto;
-    border-right: 2px solid #333;
-  }
+    .panel:last-child {
+      border-right: none;
+    }
 
-  .panel:last-child {
-    border-right: none;
-  }
+    h2 {
+      margin-top: 0;
+      border-bottom: 1px solid #444;
+      padding-bottom: 6px;
+    }
 
-  .panel h2 {
-    margin-top: 0;
-    font-size: 22px;
-    border-bottom: 2px solid #444;
-    padding-bottom: 8px;
-  }
+    button {
+      background: #444;
+      color: #fff;
+      border: none;
+      padding: 10px 16px;
+      margin: 6px 0;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 4px;
+    }
 
-  /* ============================
-     BUTTONS
-     ============================ */
-  button {
-    background: #222;
-    color: #fff;
-    border: 2px solid #555;
-    padding: 10px 16px;
-    font-size: 16px;
-    cursor: pointer;
-    margin-right: 10px;
-    margin-top: 10px;
-  }
+    button:hover {
+      background: #666;
+    }
 
-  button:hover {
-    background: #333;
-    border-color: #888;
-  }
+    #status {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #0f0;
+    }
 
-  /* ============================
-     NOTES VIEWER
-     ============================ */
-  #notesOutput {
-    background: #111;
-    border: 2px solid #444;
-    padding: 12px;
-    margin-top: 15px;
-    white-space: pre-wrap;
-    font-family: monospace;
-    font-size: 14px;
-  }
-  /* ============================
-     AUDIO RECORDER + UPLOAD UI
-     ============================ */
-  #recorderControls {
-    margin-top: 15px;
-  }
-
-  #uploadInput {
-    margin-top: 20px;
-  }
-
-  /* ============================
-     RIGHT PANEL PLACEHOLDER
-     ============================ */
-  #reharmPanel {
-    background: #0f0f0f;
-    border: 2px solid #333;
-    padding: 12px;
-    margin-top: 15px;
-  }
-</style>
+    pre {
+      background: #111;
+      padding: 12px;
+      border: 1px solid #333;
+      border-radius: 4px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+  </style>
 </head>
 
 <body>
+  <div id="topbar">Song Reharmonizer — High-Contrast Studio UI</div>
 
-  <!-- ============================
-       TOP NAV BAR
-       ============================ -->
-  <div id="topbar">
-    🎵 Song Reharmonizer — High‑Contrast Studio UI
-  </div>
-
-  <!-- ============================
-       MAIN THREE PANEL CONTAINER
-       ============================ -->
   <div id="container">
-    <!-- ============================
-         LEFT PANEL — RECORDER + UPLOAD
-         ============================ -->
-    <div class="panel" id="leftPanel">
+    <!-- AUDIO INPUT PANEL -->
+    <div class="panel" id="audio-panel">
       <h2>Audio Input</h2>
 
-      <div id="recorderControls">
-        <button id="startRecordBtn">🎙️ Start Recording</button>
-        <button id="stopRecordBtn" disabled>⏹️ Stop Recording</button>
-      </div>
+      <button id="startBtn">Start Recording</button>
+      <button id="stopBtn" disabled>Stop Recording</button>
 
-      <div id="uploadSection">
-        <h3>Or Upload WAV</h3>
-        <input type="file" id="uploadInput" accept=".wav" />
-      </div>
+      <h3>Upload WAV File</h3>
+      <input type="file" id="fileInput" accept=".wav" />
 
-      <div id="recordingStatus" style="margin-top: 20px; color: #0f0;">
-        <!-- Status messages appear here -->
-      </div>
+      <div id="status">Idle</div>
     </div>
-    <!-- ============================
-         CENTER PANEL — NOTES VIEWER
-         ============================ -->
-    <div class="panel" id="centerPanel">
+
+    <!-- TRANSCRIBED NOTES PANEL -->
+    <div class="panel" id="notes-panel">
       <h2>Transcribed Notes</h2>
 
-      <button id="transcribeBtn">🎼 Transcribe Audio</button>
+      <button id="transcribeBtn">Transcribe Audio</button>
 
-      <div id="notesOutput">
-        <!-- Transcribed notes will appear here -->
-        No notes yet. Record or upload audio to begin.
-      </div>
+      <pre id="notesOutput">No notes yet. Record or upload audio to begin.</pre>
     </div>
-    <!-- ============================
-         RIGHT PANEL — REHARMONIZER
-         ============================ -->
-    <div class="panel" id="rightPanel">
+
+    <!-- REHARMONIZER PANEL -->
+    <div class="panel" id="reharm-panel">
       <h2>Reharmonizer</h2>
 
-      <div id="reharmPanel">
-        This panel will host your reharmonization tools,
-        chord suggestions, voicing engines, and MIDI exports.
-        For now, it’s a placeholder — fully wired and ready
-        for your next development steps.
-      </div>
+      <p>
+        This panel will host your reharmonization tools, chord suggestions,
+        voicing engines, and MIDI exports.  
+        For now, it’s a placeholder — fully wired and ready for your next development steps.
+      </p>
     </div>
-  </div> <!-- end of #container -->
+  </div> <!-- end #container -->
 
-  <!-- ============================
-       JAVASCRIPT — RECORDER + UPLOAD
-       ============================ -->
   <script>
     let mediaRecorder;
     let recordedChunks = [];
     let lastRecordedBlob = null;
 
-    const startBtn = document.getElementById("startRecordBtn");
-    const stopBtn = document.getElementById("stopRecordBtn");
-    const statusDiv = document.getElementById("recordingStatus");
-    const uploadInput = document.getElementById("uploadInput");
+    const startBtn = document.getElementById("startBtn");
+    const stopBtn = document.getElementById("stopBtn");
+    const fileInput = document.getElementById("fileInput");
+    const statusEl = document.getElementById("status");
 
-    /* ============================
-       START RECORDING
-       ============================ */
     startBtn.onclick = async () => {
       recordedChunks = [];
-      statusDiv.textContent = "Recording…";
+      lastRecordedBlob = null;
 
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaRecorder = new MediaRecorder(stream);
@@ -205,17 +142,15 @@
 
       mediaRecorder.onstop = () => {
         lastRecordedBlob = new Blob(recordedChunks, { type: "audio/wav" });
-        statusDiv.textContent = "Recording complete.";
+        statusEl.textContent = "Recording complete.";
       };
 
       mediaRecorder.start();
+      statusEl.textContent = "Recording…";
       startBtn.disabled = true;
       stopBtn.disabled = false;
     };
 
-    /* ============================
-       STOP RECORDING
-       ============================ */
     stopBtn.onclick = () => {
       if (mediaRecorder && mediaRecorder.state !== "inactive") {
         mediaRecorder.stop();
@@ -224,60 +159,140 @@
       stopBtn.disabled = true;
     };
 
-    /* ============================
-       HANDLE WAV UPLOAD
-       ============================ */
-    uploadInput.onchange = (e) => {
-      const file = e.target.files[0];
+    fileInput.onchange = () => {
+      const file = fileInput.files[0];
       if (file) {
         lastRecordedBlob = file;
-        statusDiv.textContent = "WAV file loaded.";
+        statusEl.textContent = "WAV file loaded.";
       }
     };
-    /* ============================
-       TRANSCRIBE BUTTON HANDLER
-       ============================ */
+    const SERVER_URL = "https://shiny-lamp-4j6wx946j7q2q56w-5000.app.github.dev/transcribe";
+
     const transcribeBtn = document.getElementById("transcribeBtn");
     const notesOutput = document.getElementById("notesOutput");
 
-    transcribeBtn.onclick = async () => {
-      if (!lastRecordedBlob) {
-        notesOutput.textContent = "No audio available. Record or upload a WAV first.";
-        return;
-      }
+    async function sendToServer(blob) {
+      const formData = new FormData();
+      formData.append("audio", blob, "audio.wav");
 
       notesOutput.textContent = "Transcribing… please wait.";
 
       try {
-        const notes = await transcribeAudio(lastRecordedBlob);
-        notesOutput.textContent = JSON.stringify(notes, null, 2);
-      } catch (err) {
-        notesOutput.textContent = "Error during transcription: " + err;
-      }
-    };
+        const response = await fetch(SERVER_URL, {
+          method: "POST",
+          body: formData
+        });
 
-    /* ============================
-       CORE TRANSCRIPTION FUNCTION
-       ============================ */
-    async function transcribeAudio(blob) {
+        if (!response.ok) {
+          notesOutput.textContent = "Server error: " + response.status;
+          return;
+        }
+
+        const data = await response.json();
+
+        if (data.error) {
+          notesOutput.textContent = "Transcription failed: " + data.error;
+          return;
+        }
+
+        notesOutput.textContent = data.notes || "No notes returned.";
+      } catch (err) {
+        notesOutput.textContent = "Network error during transcription.";
+      }
+    }
+
+    transcribeBtn.onclick = () => {
+      if (!lastRecordedBlob) {
+        notesOutput.textContent = "No audio available. Record or upload a WAV file first.";
+        return;
+      }
+      sendToServer(lastRecordedBlob);
+    };
+  </script>
+
+</body>
+</html>
+    /* ---------------------------------------------------------
+       REHARMONIZER PLACEHOLDER LOGIC
+       ---------------------------------------------------------
+       This section is intentionally minimal but fully wired.
+       It ensures the panel is functional and ready for expansion
+       without throwing errors or blocking the rest of the app.
+    --------------------------------------------------------- */
+
+    const reharmPanel = document.getElementById("reharm-panel");
+
+    function displayReharmPlaceholder(notes) {
+      reharmPanel.innerHTML = `
+        <h2>Reharmonizer</h2>
+        <p>Your transcription is ready for reharmonization.</p>
+        <p><strong>Incoming Notes:</strong></p>
+        <pre>${notes}</pre>
+        <p>
+          Future features will include:
+          <ul>
+            <li>Chord suggestions</li>
+            <li>Voicing engines</li>
+            <li>MIDI export</li>
+            <li>Style-based reharmonization</li>
+            <li>AI-driven chord substitutions</li>
+          </ul>
+        </p>
+      `;
+    }
+    /* ---------------------------------------------------------
+       CONNECT TRANSCRIPTION TO REHARMONIZER
+       --------------------------------------------------------- */
+
+    function updateReharmonizer(notes) {
+      // Pass notes to the reharmonizer placeholder
+      displayReharmPlaceholder(notes);
+    }
+
+    // Wrap sendToServer so we can hook into the reharmonizer
+    async function transcribeAndReharmonize(blob) {
       const formData = new FormData();
       formData.append("audio", blob, "audio.wav");
 
-      // ⭐ Your LIVE cloud transcription server
-      const SERVER_URL = "https://shiny-lamp-4j6wx946j7q2q56w-5000.app.github.dev/transcribe";
+      notesOutput.textContent = "Transcribing… please wait.";
 
-      const response = await fetch(SERVER_URL, {
-        method: "POST",
-        body: formData
-      });
+      try {
+        const response = await fetch(SERVER_URL, {
+          method: "POST",
+          body: formData
+        });
 
-      if (!response.ok) {
-        throw new Error("Server returned " + response.status);
+        if (!response.ok) {
+          notesOutput.textContent = "Server error: " + response.status;
+          return;
+        }
+
+        const data = await response.json();
+
+        if (data.error) {
+          notesOutput.textContent = "Transcription failed: " + data.error;
+          return;
+        }
+
+        const notes = data.notes || "No notes returned.";
+        notesOutput.textContent = notes;
+
+        // Send notes to reharmonizer panel
+        updateReharmonizer(notes);
+
+      } catch (err) {
+        notesOutput.textContent = "Network error during transcription.";
       }
-
-      const data = await response.json();
-      return data.notes;
     }
+
+    // Replace old button handler with new unified flow
+    transcribeBtn.onclick = () => {
+      if (!lastRecordedBlob) {
+        notesOutput.textContent = "No audio available. Record or upload a WAV file first.";
+        return;
+      }
+      transcribeAndReharmonize(lastRecordedBlob);
+    };
   </script>
 
 </body>
