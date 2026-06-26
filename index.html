@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Song Reharmonizer — High-Contrast Studio UI</title>
+  <title>Song Reharmonizer — Studio UI</title>
 
   <style>
     body {
@@ -78,11 +78,39 @@
       white-space: pre-wrap;
       word-wrap: break-word;
     }
+
+    #reharmContent {
+      background: #111;
+      padding: 12px;
+      border: 1px solid #333;
+      border-radius: 4px;
+      margin-top: 10px;
+    }
+
+    #reharmContent .label {
+      font-weight: bold;
+      color: #0af;
+      margin-bottom: 6px;
+    }
+
+    #reharmContent .notes {
+      white-space: pre-wrap;
+      margin-bottom: 12px;
+    }
+
+    #reharmContent .summary {
+      background: #000;
+      padding: 10px;
+      border: 1px solid #444;
+      border-radius: 4px;
+      font-size: 14px;
+      color: #ccc;
+    }
   </style>
 </head>
 
 <body>
-  <div id="topbar">Song Reharmonizer — High-Contrast Studio UI</div>
+  <div id="topbar">Song Reharmonizer — Studio UI</div>
 
   <div id="container">
     <!-- AUDIO INPUT PANEL -->
@@ -110,16 +138,15 @@
     <!-- REHARMONIZER PANEL -->
     <div class="panel" id="reharm-panel">
       <h2>Reharmonizer</h2>
-
-      <p>
-        This panel will host your reharmonization tools, chord suggestions,
-        voicing engines, and MIDI exports.  
-        For now, it’s a placeholder — fully wired and ready for your next development steps.
-      </p>
+      <div id="reharmContent">
+        <p class="placeholder">Waiting for transcription…</p>
+      </div>
     </div>
-  </div> <!-- end #container -->
+  </div>
 
   <script>
+    const SERVER_URL = "https://shiny-lamp-4j6wx946j7q2q56w-5000.app.github.dev/transcribe";
+
     let mediaRecorder;
     let recordedChunks = [];
     let lastRecordedBlob = null;
@@ -128,6 +155,9 @@
     const stopBtn = document.getElementById("stopBtn");
     const fileInput = document.getElementById("fileInput");
     const statusEl = document.getElementById("status");
+
+    const transcribeBtn = document.getElementById("transcribeBtn");
+    const notesOutput = document.getElementById("notesOutput");
 
     startBtn.onclick = async () => {
       recordedChunks = [];
@@ -166,90 +196,23 @@
         statusEl.textContent = "WAV file loaded.";
       }
     };
-    const SERVER_URL = "https://shiny-lamp-4j6wx946j7q2q56w-5000.app.github.dev/transcribe";
 
-    const transcribeBtn = document.getElementById("transcribeBtn");
-    const notesOutput = document.getElementById("notesOutput");
+    function displayReharmProfessional(notes) {
+      const reharmContent = document.getElementById("reharmContent");
 
-    async function sendToServer(blob) {
-      const formData = new FormData();
-      formData.append("audio", blob, "audio.wav");
+      reharmContent.innerHTML = `
+        <div class="label">Transcribed Notes</div>
+        <div class="notes">${notes}</div>
 
-      notesOutput.textContent = "Transcribing… please wait.";
-
-      try {
-        const response = await fetch(SERVER_URL, {
-          method: "POST",
-          body: formData
-        });
-
-        if (!response.ok) {
-          notesOutput.textContent = "Server error: " + response.status;
-          return;
-        }
-
-        const data = await response.json();
-
-        if (data.error) {
-          notesOutput.textContent = "Transcription failed: " + data.error;
-          return;
-        }
-
-        notesOutput.textContent = data.notes || "No notes returned.";
-      } catch (err) {
-        notesOutput.textContent = "Network error during transcription.";
-      }
-    }
-
-    transcribeBtn.onclick = () => {
-      if (!lastRecordedBlob) {
-        notesOutput.textContent = "No audio available. Record or upload a WAV file first.";
-        return;
-      }
-      sendToServer(lastRecordedBlob);
-    };
-  </script>
-
-</body>
-</html>
-    /* ---------------------------------------------------------
-       REHARMONIZER PLACEHOLDER LOGIC
-       ---------------------------------------------------------
-       This section is intentionally minimal but fully wired.
-       It ensures the panel is functional and ready for expansion
-       without throwing errors or blocking the rest of the app.
-    --------------------------------------------------------- */
-
-    const reharmPanel = document.getElementById("reharm-panel");
-
-    function displayReharmPlaceholder(notes) {
-      reharmPanel.innerHTML = `
-        <h2>Reharmonizer</h2>
-        <p>Your transcription is ready for reharmonization.</p>
-        <p><strong>Incoming Notes:</strong></p>
-        <pre>${notes}</pre>
-        <p>
-          Future features will include:
-          <ul>
-            <li>Chord suggestions</li>
-            <li>Voicing engines</li>
-            <li>MIDI export</li>
-            <li>Style-based reharmonization</li>
-            <li>AI-driven chord substitutions</li>
-          </ul>
-        </p>
+        <div class="label">Reharm Summary</div>
+        <div class="summary">
+          Your transcription is ready for harmonic analysis.
+          Future modules will generate functional harmony maps,
+          chord-scale overlays, voicing suggestions, and MIDI exports.
+        </div>
       `;
     }
-    /* ---------------------------------------------------------
-       CONNECT TRANSCRIPTION TO REHARMONIZER
-       --------------------------------------------------------- */
 
-    function updateReharmonizer(notes) {
-      // Pass notes to the reharmonizer placeholder
-      displayReharmPlaceholder(notes);
-    }
-
-    // Wrap sendToServer so we can hook into the reharmonizer
     async function transcribeAndReharmonize(blob) {
       const formData = new FormData();
       formData.append("audio", blob, "audio.wav");
@@ -277,15 +240,12 @@
         const notes = data.notes || "No notes returned.";
         notesOutput.textContent = notes;
 
-        // Send notes to reharmonizer panel
-        updateReharmonizer(notes);
-
+        displayReharmProfessional(notes);
       } catch (err) {
         notesOutput.textContent = "Network error during transcription.";
       }
     }
 
-    // Replace old button handler with new unified flow
     transcribeBtn.onclick = () => {
       if (!lastRecordedBlob) {
         notesOutput.textContent = "No audio available. Record or upload a WAV file first.";
