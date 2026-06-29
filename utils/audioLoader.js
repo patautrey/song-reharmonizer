@@ -1,5 +1,3 @@
-// utils/audioLoader.js
-
 const fs = require("fs");
 const wav = require("wav-decoder");
 
