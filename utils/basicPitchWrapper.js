@@ -1,5 +1,3 @@
-// utils/basicPitchWrapper.js
-
 const ort = require("onnxruntime-node");
 const wav = require("wav-decoder");
 const fs = require("fs");
@@ -22,7 +20,7 @@ async function loadModels() {
 
 async function decodeWav(buffer) {
   const decoded = await wav.decode(buffer);
-  return decoded.channelData[0]; // mono
+  return decoded.channelData[0];
 }
 
 async function basicPitch(audioBuffer) {
