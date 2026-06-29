@@ -8,12 +8,19 @@ const { spawn } = require("child_process");
 const app = express();
 const PORT = 5000;
 
+// Allow front-end access
 app.use(cors());
 app.use(express.json());
+
+// Serve static UI from /public
 app.use(express.static(path.join(__dirname, "public")));
 
+// Multer for audio uploads
 const upload = multer({ dest: "uploads/" });
 
+// -----------------------------
+// TRANSCRIBE ENDPOINT
+// -----------------------------
 app.post("/transcribe", upload.single("audio"), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: "No audio file received" });
@@ -21,6 +28,7 @@ app.post("/transcribe", upload.single("audio"), (req, res) => {
 
   const audioPath = req.file.path;
 
+  // Call Python transcription script
   const python = spawn("python3", ["basic_pitch_transcribe.py", audioPath]);
 
   let output = "";
@@ -33,11 +41,17 @@ app.post("/transcribe", upload.single("audio"), (req, res) => {
   });
 
   python.on("close", () => {
+    // Remove temp file
     fs.unlinkSync(audioPath);
+
+    // Return transcription
     res.json({ notes: output });
   });
 });
 
+// -----------------------------
+// REHARMONIZE ENDPOINT
+// -----------------------------
 app.post("/reharmonize", (req, res) => {
   const { notes } = req.body;
 
@@ -49,7 +63,9 @@ app.post("/reharmonize", (req, res) => {
   res.json({ reharmonized });
 });
 
+// -----------------------------
+// START SERVER
+// -----------------------------
 app.listen(PORT, () => {
-  console.log(`Transcription server running on port 5000`);
+  console.log(`Transcription server running on port ${PORT}`);
 });
-
