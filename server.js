@@ -14,9 +14,6 @@ app.use(express.static(path.join(__dirname, "public")));
 
 const upload = multer({ dest: "uploads/" });
 
-// -----------------------------
-// TRANSCRIBE ENDPOINT
-// -----------------------------
 app.post("/transcribe", upload.single("audio"), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: "No audio file received" });
@@ -41,9 +38,6 @@ app.post("/transcribe", upload.single("audio"), (req, res) => {
   });
 });
 
-// -----------------------------
-// REHARMONIZE ENDPOINT
-// -----------------------------
 app.post("/reharmonize", (req, res) => {
   const { notes } = req.body;
 
@@ -55,10 +49,7 @@ app.post("/reharmonize", (req, res) => {
   res.json({ reharmonized });
 });
 
-// -----------------------------
-// START SERVER
-// -----------------------------
 app.listen(PORT, () => {
-  console.log(`Transcription server running on port ${PORT}`);
+  console.log(`Transcription server running on port 5000`);
 });
 
