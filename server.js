@@ -1,68 +1,97 @@
-const express = require("express");
-const multer = require("multer");
-const cors = require("cors");
-const path = require("path");
-const fs = require("fs");
-const { spawn } = require("child_process");
+// ===============================
+// SERVER.JS — FULL WORKING VERSION
+// ===============================
 
+const express = require('express');
 const app = express();
-const PORT = 5000;
+const path = require('path');
+const multer = require('multer');
+const { spawn } = require('child_process');
+const fs = require('fs');
 
-app.use(cors());
-app.use(express.json());
-app.use(express.static(path.join(__dirname, "public")));
+// -------------------------------
+// 1. STATIC HOSTING FOR YOUR UI
+// -------------------------------
+app.use(express.static(path.join(__dirname, 'public')));
 
-const upload = multer({ dest: "uploads/" });
+// Serve index.html at root
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
-// -----------------------------------------------------
-// TRANSCRIBE ENDPOINT
-// -----------------------------------------------------
-app.post("/transcribe", upload.single("audio"), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ error: "No audio file received" });
-  }
+// -------------------------------
+// 2. FILE UPLOAD HANDLING
+// -------------------------------
+const upload = multer({ dest: 'uploads/' });
 
+// -------------------------------
+// 3. TRANSCRIBE AUDIO (Basic Pitch)
+// -------------------------------
+app.post('/transcribe', upload.single('audio'), (req, res) => {
   const audioPath = req.file.path;
 
-  // DIRECTLY CALL THE VIRTUAL ENV PYTHON
-  const python = spawn(path.join(__dirname, "bp-env/bin/python"), [
-    "basic_pitch_transcribe.py",
-    audioPath
-  ]);
+  // Call your Python transcription script
+  const py = spawn('python3', ['basic_pitch_transcribe.py', audioPath]);
 
-  let output = "";
+  let output = '';
 
-  python.stdout.on("data", (data) => {
+  py.stdout.on('data', data => {
     output += data.toString();
   });
 
-  python.stderr.on("data", (data) => {
-    console.error("PYTHON ERROR:", data.toString());
+  py.stderr.on('data', data => {
+    console.error('Python error:', data.toString());
   });
 
-  python.on("close", () => {
+  py.on('close', () => {
+    // Delete uploaded file after processing
     fs.unlinkSync(audioPath);
+
     res.json({ notes: output });
   });
 });
 
-// -----------------------------------------------------
-// REHARMONIZE ENDPOINT
-// -----------------------------------------------------
-app.post("/reharmonize", (req, res) => {
-  const { notes } = req.body;
+// -------------------------------
+// 4. REHARMONIZE MIDI FILE
+// -------------------------------
+app.post('/reharm-midi', upload.single('midi'), async (req, res) => {
+  try {
+    const buffer = fs.readFileSync(req.file.path);
+    const style = req.body.style || 'jazz';
 
-  if (!notes) {
-    return res.status(400).json({ error: "No notes provided" });
+    // Load your MIDI parser
+    const { Midi } = require('@tonejs/midi');
+    const midi = new Midi(buffer);
+
+    // Convert MIDI → note objects
+    const track = midi.tracks[0];
+    const parsed = track.notes.map(n => ({
+      start: n.time,
+      end: n.time + n.duration,
+      midi: n.midi,
+      velocity: n.velocity
+    }));
+
+    // Load your reharm functions
+    const { groupNotes } = require('./utils/groupNotes');
+    const { reharmByStyle } = require('./utils/reharmRouter');
+
+    const groups = groupNotes(parsed, 0.5);
+    const reharm = reharmByStyle(style, groups);
+
+    fs.unlinkSync(req.file.path);
+    res.json({ chords: reharm });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'MIDI reharm failed' });
   }
-
-  const reharmonized = `Reharmonized progression:\n${notes}`;
-  res.json({ reharmonized });
 });
 
-// -----------------------------------------------------
-// START SERVER
-// -----------------------------------------------------
+// -------------------------------
+// 5. START SERVER
+// -------------------------------
+const PORT = 5000;
 app.listen(PORT, () => {
-  console.log(`Transcription server running on port ${PORT}`);
+  console.log(`The server is running on port ${PORT}.`);
 });
