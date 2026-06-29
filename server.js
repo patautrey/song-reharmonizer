@@ -8,14 +8,10 @@ const { spawn } = require("child_process");
 const app = express();
 const PORT = 5000;
 
-// Middleware
 app.use(cors());
 app.use(express.json());
-
-// Serve static frontend
 app.use(express.static(path.join(__dirname, "public")));
 
-// Multer upload
 const upload = multer({ dest: "uploads/" });
 
 // -----------------------------------------------------
@@ -28,13 +24,11 @@ app.post("/transcribe", upload.single("audio"), (req, res) => {
 
   const audioPath = req.file.path;
 
-  // Use Python 3.11 + bp-env virtual environment
-  const python = spawn("python3.11", ["basic_pitch_transcribe.py", audioPath], {
-    env: {
-      ...process.env,
-      PATH: `${process.env.PATH}:${process.cwd()}/bp-env/bin`
-    }
-  });
+  // DIRECTLY CALL THE VIRTUAL ENV PYTHON
+  const python = spawn(path.join(__dirname, "bp-env/bin/python"), [
+    "basic_pitch_transcribe.py",
+    audioPath
+  ]);
 
   let output = "";
 
