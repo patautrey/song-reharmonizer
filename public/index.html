@@ -1,0 +1,48 @@
+<!-- index.html — FULL REPLACEMENT FILE -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Song Reharmonizer — Studio UI</title>
+  <style>
+    body { font-family: Arial; margin: 40px; }
+    textarea { width: 100%; height: 150px; }
+    .section { margin-bottom: 40px; }
+    button { padding: 10px 20px; margin: 5px; }
+  </style>
+</head>
+
+<body>
+
+  <h1>Song Reharmonizer — Studio UI</h1>
+
+  <!-- AUDIO INPUT -->
+  <div class="section">
+    <h2>Audio Input</h2>
+
+    <button onclick="startRecording()">Start Recording</button>
+    <button onclick="stopRecording()">Stop Recording</button>
+    <p id="recording-status"></p>
+
+    <h3>Upload WAV File</h3>
+    <input type="file" id="wav-file" accept=".wav">
+    <button onclick="transcribeUploaded()">Transcribe Audio</button>
+  </div>
+
+  <!-- TRANSCRIBED NOTES -->
+  <div class="section">
+    <h2>Transcribed Notes</h2>
+    <textarea id="transcribed-notes" placeholder="Transcription will appear here..."></textarea>
+  </div>
+
+  <!-- REHARMONIZER -->
+  <div class="section">
+    <h2>Reharmonizer</h2>
+    <button onclick="reharmonize()">Reharmonize</button>
+    <textarea id="reharmonized-output" placeholder="Reharmonized output..."></textarea>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
