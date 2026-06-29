@@ -1,43 +1,80 @@
-const express = require("express");
-const cors = require("cors");
-const multer = require("multer");
-const fs = require("fs");
+// server.js — FULL REPLACEMENT FILE
 
-const { basicPitch } = require("./utils/basicPitchWrapper");
-const { extractNotes } = require("./utils/postprocess");
+const express = require("express");
+const multer = require("multer");
+const cors = require("cors");
+const path = require("path");
+const fs = require("fs");
+const { spawn } = require("child_process");
 
 const app = express();
+const PORT = 5000;
+
+// Allow front-end to reach backend
 app.use(cors());
 app.use(express.json());
 
-const upload = multer({ dest: "uploads/" });
+// Serve static front-end
+app.use(express.static(path.join(__dirname, "public")));
 
+// Multer storage for uploaded audio
+const upload = multer({
+  dest: "uploads/"
+});
+
+// -----------------------------
+// TRANSCRIBE ENDPOINT
+// -----------------------------
 app.post("/transcribe", upload.single("audio"), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: "No audio file received" });
     }
 
-    const filePath = req.file.path;
-    const audioData = await fs.promises.readFile(filePath);
+    const audioPath = req.file.path;
 
-    const rawOutput = await basicPitch(audioData);
-    const notesArray = extractNotes(rawOutput);
+    // Call Basic Pitch Python script
+    const python = spawn("python3", ["basic_pitch_transcribe.py", audioPath]);
 
-    const notesText = notesArray
-      .map(n => `${n.pitch} (${n.start_time.toFixed(2)}s → ${n.end_time.toFixed(2)}s) vel=${n.velocity}`)
-      .join("\n");
+    let output = "";
+    python.stdout.on("data", (data) => {
+      output += data.toString();
+    });
 
-    fs.unlinkSync(filePath);
+    python.stderr.on("data", (data) => {
+      console.error("Python error:", data.toString());
+    });
 
-    res.json({ notes: notesText });
+    python.on("close", () => {
+      fs.unlinkSync(audioPath); // cleanup
+      res.json({ notes: output });
+    });
 
   } catch (err) {
-    console.error("SERVER ERROR:", err);
+    console.error("Transcription error:", err);
     res.status(500).json({ error: "Transcription failed" });
   }
 });
 
-app.listen(5000, () => {
-  console.log("Transcription server running on port 5000");
+// -----------------------------
+// REHARMONIZE ENDPOINT
+// -----------------------------
+app.post("/reharmonize", (req, res) => {
+  const { notes } = req.body;
+
+  if (!notes) {
+    return res.status(400).json({ error: "No notes provided" });
+  }
+
+  // Simple placeholder reharmonizer
+  const reharmonized = `Reharmonized progression:\n${notes}\n\n(placeholder engine)`;
+
+  res.json({ reharmonized });
+});
+
+// -----------------------------
+// START SERVER
+// -----------------------------
+app.listen(PORT, () => {
+  console.log(`Transcription server running on port ${PORT}`);
 });
