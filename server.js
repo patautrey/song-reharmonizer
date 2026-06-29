@@ -31,7 +31,6 @@ app.post("/transcribe", upload.single("audio"), (req, res) => {
 
   const audioPath = req.file.path;
   const python = spawn("python3", ["basic_pitch_transcribe.py", audioPath]);
-
   let output = "";
 
   python.stdout.on("data", (data) => {
