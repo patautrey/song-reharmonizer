@@ -8,19 +8,19 @@ const { spawn } = require("child_process");
 const app = express();
 const PORT = 5000;
 
-// Allow front-end access
+// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Serve static UI from /public
+// Serve static frontend
 app.use(express.static(path.join(__dirname, "public")));
 
-// Multer for audio uploads
+// Multer upload
 const upload = multer({ dest: "uploads/" });
 
-// -----------------------------
+// -----------------------------------------------------
 // TRANSCRIBE ENDPOINT
-// -----------------------------
+// -----------------------------------------------------
 app.post("/transcribe", upload.single("audio"), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: "No audio file received" });
@@ -28,30 +28,33 @@ app.post("/transcribe", upload.single("audio"), (req, res) => {
 
   const audioPath = req.file.path;
 
-  // Call Python transcription script
-  const python = spawn("python3", ["basic_pitch_transcribe.py", audioPath]);
+  // Use Python 3.11 + bp-env virtual environment
+  const python = spawn("python3.11", ["basic_pitch_transcribe.py", audioPath], {
+    env: {
+      ...process.env,
+      PATH: `${process.env.PATH}:${process.cwd()}/bp-env/bin`
+    }
+  });
 
   let output = "";
+
   python.stdout.on("data", (data) => {
     output += data.toString();
   });
 
   python.stderr.on("data", (data) => {
-    console.error("Python error:", data.toString());
+    console.error("PYTHON ERROR:", data.toString());
   });
 
   python.on("close", () => {
-    // Remove temp file
     fs.unlinkSync(audioPath);
-
-    // Return transcription
     res.json({ notes: output });
   });
 });
 
-// -----------------------------
+// -----------------------------------------------------
 // REHARMONIZE ENDPOINT
-// -----------------------------
+// -----------------------------------------------------
 app.post("/reharmonize", (req, res) => {
   const { notes } = req.body;
 
@@ -63,9 +66,9 @@ app.post("/reharmonize", (req, res) => {
   res.json({ reharmonized });
 });
 
-// -----------------------------
+// -----------------------------------------------------
 // START SERVER
-// -----------------------------
+// -----------------------------------------------------
 app.listen(PORT, () => {
   console.log(`Transcription server running on port ${PORT}`);
 });
