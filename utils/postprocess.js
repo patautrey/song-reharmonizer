@@ -1,5 +1,3 @@
-// utils/postprocess.js
-
 function extractNotes(modelOutput) {
   const notes = [];
 
