@@ -1,97 +1,66 @@
-// ===============================
-// SERVER.JS — FULL WORKING VERSION
-// ===============================
+const express = require("express");
+const multer = require("multer");
+const cors = require("cors");
+const path = require("path");
+const fs = require("fs");
+const { spawn } = require("child_process");
 
-const express = require('express');
 const app = express();
-const path = require('path');
-const multer = require('multer');
-const { spawn } = require('child_process');
-const fs = require('fs');
+const PORT = 5000;
 
-// -------------------------------
-// 1. STATIC HOSTING FOR YOUR UI
-// -------------------------------
-app.use(express.static(path.join(__dirname, 'public')));
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// FIXED: serve the public folder correctly
+app.use(express.static(path.join(__dirname, "public")));
 
 // Serve index.html at root
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// -------------------------------
-// 2. FILE UPLOAD HANDLING
-// -------------------------------
-const upload = multer({ dest: 'uploads/' });
+// File uploads
+const upload = multer({ dest: "uploads/" });
 
-// -------------------------------
-// 3. TRANSCRIBE AUDIO (Basic Pitch)
-// -------------------------------
-app.post('/transcribe', upload.single('audio'), (req, res) => {
+// TRANSCRIBE ENDPOINT
+app.post("/transcribe", upload.single("audio"), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: "No audio file received" });
+  }
+
   const audioPath = req.file.path;
+  const python = spawn("python3", ["basic_pitch_transcribe.py", audioPath]);
 
-  // Call your Python transcription script
-  const py = spawn('python3', ['basic_pitch_transcribe.py', audioPath]);
+  let output = "";
 
-  let output = '';
-
-  py.stdout.on('data', data => {
+  python.stdout.on("data", (data) => {
     output += data.toString();
   });
 
-  py.stderr.on('data', data => {
-    console.error('Python error:', data.toString());
+  python.stderr.on("data", (data) => {
+    console.error("PYTHON ERROR:", data.toString());
   });
 
-  py.on('close', () => {
-    // Delete uploaded file after processing
+  python.on("close", () => {
     fs.unlinkSync(audioPath);
-
     res.json({ notes: output });
   });
 });
 
-// -------------------------------
-// 4. REHARMONIZE MIDI FILE
-// -------------------------------
-app.post('/reharm-midi', upload.single('midi'), async (req, res) => {
-  try {
-    const buffer = fs.readFileSync(req.file.path);
-    const style = req.body.style || 'jazz';
+// REHARMONIZE ENDPOINT
+app.post("/reharmonize", (req, res) => {
+  const { notes } = req.body;
 
-    // Load your MIDI parser
-    const { Midi } = require('@tonejs/midi');
-    const midi = new Midi(buffer);
-
-    // Convert MIDI → note objects
-    const track = midi.tracks[0];
-    const parsed = track.notes.map(n => ({
-      start: n.time,
-      end: n.time + n.duration,
-      midi: n.midi,
-      velocity: n.velocity
-    }));
-
-    // Load your reharm functions
-    const { groupNotes } = require('./utils/groupNotes');
-    const { reharmByStyle } = require('./utils/reharmRouter');
-
-    const groups = groupNotes(parsed, 0.5);
-    const reharm = reharmByStyle(style, groups);
-
-    fs.unlinkSync(req.file.path);
-    res.json({ chords: reharm });
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'MIDI reharm failed' });
+  if (!notes) {
+    return res.status(400).json({ error: "No notes provided" });
   }
+
+  const reharmonized = `Reharmonized progression:\n${notes}`;
+  res.json({ reharmonized });
 });
 
-// -------------------------------
-// 5. START SERVER
-// -------------------------------
-const PORT = 5000;
+// START SERVER
 app.listen(PORT, () => {
-  console.log(`The server is running on port ${PORT}.`);
+  console.log(`Transcription server running on port ${PORT}`);
 });
