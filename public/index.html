@@ -1,16 +1,14 @@
-<!-- index.html — FULL REPLACEMENT FILE -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Song Reharmonizer — Studio UI</title>
-  <style>
-    body { font-family: Arial; margin: 40px; }
-    textarea { width: 100%; height: 150px; }
-    .section { margin-bottom: 40px; }
-    button { padding: 10px 20px; margin: 5px; }
-  </style>
+
+  <!-- Load stylesheet -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Mobile-friendly -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 
 <body>
@@ -43,6 +41,8 @@
     <textarea id="reharmonized-output" placeholder="Reharmonized output..."></textarea>
   </div>
 
+  <!-- Load front-end logic -->
   <script src="app.js"></script>
+
 </body>
 </html>
