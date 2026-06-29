@@ -8,14 +8,10 @@ const { spawn } = require("child_process");
 const app = express();
 const PORT = 5000;
 
-// Allow front-end access
 app.use(cors());
 app.use(express.json());
-
-// Serve static UI from /public
 app.use(express.static(path.join(__dirname, "public")));
 
-// Multer for audio uploads
 const upload = multer({ dest: "uploads/" });
 
 // -----------------------------
@@ -65,3 +61,4 @@ app.post("/reharmonize", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Transcription server running on port ${PORT}`);
 });
+
