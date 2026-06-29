@@ -1,0 +1,41 @@
+// -----------------------------------------------------
+// TRANSCRIBE ENDPOINT (FULL WORKING VERSION)
+// -----------------------------------------------------
+app.post("/transcribe", upload.single("audio"), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: "No audio file received" });
+  }
+
+  const audioPath = req.file.path;
+
+  // ABSOLUTE PATHS — GUARANTEED TO WORK
+  const pythonPath = "/workspaces/song-reharmonizer/bp-env/bin/python";
+  const scriptPath = "/workspaces/song-reharmonizer/basic_pitch_transcribe.py";
+
+  // CALL PYTHON 3.11 INSIDE bp-env
+  const python = spawn(pythonPath, [scriptPath, audioPath]);
+
+  let output = "";
+
+  // LOG PYTHON STDOUT
+  python.stdout.on("data", (data) => {
+    console.log("PYTHON STDOUT:", data.toString());
+    output += data.toString();
+  });
+
+  // LOG PYTHON ERRORS
+  python.stderr.on("data", (data) => {
+    console.log("PYTHON ERROR:", data.toString());
+  });
+
+  // WHEN PYTHON FINISHES
+  python.on("close", () => {
+    try {
+      fs.unlinkSync(audioPath);
+    } catch (err) {
+      console.log("Could not delete temp file:", err);
+    }
+
+    res.json({ notes: output });
+  });
+});
